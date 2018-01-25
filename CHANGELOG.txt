@@ -1,0 +1,240 @@
+--------------------------
+SnowMicroPyn 0.0.21 alpha
+--------------------------
+
+ToDo:
+-manual layer insertion -proksch
+-2d log(median) profile, frame 2.5 mm overlap 50% -proksch
+-option for plot rotation 90degs
+-force drops statistics -denes
+-shot noise parameters check
+
+2018/01/25
+- Version 0.0.12 alpha
+- Packaging for Anaconda for easy install
+  No wxpython 3.x on PyPI, makes installation awful without Anaconda)
+- Use Down Sampling Factor 1 by default
+
+2014/07/10
+- version 0.0.19 alpha
+- allowed negative and comma values for axes in graph options
+- new variable self.pathOpen as default file opening path (location of last opened file)
+- new variable self.pathSave as default save path
+
+2014/04/29
+- gps coordinates sign bug fixed
+- fixed bug, where noise, drift offset could not be shown
+
+2014/04/04
+- implemented options for subtracted median in options window
+- implemented shot noise and added shot noise save options
+
+2014/04/02
+-fixed surface tool visibility bug
+-introduced overwrite prompt to some save functions
+-arrow keys can be used to switch plot
+-fixed indexing bug in shotnoise()
+
+2014/04/01
+-improved mean.py
+-introduced view menu, exported functions from data menu
+
+2014/03/28
+-use scroll wheel to zoom in/out of plot
+-up/down/left/right to navigate through open files
+-ctrl+ left click moves surface to location
+-shift + left click moves ground to location
+
+2014/03/27
+-implemented average menu to data (/extensions/mean.py)
+-started to use click event on canvas
+-left click on plot shows x//y coordinates
+
+2014/03/24
+-implemented average curves to superposition viewer
+-implemented log for y axis to graph options, default = True
+-implemented subtract median to view menu
+
+2014/03/21
+-call class graphoptions with .show() -> parent.draw_figure actualizes parent plot
+
+2014/03/20
+-version 0.0.14 alpha
+-add ground level analog to surface
+-add overload to info screen
+
+2014/03/17
+-version 0.0.13 alpha
+-add option to hide legend in super position viewer
+
+2014/03/16
+-implemented graph options to super position viewer
+-hide surface tool if not checked
+-get_surface returns now max instead of a rounded value, if no surface was found
+-created a pyinstaller build script to create build archives
+
+2014/02/24
+-bug fix in OnClose()
+
+2014/02/21
+-renamed software to SnowMicroPyn
+
+2014/02/19
+-fixed bug in export surface
+-fixed surface tool bug
+
+2014/02/18
+-Additions in Super Position Viewer:
+	-subtract plot has same color as corresponding curve
+	-legend for subtracted graphs
+	-rsme is shown mathematics.rsme(x_ref,x_sub, norm)
+
+2014/02/17
+-version 0.0.11 alpha
+-fixed surface tool inactivation bug for windows
+-maximize super position viewer at start
+-deactivated surface tab in graph options
+-cancel possibility in GPS viewer if no coordinates available
+-precision option in save options for ascii data
+-enabled keyboard short cuts for windows
+-correct exec_path detection (for exe)
+
+2014/02/16
+-version 0.0.10 alpha
+-super position viewer: show only basename in reference selection
+-fixed bug in file number text control in tool bar
+-use Ubuntu icons for tool bar in all operating systems
+
+2014/02/15
+-changed standard gradient down sampling factor to 1000
+
+2014/02/10
+-fixed logo location bug
+
+2014/02/10
+-changed version to 0.0.9 alpha
+-changed getsurface algorithm
+
+2014/02/08
+-improved filter function 
+
+2014/02/08
+-implemented experimental butterworth low pass filter and automatic
+ cut off frequency search using residual analysis
+
+2014/02/07
+-upgrade to 0.0.8 alpha
+-implemented open files as command line arguments
+ -> "open with"
+-implemented error caching to open file function
+-reneamed pnt header dict keys with units
+	-> header infos contain units
+-cleaned code in smp.py
+-introduced savezoom() to updatefigure()
+-disable preferences when no file is loaded
+
+2014/02/06
+-upgraded version to 0.0.7 alpha
+-implemented auto zoom boolean to draw_plot 
+	-> zoom ratio is kept when changing preferences
+-implemented gradient to analysis menu
+-better surface detection algorithm
+-implemented new surface detection algorithm based on 2nd deviation
+-fixed bug: smooth in Super Position Viewer works now
+-removed subplot from navigation tool bar
+-added additional tabs and options to graph options
+-implemeted manual surface correction to tool bar
+-outsourced getsurface to mathematics.py
+-outsourced linfit to mathematics.py
+-implemented "keep zoom"
+-added legend to super position viewer
+
+2014/02/04
+-improved getData from smp.py
+-replaced smooth with downsample in getsurface
+-introduced arg boolean "show" to draw_plot -> circumvents double plotting while saving plot
+-implemented "subtract plot" to SuperPosition
+-improved surface detection 
+
+2014/02/03
+-update version to 0.0.6 alpha
+-new class SuperPosition in menus.py
+-introduced SuperPosition (not fully developed yet) to data menu
+
+2014/02/02
+-added more colors and styles to plot options
+-moved class checklstctr from map to menus
+
+2014/01/31
+-changed version number to 0.0.5 alpha
+-introduced new graph options windows with enhanced functionality.
+
+2014/01/30
+-changed "preferences" to "graph options" and moved to data menu
+-renamed "view" to "analysis"
+-introduced save options to single file save method
+-changed graph options tool bar icon
+-changed quit icon to cross mark (probably nicer in windows)
+-renamed "Map" to "GPS Map View"
+-removed "save" from mpl tool bar
+-introduced save all and save single to tool bar
+-new save options menu using wx.multichoice dialog in menus.py
+
+2014/01/29
+-corrected SLF institute labels
+-tool bar info button now shows header instead of license
+-deactivated next/prev buttons in tool bar, if no file is open
+-decoupled "max force" off surface
+-changed export "max force and penetration" to "max force and surface".
+-added text in plot to autom. surface and max force detection
+-fixed bug, where prev button jumped over a measurement
+-setup plot renamed to graph options
+
+2014/01/24
+-changed version number to 0.0.4 alpha
+-introduced error catching for icon and logo
+-improved down  sampling function
+-removed automatic y axis restriction for plots
+
+2014/01/20
+-removed icon call from main function in PyNTReader.py
+
+2014/01/17
+-add standard deviation to noise, drift and offset export function
+-labels in map.py repeat now, if num lables > num ascii_uppercase
+
+2014/01/16
+-changed version to 0.0.3 alpha
+-corrected save path in export functions due to incompatibility in MacOS
+-fixed bug: noise and drift works again without surface option being checked in menu
+
+2014/01/15
+-deleted unused import urllib
+-use wx.App(False) instead of deprecated wx.PySimpleApp()
+-tested program under wxPython 3.0.0
+-export coordinates as .coords instead of .txt
+-excluded "hardness test" from data menu (former used by team snow sports)
+-introduced plot update after noise data export
+-moved options button from mpl tool bar to custom tool bar due to compatibility issues in windows
+-introduced plot options menu to file menu
+-linked slf.ch to license
+-created icon.ico as task bar icon
+-actualized requirements.txt
+-in maps SLF location is shown if no coordinates present
+
+2014/01/13
+-changed PyNTReader version number to 0.0.2 alpha.
+-introduced class SaveOptions to menus.py
+-OnSaveAll calls SaveOptions
+-in map.py items can't be checked anymore if GPS off
+-introduced experimental feature "app.SetMacSupportPCMenuShortcuts(True)" and OS detection in main function
+	-> not tested yet
+
+2014/01/12
+-introduced file selection drop down list to tool bar
+-introduced down sampling factor to plot options
+-introduced array down sampling function to mathematics.py
+-cleaned and documented code
+
+2014/01/09
+-(p)released PyNTReader version 0.0.1 alpha

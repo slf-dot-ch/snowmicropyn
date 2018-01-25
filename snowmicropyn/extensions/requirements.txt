@@ -1,0 +1,4 @@
+matplotlib<1.3.0
+wxPython>=2.8.12.1
+numpy>=1.7.1
+scipy>=13.0

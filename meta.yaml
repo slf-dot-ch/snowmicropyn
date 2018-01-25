@@ -1,0 +1,22 @@
+package:
+  name: snowmicropyn
+  version: "0.0.21"
+
+source:
+  git_rev: rev
+  git_url: url
+
+requirements:
+  build:
+    - python
+    - setuptools
+  run:
+    - python
+
+test:
+  imports:
+
+about:
+  home: https://github.com/joerick/pyinstrument
+  license: GPL
+  license_file: LICENSE
