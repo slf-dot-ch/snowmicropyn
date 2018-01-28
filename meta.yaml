@@ -13,9 +13,9 @@ requirements:
   run:
     - python
     - numpy
-    - matplotlib ==1.5.x
-    - wxpython ==3.x
-    - scipy==0.13.*
+    - matplotlib ==1.5.*
+    - wxpython ==3.*
+    - scipy ==0.13.*
 
 build:
   script: python setup.py install
