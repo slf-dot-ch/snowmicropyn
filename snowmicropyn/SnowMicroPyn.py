@@ -34,7 +34,7 @@ elif __file__:
     exec_path = os.path.dirname(__file__)
 name = "SnowMicroPyn"
 title = "%s - The bit more complex PNT Reader for SnowMicroPen (R) Measurements" % name
-version = "0.0.21 alpha"
+version = "0.0.22"
 author = "Sascha Grimm"
 trademark = u"\u2122"
 company = """WSL Institute for Snow and Avalanche Research SLF"""
