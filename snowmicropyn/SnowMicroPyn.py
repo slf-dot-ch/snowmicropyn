@@ -1341,12 +1341,13 @@ def fileDialog(self):
     return selected
 
 
-if __name__ == "__main__":
-    """main application"""
+def run():
     app = wx.App(False)
-    opsys = system()
-    print("%s Operating System Detected" % opsys)
-    gui = UI(sys.argv[1:])
-    if opsys == "Darwin":
+    UI(sys.argv[1:])
+    if system() == "Darwin":
         app.SetMacSupportPCMenuShortcuts(True)
     app.MainLoop()
+
+
+if __name__ == "__main__":
+    run()

@@ -8,9 +8,20 @@ setup(
     author='WSL Institute for Snow and Avalanche Research SLF',
     author_email='snowmicropen@slf.ch',
     url='https://www.slf.ch/en/about-the-slf/instrumented-field-sites-and-laboratories/cold-chambers/snowmicropenr.html',
-    keywords=['SLF', 'SnowMicroPen', 'Snow Micro Pen', 'SMP', 'Snow', 'Penetrator', 'Science', 'Research', ],
-    packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
-    python_requires='==2.7',
+    keywords=['SLF', 'SnowMicroPen', 'Snow Micro Pen', 'SMP', 'Snow', 'Penetrator', 'Science', 'Research'],
+    packages=find_packages(),
+    python_requires='==2.7.*',
+    install_requires=[
+        'numpy',
+        'matplotlib==1.5.*',
+        'scipy==0.13.*',
+        'wxpython==4.*',
+    ],
+    entry_points={
+        'gui_scripts': [
+            'SnowMicroPyn = snowmicropyn.SnowMicroPyn:run'
+        ]
+    },
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
