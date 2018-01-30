@@ -15,7 +15,7 @@ setup(
         'numpy',
         'matplotlib==1.5.*',
         'scipy==0.13.*',
-        'wxpython==4.*',
+        'wxpython==3.*',
     ],
     entry_points={
         'gui_scripts': [
