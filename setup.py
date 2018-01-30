@@ -4,17 +4,17 @@ from setuptools import find_packages
 setup(
     name='snowmicropyn',
     description='SnowMicroPyn, an Application to view and analyze Snow Profiles recorded by Snow Micro Pen by SLF',
-    version='0.0.21',
+    version='0.0.22',
     author='WSL Institute for Snow and Avalanche Research SLF',
     author_email='snowmicropen@slf.ch',
     url='https://www.slf.ch/en/about-the-slf/instrumented-field-sites-and-laboratories/cold-chambers/snowmicropenr.html',
     keywords=['SLF', 'SnowMicroPen', 'Snow Micro Pen', 'SMP', 'Snow', 'Penetrator', 'Science', 'Research'],
     packages=find_packages(),
+    package_data={'snowmicropyn': ['artwork/*']},
     python_requires='==2.7.*',
     install_requires=[
-        'numpy',
+        'scipy==0.17.*',
         'matplotlib==1.5.*',
-        'scipy==0.13.*',
         'wxpython==3.*',
     ],
     entry_points={
