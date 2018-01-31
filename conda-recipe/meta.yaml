@@ -3,12 +3,14 @@ package:
   version: 0.0.22
 
 source:
-  git_rev: v0.0.22
-  git_url: https://github.com/marrcl/smp.git
+  #git_rev: v0.0.22
+  #git_url: https://github.com/marrcl/smp.git
+  path: ..
 
 requirements:
   build:
     - python
+    - setuptools
   run:
     - python
     - scipy ==0.17
@@ -16,12 +18,10 @@ requirements:
     - wxpython ==3
 
 build:
-  script: python setup.py install --single-version-externally-managed --record=record.txt
-  osx_is_app: True
-
-test:
-  imports:
+  script: python setup.py install --old-and-unmanageable
 
 about:
   home: https://www.slf.ch
   license: GPL
+  summary: 'Analyzing tool for snow profiles recorded by Snow Micro Pen'
+
