@@ -1,5 +1,5 @@
 --------------------------
-SnowMicroPyn 0.0.21 alpha
+SnowMicroPyn 0.0.26 alpha
 --------------------------
 
 ToDo:
@@ -9,11 +9,42 @@ ToDo:
 -force drops statistics -denes
 -shot noise parameters check
 
-2018/01/25
-- Version 0.0.12 alpha
-- Packaging for Anaconda for easy install
-  No wxpython 3.x on PyPI, makes installation awful without Anaconda)
-- Use Down Sampling Factor 1 by default
+2018/02/08
+- Version 0.0.26 alpha
+- Packaging for Anaconda
+
+????/??/??
+- version 0.0.25 alpha
+- Man kann jetzt unter Menu->View->Show Density oder ->Show SSA auswählen. 
+  Dann wird SSA oder Dichte mit zweiter y-Achse geplottet.
+
+????/??/??
+- version 0.0.24 alpha
+- show surface und show ground default-mässig aktiviert
+- MessageBox wenn versucht wird SSA und Density gleichzeitig zu plotten (geht
+  nur einzeln)
+- im Menu Export->shot noise parameters geändert zu Export-> ShotNoiseParameters,
+  Density and SSA
+
+????/??/?? 
+- version 0.0.23 alpha  
+- dichte- oder ssa-profil in plot zeichnen
+- beim öffnen der files werden shotnoiseparameter für jedes file berechnet,
+  daher etwas langsamer beim öffnen (vor allem bei vielen dateien)
+- range für zweite y-achse festgelegt:
+  dichte: 0-700 kg/m^3
+  ssa: 0-60 m^2/kg
+
+????/??/??
+- version 0.0.22 alpha 
+- shotnoise parameter in file schreiben inklusive dichte und ssa
+
+????/??/??
+- version 0.0.21 alpha 
+- shotnoise-auswertung von evalSMP-skript hier reinkopiert und etwas angepasst
+- zusätzlich dichte und ssa ausrechnen und alles ins shotnoise-file schreiben
+- ausserdem default-filename und -ordner für shotnoise-file geändert:
+  jetzt gleichen namen und ordner wie pnt-file nur andere endung
 
 2014/07/10
 - version 0.0.19 alpha

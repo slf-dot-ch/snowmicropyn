@@ -1,4 +1,4 @@
-SnowMicroPyn Version 0.0.21 alpha
+SnowMicroPyn Version 0.0.26 alpha
 =================================
 
 About:
@@ -24,46 +24,25 @@ Features:
 -super pose and subtract plots
 -frequency analysis
 
-Requirements:
--------------
-A) Using a Python Interpreter:
-	-tested on python 2.7.x
-	-use wxPython 3.0.0
-	-use matplotlib <= 1.2.2 (version = 1.3.0 has a bug in zoom function)
-	-use scipy >= 13.0
-	-see ./src/extensions/requirements.txt
-
-B) Stand alone binaries:
-	-binary (.bin/.app/.exe) should be in the same folder as artwork directory
-	-no other dependencies are known
 
 Installation:
 -------------
-A) Using a Python Interpreter:
-	-install Python 2.7.x (python.org)
-	-t is recommended to use virtualenv, see http://blog.dbrgn.ch/2012/9/18/virtualenv-quickstart/
-	-install dependencies using pip
-		pip install -r requirements.txt
-		wxpython >= 2.8 can be installed from wxpython.org
-	-run "python PyNTReader.py" from terminal
-	-or in Ubuntu make file executable: "chmod +x PyNTReader.py" and run ./PyNTReader from terminal, respectively double click the file 
+A) If not yet installed, install Anaconda or Miniconda
+   https://conda.io/docs/user-guide/install/download.html
 
-B) Stand alone binaries:
+B) Windows: Start Anaconda Prompt
+   macOS: Start Terminal Application
 
-	I) Linux
-		compiled and tested on Ubuntu 13.10 64bit
-		-make file executable: chmod +x PyNTReader
-		-double click executable or type /path/to/file/PyNTReader
-		-optionally pass file names as command line argument to open them directly, or try "open with"
-	II) MacOS
-		compiled and tested on MacOSX 10.8.5 64bit
-		-double click .app or executer PyNTReader in terminal
-	III) Windows
-		compiled and tested on Win7 64bit and WinXP 32bit
-		-double click .exe, or press on "open with" on a .pnt file 
+C) Create new conda environment
+   conda create -n smpenv
+
+D) Run SnowMicroPyn:
+   python -m snowmicropyn.SnowMicroPyn  (on Windows)
+   pythonw -m snowmicropyn.SnowMicroPyn  (on macOS)
+
 Contact:
 --------
-For questions and bug reports please contact sascha.grimm@slf.ch
+For questions and bug reports please contact snowmicropyn@slf.ch
 
 Developer:
 -----------

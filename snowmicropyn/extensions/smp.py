@@ -1,5 +1,7 @@
-import struct, numpy
 import matplotlib.pyplot as plt
+import numpy
+import struct
+
 import menus as gui
 
 
@@ -24,6 +26,7 @@ class Pnt(object):
         self.data = self.getData()
         self.surface = 0.0
         self.ground = self.data[-1, 0]
+        self.shotnoise_data = []
 
     def printHeader(self):
         """Show Header infos"""

@@ -1,16 +1,16 @@
 package:
   name: snowmicropyn
-  version: 0.0.22
+  version: 0.0.20
 
 source:
-  #git_rev: v0.0.22
-  #git_url: https://github.com/marrcl/smp.git
   path: ..
 
 requirements:
   build:
     - python
-    - setuptools
+    - scipy ==0.17
+    - matplotlib ==1.5
+    - wxpython ==3
   run:
     - python
     - scipy ==0.17
@@ -18,10 +18,11 @@ requirements:
     - wxpython ==3
 
 build:
-  script: python setup.py install --old-and-unmanageable
+  noarch: python
+  script: python setup.py install
 
 about:
   home: https://www.slf.ch
   license: GPL
-  summary: 'Analyzing tool for snow profiles recorded by Snow Micro Pen'
+  summary: Analyzing tool for snow profiles recorded by SnowMicroPen, a penetration probe for snow for scientific purposes.
 

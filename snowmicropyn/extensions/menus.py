@@ -122,7 +122,7 @@ class PlotOptions(wx.Dialog):
         self.ylabel = "Force [N]"
         self.xlim = (0,300,True)
         self.ylim = (0,41,True)
-        self.sampling = 2
+        self.sampling = 1
         self.logscale = True
                 
         wx.StaticBox(self, -1, 'Axis', (5, 5), size=(240, 170))
@@ -312,12 +312,12 @@ class GraphOptions(wx.Dialog):
         self.grad_color = colors[3]
         self.grad_style = styles[2]
         self.grad_width = 1
-        self.grad_sampling = 1000
+        self.grad_sampling = 100
         #median
         self.median_color = colors[9]
         self.median_style = styles[0]
         self.median_width = 1
-        self.median_sampling = 200
+        self.median_sampling = 100
         
         panel = wx.Panel(self)
 

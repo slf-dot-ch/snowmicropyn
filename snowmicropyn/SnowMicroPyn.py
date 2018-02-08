@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 
+import numpy
 #####################################################
 # imports
 #####################################################
 import os
 import sys
-from platform import system
-from re import search
-
-import numpy
 import wx
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigCanvas
-from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigCanvas, \
+    NavigationToolbar2WxAgg as NavigationToolbar
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
+from platform import system
+from re import search
 from wx.lib.agw.floatspin import FloatSpin
 
+import extensions.artwork
 import extensions.map as maps
 import extensions.mathematics as calc
 import extensions.smp as smp
@@ -34,12 +34,12 @@ elif __file__:
     exec_path = os.path.dirname(__file__)
 name = "SnowMicroPyn"
 title = "%s - The bit more complex PNT Reader for SnowMicroPen (R) Measurements" % name
-version = "0.0.22"
+version = "0.0.26 alpha"
 author = "Sascha Grimm"
 trademark = u"\u2122"
 company = """WSL Institute for Snow and Avalanche Research SLF"""
-address = """Fluelastrasse 11\nCH-7260 Davos"""
-contact = "sascha.grimm@slf.ch"
+adress = """Fluelastrasse 11\nCH-7260 Davos"""
+contact = "snowmicropen@slf.ch"
 description = """%s is a software to read and analyze SnowMicroPen%s meaurements.
 Supported input file format is the binary .pnt.""" % (name, trademark)
 licence = """
@@ -130,7 +130,7 @@ class UI(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnExportNoise, men)
         mem = export.Append(wx.ID_ANY, "Maximum Forces, Surface and Ground")
         self.Bind(wx.EVT_MENU, self.OnExportForce, mem)
-        mesn = export.Append(wx.ID_ANY, "Shot Noise Parameters")
+        mesn = export.Append(wx.ID_ANY, "Shot Noise Parameters, Density and SSA")
         self.Bind(wx.EVT_MENU, self.OnExportShotNoise, mesn)
 
         self.fileMenu.AppendMenu(100, "&Export", export)
@@ -169,6 +169,12 @@ class UI(wx.Frame):
                                            kind=wx.ITEM_CHECK)
         self.shmed = self.viewMenu.Append(305, "Raw Data Minus Median", "Subtract median window from original signal",
                                           kind=wx.ITEM_CHECK)
+        self.showDensity = self.viewMenu.Append(308, "Show Density",
+                                                "Show density calculated by shotnoise parameters (Proksch 2015)",
+                                                kind=wx.ITEM_CHECK)
+        self.showSSA = self.viewMenu.Append(309, "Show SSA",
+                                            "Show specific surface area calculated by shotnoise parameters (Proksch 2015)",
+                                            kind=wx.ITEM_CHECK)
 
         self.Bind(wx.EVT_MENU, self.UpdateFigure, self.shmf)
         self.Bind(wx.EVT_MENU, self.UpdateFigure, self.shsf)
@@ -177,6 +183,8 @@ class UI(wx.Frame):
         self.Bind(wx.EVT_MENU, self.UpdateFigure, self.shgnd)
         self.Bind(wx.EVT_MENU, self.UpdateFigure, self.shmed)
         self.Bind(wx.EVT_MENU, self.OnLayers, self.showLayers)
+        self.Bind(wx.EVT_MENU, self.UpdateFigure, self.showDensity)
+        self.Bind(wx.EVT_MENU, self.UpdateFigure, self.showSSA)
         # self.Bind(wx.EVT_MENU, self.UpdateFigure,self.shhn)
 
         self.dataMenu.AppendItem(msh)
@@ -328,6 +336,8 @@ class UI(wx.Frame):
         self.fig = Figure((5.0, 4.0), dpi=self.dpi)
         self.canvas = FigCanvas(self.panel, -1, self.fig)
         self.axes = self.fig.add_subplot(111)
+        self.axes2 = self.axes.twinx()
+        self.axes2.get_yaxis().set_visible(False)
 
         self.plot_toolbar = NavigationToolbar(self.canvas)
         self.plot_toolbar.DeleteToolByPos(8)
@@ -474,6 +484,51 @@ class UI(wx.Frame):
                        linestyle=self.plotOptions.style,
                        linewidth=self.plotOptions.width
                        )
+
+        if (self.showDensity.IsChecked() and self.showSSA.IsChecked()):
+            # if both are checked, then uncheck both. only one of the two can be displayed
+            message = "Either density or SSA can be shown. Not both at the same time."
+            wx.MessageBox(message=message,
+                          caption='Information',
+                          style=wx.OK | wx.ICON_INFORMATION)
+
+            self.viewMenu.Check(self.showDensity.GetId(), False)
+            self.viewMenu.Check(self.showSSA.GetId(), False)
+            self.axes2.get_yaxis().set_visible(False)
+            for line in self.axes2.lines:
+                line.remove()
+        elif self.showDensity.IsChecked():
+            # plot density with second axis
+            shotNoiseData = self.File[self.current].shotnoise_data
+            density = shotNoiseData[:, 5]
+            x_density = shotNoiseData[:, 7]
+            self.axes2.get_yaxis().set_visible(True)
+            for line in self.axes2.lines:
+                line.remove()
+            self.axes2.set_ylabel("Density (kg/m^3)")
+            self.axes2.set_ylim(0, 700)
+            self.axes2.plot(x_density, density,
+                            color=self.plotOptions.grad_color,
+                            linestyle=self.plotOptions.grad_style,
+                            linewidth=self.plotOptions.grad_width)
+        elif self.showSSA.IsChecked():
+            # plot ssa with second axis
+            shotNoiseData = self.File[self.current].shotnoise_data
+            ssa = shotNoiseData[:, 6]
+            x_ssa = shotNoiseData[:, 7]
+            self.axes2.get_yaxis().set_visible(True)
+            for line in self.axes2.lines:
+                line.remove()
+            self.axes2.set_ylabel("SSA (m^2/kg)")
+            self.axes2.set_ylim(0, 60)
+            self.axes2.plot(x_ssa, ssa,
+                            color=self.plotOptions.median_color,
+                            linestyle=self.plotOptions.grad_style,
+                            linewidth=self.plotOptions.grad_width)
+        else:
+            self.axes2.get_yaxis().set_visible(False)
+            for line in self.axes2.lines:
+                line.remove()
 
         if self.shgrad.IsChecked():
             amp = self.File[self.current].header['Samples Dist [mm]']
@@ -632,6 +687,9 @@ class UI(wx.Frame):
                         data.ground = calc.GetGround(data)
                         data.ylim = None
                         data.xlim = None
+                        window = 2.5
+                        overlap = 50
+                        data.shotnoise_data = numpy.array(calc.getSNParams(data, window, overlap))
                         self.File.append(data)
                     except:
                         dlg = wx.MessageDialog(self,
@@ -884,8 +942,12 @@ class UI(wx.Frame):
                       File: %s\n 
                       Window: %.2f mm\n
                       Overlap: %.2f\n
-                      Lambda\tMedian [N]\tDelta\tL""" % (
-                          name, version, self.File[self.current].filename, window, overlap))
+                      Surface: %.3f\n
+                      Ground: %.3f\n
+                      Lambda[1/mm]\tf_0[N]\tDelta[mm]\tL[mm]\tMedianF[N]\tDensity_Proksch[kg/m^3]\tSSA_Proksch[m^2/kg]\tz[mm]""" % (
+                          name, version, self.File[self.current].filename, window, overlap,
+                          self.File[self.current].surface,
+                          self.File[self.current].ground))
 
         self.updateStatus("Saved Shot Noise Parameters to %s" % path)
 
@@ -1144,11 +1206,16 @@ class UI(wx.Frame):
     def OnExportShotNoise(self, e):
         file_choices = "SHN (*.shn)|*.shn"
 
+        default_fn = self.File[self.current].filename
+        default_path = os.path.dirname(default_fn)
+        default_fn = os.path.basename(default_fn)
+        default_fn = default_fn.replace(".pnt", ".shn")
+
         dlg = wx.FileDialog(
             self,
             message="Save Shot Noise Parameters...",
-            defaultDir=os.getcwd(),
-            defaultFile="ShotNoise.shn",
+            defaultDir=default_path,
+            defaultFile=default_fn,
             wildcard=file_choices,
             style=wx.SAVE | wx.OVERWRITE_PROMPT)
 
@@ -1251,6 +1318,8 @@ class UI(wx.Frame):
         self.viewMenu.Enable(305, enable)
         self.viewMenu.Enable(306, enable)
         self.viewMenu.Enable(307, enable)
+        self.viewMenu.Enable(308, enable)
+        self.viewMenu.Enable(309, enable)
         self.dataMenu.Enable(wx.ID_PREFERENCES, enable)
         self.dataMenu.Enable(self.fft.GetId(), enable)
         self.plot_toolbar.Enable(enable)
@@ -1264,6 +1333,9 @@ class UI(wx.Frame):
         self.toolbar.EnableTool(wx.ID_BACKWARD, enable)
         self.toolbar.EnableTool(self.infoTool.GetId(), enable)
         self.toolbar.EnableTool(wx.ID_PREFERENCES, enable)
+
+        self.viewMenu.Check(self.shsf.GetId(), True)
+        self.viewMenu.Check(self.shgnd.GetId(), True)
 
         if self.shsf.IsChecked() and enable:
             self.surface.Show()
@@ -1341,13 +1413,12 @@ def fileDialog(self):
     return selected
 
 
-def run():
+if __name__ == "__main__":
+    """main application"""
     app = wx.App(False)
-    UI(sys.argv[1:])
-    if system() == "Darwin":
+    opsys = system()
+    print("%s Operating System Detected" % opsys)
+    gui = UI(sys.argv[1:])
+    if opsys == "Darwin":
         app.SetMacSupportPCMenuShortcuts(True)
     app.MainLoop()
-
-
-if __name__ == "__main__":
-    run()
