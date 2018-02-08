@@ -4,7 +4,7 @@ from setuptools import find_packages
 setup(
     name='snowmicropyn',
     description='SnowMicroPyn, an Application to view and analyze Snow Profiles recorded by Snow Micro Pen by SLF',
-    version='0.0.20',
+    version='0.0.26',
     author='WSL Institute for Snow and Avalanche Research SLF',
     author_email='snowmicropen@slf.ch',
     url='https://www.slf.ch/en/about-the-slf/instrumented-field-sites-and-laboratories/cold-chambers/snowmicropenr.html',
@@ -19,7 +19,7 @@ setup(
     ],
     entry_points={
         'gui_scripts': [
-            'SnowMicroPyn = snowmicropyn.SnowMicroPyn:run'
+            'SnowMicroPyn = snowmicropyn.SnowMicroPyn:main'
         ]
     },
     classifiers=[
