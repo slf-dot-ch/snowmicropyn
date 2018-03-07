@@ -57,7 +57,7 @@ except:
 copyright = "(C) 2014 - Sascha Grimm"
 link = """http://www.slf.ch """  # /ueber/organisation/schnee_permafrost/schneephysik/SnowMicroPen/index_EN"""
 
-#zum testen von github (von Thiemo)
+
 #####################################################
 # User Interface
 ##################################################### 
