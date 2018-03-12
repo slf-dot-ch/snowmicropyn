@@ -34,7 +34,7 @@ elif __file__:
     exec_path = os.path.dirname(__file__)
 name = "SnowMicroPyn"
 title = "%s - The bit more complex PNT Reader for SnowMicroPen (R) Measurements" % name
-version = "0.0.26 alpha"
+version = "0.0.27 alpha"
 author = "Sascha Grimm"
 trademark = u"\u2122"
 company = """WSL Institute for Snow and Avalanche Research SLF"""
@@ -499,32 +499,40 @@ class UI(wx.Frame):
                 line.remove()
         elif self.showDensity.IsChecked():
             # plot density with second axis
-            shotNoiseData = self.File[self.current].shotnoise_data
-            density = shotNoiseData[:, 5]
-            x_density = shotNoiseData[:, 7]
-            self.axes2.get_yaxis().set_visible(True)
-            for line in self.axes2.lines:
-                line.remove()
-            self.axes2.set_ylabel("Density (kg/m^3)")
-            self.axes2.set_ylim(0, 700)
-            self.axes2.plot(x_density, density,
-                            color=self.plotOptions.grad_color,
-                            linestyle=self.plotOptions.grad_style,
-                            linewidth=self.plotOptions.grad_width)
+            error=self.updateShotNoiseParameters(2.5,50,1)
+            if(error==1):
+                self.viewMenu.Check(self.showDensity.GetId(), False)
+            else:
+                shotNoiseData = self.File[self.current].shotnoise_data
+                density = shotNoiseData[:, 5]
+                x_density = shotNoiseData[:, 7]
+                self.axes2.get_yaxis().set_visible(True)
+                for line in self.axes2.lines:
+                    line.remove()
+                self.axes2.set_ylabel("Density (kg/m^3)")
+                self.axes2.set_ylim(0, 700)
+                self.axes2.plot(x_density, density,
+                                color=self.plotOptions.grad_color,
+                                linestyle=self.plotOptions.grad_style,
+                                linewidth=self.plotOptions.grad_width)
         elif self.showSSA.IsChecked():
             # plot ssa with second axis
-            shotNoiseData = self.File[self.current].shotnoise_data
-            ssa = shotNoiseData[:, 6]
-            x_ssa = shotNoiseData[:, 7]
-            self.axes2.get_yaxis().set_visible(True)
-            for line in self.axes2.lines:
-                line.remove()
-            self.axes2.set_ylabel("SSA (m^2/kg)")
-            self.axes2.set_ylim(0, 60)
-            self.axes2.plot(x_ssa, ssa,
-                            color=self.plotOptions.median_color,
-                            linestyle=self.plotOptions.grad_style,
-                            linewidth=self.plotOptions.grad_width)
+            error = self.updateShotNoiseParameters(2.5, 50,1)
+            if (error == 1):
+                self.viewMenu.Check(self.showSSA.GetId(), False)
+            else:
+                shotNoiseData = self.File[self.current].shotnoise_data
+                ssa = shotNoiseData[:, 6]
+                x_ssa = shotNoiseData[:, 7]
+                self.axes2.get_yaxis().set_visible(True)
+                for line in self.axes2.lines:
+                    line.remove()
+                self.axes2.set_ylabel("SSA (m^2/kg)")
+                self.axes2.set_ylim(0, 60)
+                self.axes2.plot(x_ssa, ssa,
+                                color=self.plotOptions.median_color,
+                                linestyle=self.plotOptions.grad_style,
+                                linewidth=self.plotOptions.grad_width)
         else:
             self.axes2.get_yaxis().set_visible(False)
             for line in self.axes2.lines:
@@ -687,9 +695,17 @@ class UI(wx.Frame):
                         data.ground = calc.GetGround(data)
                         data.ylim = None
                         data.xlim = None
-                        window = 2.5
-                        overlap = 50
-                        data.shotnoise_data = numpy.array(calc.getSNParams(data, window, overlap))
+                        try:
+                            window = 2.5
+                            overlap = 50
+                            data.shotnoise_data = numpy.array(calc.getSNParams(data, window, overlap))
+                        except:
+                            dlg = wx.MessageDialog(self,
+                                                   message="ERROR: Could not create shot-noise-parameters. Check if surface < ground!",
+                                                   caption="Error",
+                                                   style=wx.OK | wx.ICON_ERROR)
+                            dlg.ShowModal()
+                            dlg.Destroy()
                         self.File.append(data)
                     except:
                         dlg = wx.MessageDialog(self,
@@ -926,28 +942,31 @@ class UI(wx.Frame):
 
     def SaveShotNoise(self, path=os.getcwd(), filename="", window=2.5, overlap=50):
 
-        if filename == "":
-            filename = self.File[self.current].filename
-            filename = os.path.basename(filename)
-            filename = filename.replace(".pnt", ".shn")
+        error = self.updateShotNoiseParameters(window,overlap,0)
+        if (error == 0):
+            shotNoiseData = self.File[self.current].shotnoise_data.tolist()
+            if filename == "":
+                filename = self.File[self.current].filename
+                filename = os.path.basename(filename)
+                filename = filename.replace(".pnt", ".shn")
 
-        filename = os.path.join(path, filename)
+            filename = os.path.join(path, filename)
 
-        numpy.savetxt(filename,
-                      calc.getSNParams(self.File[self.current], window, overlap),
-                      delimiter="\t",
-                      newline="\n",
-                      fmt="%3g",
-                      header="""Automatic written Shot Noise Parameters by %s %s\n
-                      File: %s\n 
-                      Window: %.2f mm\n
-                      Overlap: %.2f\n
-                      Surface: %.3f\n
-                      Ground: %.3f\n
-                      Lambda[1/mm]\tf_0[N]\tDelta[mm]\tL[mm]\tMedianF[N]\tDensity_Proksch[kg/m^3]\tSSA_Proksch[m^2/kg]\tz[mm]""" % (
-                          name, version, self.File[self.current].filename, window, overlap,
-                          self.File[self.current].surface,
-                          self.File[self.current].ground))
+            numpy.savetxt(filename,
+                          shotNoiseData,
+                          delimiter="\t",
+                          newline="\n",
+                          fmt="%3g",
+                          header="""Automatic written Shot Noise Parameters by %s %s\n
+                          File: %s\n 
+                          Window: %.2f mm\n
+                          Overlap: %.2f\n
+                          Surface: %.3f\n
+                          Ground: %.3f\n
+                          Lambda[1/mm]\tf_0[N]\tDelta[mm]\tL[mm]\tMedianF[N]\tDensity_Proksch[kg/m^3]\tSSA_Proksch[m^2/kg]\tz[mm]""" % (
+                              name, version, self.File[self.current].filename, window, overlap,
+                              self.File[self.current].surface,
+                              self.File[self.current].ground))
 
         self.updateStatus("Saved Shot Noise Parameters to %s" % path)
 
@@ -1377,6 +1396,26 @@ class UI(wx.Frame):
             self.current = len(self.File) - 1
             self.updateIndex()
             self.draw_figure()
+
+    def updateShotNoiseParameters(self,window,overlap,calculateOnlyIfNotExisting=1):
+        error = 0
+        if(len(self.File[self.current].shotnoise_data)>0):
+            #shotNoiseParameters were already calculated
+            if(calculateOnlyIfNotExisting==1):
+                return error
+        data = self.File[self.current]
+        try:
+            self.File[self.current].shotnoise_data = numpy.array(calc.getSNParams(data, window, overlap))
+        except:
+            dlg = wx.MessageDialog(self,
+                                   message="ERROR: Could not create shot-noise-parameters. Check surface and ground!",
+                                   caption="Error",
+                                   style=wx.OK | wx.ICON_ERROR)
+            dlg.ShowModal()
+            dlg.Destroy()
+            error = 1
+        return error
+
 
 
 def ask(question, caption="Confirm"):
