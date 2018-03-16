@@ -1,8 +1,9 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import os
-from os.path import join, basename, dirname
 import sys
+from os.path import join, basename, dirname
 from platform import system
 from re import search
 
@@ -14,41 +15,40 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
 from wx.lib.agw.floatspin import FloatSpin
 
-import extensions.map as maps
-import extensions.mathematics as calc
-import extensions.smp as smp
-from extensions import mean
-from extensions.menus import HeaderInfo, GraphOptions, SaveOptions, SuperPosition
-from extensions.residual_analysis import residual_analysis
-
+import snowmicropyn.analysis.mathematics as smp_calc
+import snowmicropyn.analysis.shotnoise as smp_shotnoise
+import snowmicropyn.gui.extensions.map as smp_map
+import snowmicropyn.io as smp_io
+from snowmicropyn.gui.extensions import mean
+from snowmicropyn.gui.menus import HeaderInfo, GraphOptions, SaveOptions, SuperPosition
+from snowmicropyn.analysis.residual_analysis import residual_analysis
 
 # determine if application is a script file or frozen exe
-exec_path = dirname(__file__)
+EXEC_PATH = dirname(__file__)
 if getattr(sys, 'frozen', False):
-    exec_path = dirname(sys.executable)
+    EXEC_PATH = dirname(sys.executable)
 
 NAME = 'SnowMicroPyn'
-TITLE = '%s - The bit more complex PNT Reader for SnowMicroPen (R) Measurements' % NAME
+TITLE = '{} - The bit more complex PNT Reader for SnowMicroPen® Measurements'.format(NAME)
 VERSION = '0.0.26 alpha'
-AUTHOR = "Sascha Grimm"
-TRADEMARK = u"\u2122"
+AUTHOR = 'Sascha Grimm'
 COMPANY = 'WSL Institute for Snow and Avalanche Research SLF'
-ADDRESS = 'Fluelastrasse 11\nCH-7260 Davos'
+ADDRESS = 'Flüelastrasse 11\nCH-7260 Davos'
 CONTACT = 'snowmicropen@slf.ch'
 DESCRIPTION = (
-    '%s is a software to read and analyze SnowMicroPen%s measurements.\n'
-    'Supported input file format is the binary .pnt.' % (NAME, TRADEMARK)
+    '{} is a software to read and analyze SnowMicroPen® measurements.\n'
+    'Supported input file format is the binary .pnt.'.format(NAME)
 )
 LICENCE = (
-    '%s is free software; you can redistribute it and/or modify it under the terms of\n'
+    '{name} is free software; you can redistribute it and/or modify it under the terms of\n'
     'the GNU General Public License as published by the Free Software Foundation;\n'
-    'either version 2 of the License, or (at your option) any later version. %s is\n' 
+    'either version 2 of the License, or (at your option) any later version. {name} is\n'
     'distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;\n'
     'without even the implied warranty of MERCHANTABILITY or FITNESS FOR A\n'
-    'PARTICULAR PURPOSE. See the GNU General Public License for more details.' % (NAME, NAME)
+    'PARTICULAR PURPOSE. See the GNU General Public License for more details.'.format(name=NAME)
 )
-LOGO = join(exec_path, 'artwork', 'logo_slf.png')
-ICON = join(exec_path, 'artwork', 'icon.ico')
+LOGO = join(EXEC_PATH, 'artwork', 'logo_slf.png')
+ICON = join(EXEC_PATH, 'artwork', 'icon.ico')
 COPYRIGHT = '(c) 2018, WSL Institute for Snow and Avalanche Research SLF'
 LINK = 'http://www.slf.ch'
 
@@ -137,13 +137,21 @@ class UI(wx.Frame):
 
         self.shmf = self.viewMenu.Append(301, 'Show Maximum Force', 'Show Maximum Force', kind=wx.ITEM_CHECK)
         self.shsf = self.viewMenu.Append(302, 'Show Surface', 'Show Surface', kind=wx.ITEM_CHECK)
-        self.shgnd = self.viewMenu.Append(306, 'Show Ground', 'Show ground on measurements with overload', kind=wx.ITEM_CHECK)
+        self.shgnd = self.viewMenu.Append(306, 'Show Ground', 'Show ground on measurements with overload',
+                                          kind=wx.ITEM_CHECK)
         self.showLayers = self.viewMenu.Append(307, 'Manage Layers', 'Manage and show Layers', kind=wx.ITEM_CHECK)
-        self.shnd = self.viewMenu.Append(303, 'Show Noise, Drift & Offset', 'Show Noise, Drift & Offset', kind=wx.ITEM_CHECK)
-        self.shgrad = self.viewMenu.Append(304, 'Show Gradient', 'Show derivation of the force signal', kind=wx.ITEM_CHECK)
-        self.shmed = self.viewMenu.Append(305, 'Raw Data Minus Median', 'Subtract median window from original signal', kind=wx.ITEM_CHECK)
-        self.showDensity = self.viewMenu.Append(308, 'Show Density', 'Show density calculated by shotnoise parameters (Proksch 2015)', kind=wx.ITEM_CHECK)
-        self.showSSA = self.viewMenu.Append(309, 'Show SSA', 'Show specific surface area calculated by shotnoise parameters (Proksch 2015)', kind=wx.ITEM_CHECK)
+        self.shnd = self.viewMenu.Append(303, 'Show Noise, Drift & Offset', 'Show Noise, Drift & Offset',
+                                         kind=wx.ITEM_CHECK)
+        self.shgrad = self.viewMenu.Append(304, 'Show Gradient', 'Show derivation of the force signal',
+                                           kind=wx.ITEM_CHECK)
+        self.shmed = self.viewMenu.Append(305, 'Raw Data Minus Median', 'Subtract median window from original signal',
+                                          kind=wx.ITEM_CHECK)
+        self.showDensity = self.viewMenu.Append(308, 'Show Density',
+                                                'Show density calculated by shotnoise parameters (Proksch 2015)',
+                                                kind=wx.ITEM_CHECK)
+        self.showSSA = self.viewMenu.Append(309, 'Show SSA',
+                                            'Show specific surface area calculated by shotnoise parameters (Proksch 2015)',
+                                            kind=wx.ITEM_CHECK)
 
         self.Bind(wx.EVT_MENU, self.UpdateFigure, self.shmf)
         self.Bind(wx.EVT_MENU, self.UpdateFigure, self.shsf)
@@ -202,16 +210,18 @@ class UI(wx.Frame):
         self.toolbar = self.CreateToolBar()
 
         try:
-            quit_ico = wx.Image(join(exec_path, 'artwork', 'icon_quit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-            save_all_ico = wx.Image(join(exec_path, 'artwork', 'icon_save_all.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-            save_ico = wx.Image(join(exec_path, 'artwork', 'icon_save.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-            new_ico = wx.Image(join(exec_path, 'artwork', 'icon_open.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-            close_all_ico = wx.Image(join(exec_path, 'artwork', 'icon_clear.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-            close_ico = wx.Image(join(exec_path, 'artwork', 'icon_delete.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-            info_ico = wx.Image(join(exec_path, 'artwork', 'icon_info.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-            pref_ico = wx.Image(join(exec_path, 'artwork', 'icon_properties.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-            back_ico = wx.Image(join(exec_path, 'artwork', 'icon_go-previous.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-            forward_ico = wx.Image(join(exec_path, 'artwork', 'icon_go-next.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+            quit_ico = wx.Image(join(EXEC_PATH, 'artwork', 'icon_quit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+            save_all_ico = wx.Image(join(EXEC_PATH, 'artwork', 'icon_save_all.png'),
+                                    wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+            save_ico = wx.Image(join(EXEC_PATH, 'artwork', 'icon_save.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+            new_ico = wx.Image(join(EXEC_PATH, 'artwork', 'icon_open.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+            close_all_ico = wx.Image(join(EXEC_PATH, 'artwork', 'icon_clear.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+            close_ico = wx.Image(join(EXEC_PATH, 'artwork', 'icon_delete.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+            info_ico = wx.Image(join(EXEC_PATH, 'artwork', 'icon_info.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+            pref_ico = wx.Image(join(EXEC_PATH, 'artwork', 'icon_properties.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+            back_ico = wx.Image(join(EXEC_PATH, 'artwork', 'icon_go-previous.png'),
+                                wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+            forward_ico = wx.Image(join(EXEC_PATH, 'artwork', 'icon_go-next.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         except:
             quit_ico = wx.ArtProvider.GetBitmap(wx.ART_QUIT, wx.ART_TOOLBAR, (24, 24))
             save_ico = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE, wx.ART_TOOLBAR, (24, 24))
@@ -237,7 +247,8 @@ class UI(wx.Frame):
 
         self.toolbar.AddSeparator()
 
-        self.prevButton = self.toolbar.AddSimpleTool(wx.ID_BACKWARD, back_ico, 'Previous Image', 'Show previous measurement')
+        self.prevButton = self.toolbar.AddSimpleTool(wx.ID_BACKWARD, back_ico, 'Previous Image',
+                                                     'Show previous measurement')
 
         self.choice = wx.Choice(self.toolbar, wx.ID_ANY, size=(200, -1))
         self.choiceTool = self.toolbar.AddControl(self.choice)
@@ -256,13 +267,15 @@ class UI(wx.Frame):
 
         self.surfacelabel = wx.StaticText(self.toolbar, -1, 'Surface:')
         self.toolbar.AddControl(self.surfacelabel)
-        self.surface = FloatSpin(self.toolbar, wx.ID_ANY, size=(100, -1), value=-1, min_val=0, max_val=2500, increment=0.1, digits=2)
+        self.surface = FloatSpin(self.toolbar, wx.ID_ANY, size=(100, -1), value=-1, min_val=0, max_val=2500,
+                                 increment=0.1, digits=2)
         self.surfaceTool = self.toolbar.AddControl(self.surface)
         self.Bind(wx.EVT_SPINCTRL, self.OnSurface, self.surface)
 
         self.groundlabel = wx.StaticText(self.toolbar, -1, 'Ground:')
         self.toolbar.AddControl(self.groundlabel)
-        self.ground = FloatSpin(self.toolbar, wx.ID_ANY, size=(100, -1), value=-1, min_val=0, max_val=2500, increment=0.1, digits=2)
+        self.ground = FloatSpin(self.toolbar, wx.ID_ANY, size=(100, -1), value=-1, min_val=0, max_val=2500,
+                                increment=0.1, digits=2)
         self.groundTool = self.toolbar.AddControl(self.ground)
         self.Bind(wx.EVT_SPINCTRL, self.OnGround, self.ground)
 
@@ -373,8 +386,8 @@ class UI(wx.Frame):
         x = self.File[self.current].data[:, 0]
         y = self.File[self.current].data[:, 1]
 
-        x_smooth = calc.downsample(x, self.plotOptions.sampling)
-        y_smooth = calc.downsample(y, self.plotOptions.sampling)
+        x_smooth = smp_calc.downsample(x, self.plotOptions.sampling)
+        y_smooth = smp_calc.downsample(y, self.plotOptions.sampling)
 
         if not self.plotOptions.auto_x:
             self.axes.set_xlim(self.plotOptions.xlim[0], self.plotOptions.xlim[1])
@@ -456,8 +469,8 @@ class UI(wx.Frame):
 
         if self.shgrad.IsChecked():
             amp = self.File[self.current].header['Samples Dist [mm]']
-            grad = calc.downsample(numpy.gradient(y, amp), self.plotOptions.grad_sampling)
-            x_grad = calc.downsample(x, self.plotOptions.grad_sampling)
+            grad = smp_calc.downsample(numpy.gradient(y, amp), self.plotOptions.grad_sampling)
+            x_grad = smp_calc.downsample(x, self.plotOptions.grad_sampling)
             self.axes.plot(
                 x_grad, grad,
                 color=self.plotOptions.grad_color,
@@ -469,7 +482,8 @@ class UI(wx.Frame):
 
         if self.shsf.IsChecked():
             if self.File[self.current].surface == 0:
-                self.File[self.current].surface = calc.GetSurface(self.File[self.current].data[:, 0], self.File[self.current].data[:, 1])
+                self.File[self.current].surface = smp_calc.detect_surface(
+                    self.File[self.current].data[:, 0], self.File[self.current].data[:, 1])
 
             surface = self.File[self.current].surface
             self.surface.SetValue(surface)
@@ -486,7 +500,7 @@ class UI(wx.Frame):
             text += 'Max Force: %.2f N at %.2f mm\n' % (fmax, xfmax)
 
         if self.shnd.IsChecked():
-            x_fit, y_fit, m, c, std = calc.linFit(x, y, surface)
+            x_fit, y_fit, m, c, std = smp_calc.linFit(x, y, surface)
             self.axes.plot(x_fit, y_fit, color='black', ls='--', linewidth=1)
             self.axes.plot(x_fit, y_fit + std, color='red', ls=':', linewidth=2)
             self.axes.plot(x_fit, y_fit - std, color='red', ls=':', linewidth=2)
@@ -506,7 +520,7 @@ class UI(wx.Frame):
 
     def drawMedian(self, x, y):
         if self.shmed.IsChecked():
-            x_median, y_median = calc.subtractMedian(x, y, self.plotOptions.median_sampling)
+            x_median, y_median = smp_calc.subtractMedian(x, y, self.plotOptions.median_sampling)
             self.axes.plot(
                 x_median, y_median,
                 color=self.plotOptions.median_color,
@@ -602,14 +616,15 @@ class UI(wx.Frame):
                 else:
                     i += 1
                     try:
-                        data = smp.Pnt(entry)
-                        data.surface = calc.GetSurface(data.data[:, 0], data.data[:, 1])
-                        data.ground = calc.GetGround(data)
+                        data = smp_io.Pnt(entry)
+                        data.surface = smp_calc.detect_surface(data.data[:, 0], data.data[:, 1])
+                        data.ground = smp_calc.detect_ground(data)
                         data.ylim = None
                         data.xlim = None
                         window = 2.5
                         overlap = 50
-                        data.shotnoise_data = numpy.array(calc.getSNParams(data, window, overlap))
+                        data.shotnoise_data = numpy.array(
+                            smp_shotnoise.getSNParams(data, window, overlap))
                         self.File.append(data)
                     except:
                         dlg = wx.MessageDialog(
@@ -717,7 +732,7 @@ class UI(wx.Frame):
         e.Skip()
 
     def OnHist(self, e):
-        calc.forceDrops(self.File[self.current].data[:, 0], self.File[self.current].data[:, 1])
+        smp_calc.forceDrops(self.File[self.current].data[:, 0], self.File[self.current].data[:, 1])
         e.Skip()
 
     def OnLayers(self, e):
@@ -742,7 +757,8 @@ class UI(wx.Frame):
                 if self.saveOptions.data():
                     self.SaveData(self.pathSave, precision=self.saveOptions.Precision())
                 if self.saveOptions.shotnoise():
-                    self.SaveShotNoise(self.pathSave, window=self.saveOptions.Window(), overlap=self.saveOptions.Overlap())
+                    self.SaveShotNoise(self.pathSave, window=self.saveOptions.Window(),
+                                       overlap=self.saveOptions.Overlap())
 
             dlg.Destroy()
         e.Skip()
@@ -845,26 +861,26 @@ class UI(wx.Frame):
 
         numpy.savetxt(
             filename,
-            calc.getSNParams(self.File[self.current], window, overlap),
+            smp_shotnoise.getSNParams(self.File[self.current], window, overlap),
             delimiter='\t',
             newline='\n',
             fmt='%3g',
             header=(
-                'Automatic written Shot Noise Parameters by %s %s\n'
-                'File: %s\n' 
-                'Window: %.2f mm\n'
-                'Overlap: %.2f\n'
-                'Surface: %.3f\n'
-                'Ground: %.3f\n'
-                'Lambda[1/mm]\tf_0[N]\tDelta[mm]\tL[mm]\tMedianF[N]\tDensity_Proksch[kg/m^3]\tSSA_Proksch[m^2/kg]\tz[mm]' % (
-                    NAME,
-                    VERSION,
-                    self.File[self.current].filename,
-                    window,
-                    overlap,
-                    self.File[self.current].surface,
-                    self.File[self.current].ground
-                )
+                    'Automatic written Shot Noise Parameters by %s %s\n'
+                    'File: %s\n'
+                    'Window: %.2f mm\n'
+                    'Overlap: %.2f\n'
+                    'Surface: %.3f\n'
+                    'Ground: %.3f\n'
+                    'Lambda[1/mm]\tf_0[N]\tDelta[mm]\tL[mm]\tMedianF[N]\tDensity_Proksch[kg/m^3]\tSSA_Proksch[m^2/kg]\tz[mm]' % (
+                        NAME,
+                        VERSION,
+                        self.File[self.current].filename,
+                        window,
+                        overlap,
+                        self.File[self.current].surface,
+                        self.File[self.current].ground
+                    )
             )
         )
 
@@ -893,7 +909,7 @@ class UI(wx.Frame):
             x = self.File[i].data[:, 0]
             y = self.File[i].data[:, 1]
             surface = self.File[i].surface
-            x, y_fit, drift, offset, noise = calc.linFit(x, y, surface)
+            x, y_fit, drift, offset, noise = smp_calc.linFit(x, y, surface)
             f = basename(self.File[i].filename)
             save.append([f, '%.3g' % offset, '%.3g' % drift, '%.3g' % noise])
 
@@ -1161,7 +1177,7 @@ class UI(wx.Frame):
         self.plotOptions.Show()
 
     def OnShowMap(self, e):
-        maps.Map(self, -1, self.File)
+        smp_map.Map(self, -1, self.File)
 
     def OnShowHeader(self, e):
         info = HeaderInfo(self, -1, self.File[self.current].header)
@@ -1180,7 +1196,7 @@ class UI(wx.Frame):
             self.surface.SetValue(max_x)
             self.File[self.current].surface = max_x
         elif surface == 0.0:
-            self.File[self.current].surface = calc.GetSurface(data[:, 0], data[:, 1])
+            self.File[self.current].surface = smp_calc.detect_surface(data[:, 0], data[:, 1])
         else:
             self.File[self.current].surface = surface
         self.draw_figure(autozoom=False)
@@ -1205,8 +1221,8 @@ class UI(wx.Frame):
         self.saveZoom()
         data = self.File[self.current].data
         f = 1 / self.File[self.current].header['Samples Dist [mm]']
-        residual_analysis(data[:, 1], freq=f, show=True, )
-        # x_filter, y_filter = calc.butterworth(data[:,0], data[:,1], f, fc_opt)
+        residual_analysis(data[:, 1], freq=f, show=True)
+        # x_filter, y_filter = analysis.butterworth(data[:,0], data[:,1], f, fc_opt)
         self.draw_figure(autozoom=False)
 
         e.Skip()
@@ -1271,9 +1287,9 @@ class UI(wx.Frame):
         if len(files) != 0:
             for entry in files:
                 try:
-                    data = smp.Pnt(entry)
-                    data.surface = calc.GetSurface(data.data[:, 0], data.data[:, 1])
-                    data.ground = calc.GetGround(data)
+                    data = smp_io.Pnt(entry)
+                    data.surface = smp_calc.detect_surface(data.data[:, 0], data.data[:, 1])
+                    data.ground = smp_calc.detect_ground(data)
                     data.ylim = None
                     data.xlim = None
                     self.File.append(data)

@@ -194,17 +194,22 @@ def _plot(y, freq, freqs, res, fclim, fc_opt, B, A):
             ax3.set_title('Second derivatives (RMSE = %.3g)' % resdd)
             ax3.set_ylabel("f ''")
             
-            y2fft = np.abs(scipy.fftpack.fft(yf))/(y.size/2); # filtered data
+            y2fft = np.abs(scipy.fftpack.fft(yf))/(y.size/2) # filtered data
             ax4.plot(fft_freqs[:yfft.size/2],y2fft[:yfft.size/2],'r--',linewidth=1,label='filtered @ %.2f per mm' %fc_opt)
             ax4.legend(loc="best")
-            y2ddfft = np.abs(scipy.fftpack.fft(yfdd))/(ydd.size/2);
+            y2ddfft = np.abs(scipy.fftpack.fft(yfdd))/(ydd.size/2)
             ax5.plot(fft_freqs[:yddfft.size/2],y2ddfft[:yddfft.size/2],'r--',linewidth=1,label='filtered @ %.2f per mm'%fc_opt)
             ax5.legend(loc="best")
             
         else:
-            ax1.text(.5, .5, 'Unable to find optimal cutoff frequency',
-                     horizontalalignment='center', color='r', zorder=9,
-                     transform=ax1.transAxes, fontsize=12)
+            ax1.text(
+                0.5, 0.5, 'Unable to find optimal cutoff frequency',
+                horizontalalignment='center',
+                color='r',
+                zorder=9,
+                transform=ax1.transAxes,
+                fontsize=12
+            )
             ax2.set_title('Signal')
             ax3.set_title('Second derivative')
 

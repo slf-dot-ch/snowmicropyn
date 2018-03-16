@@ -2,8 +2,6 @@ import matplotlib.pyplot as plt
 import numpy
 import struct
 
-import menus as gui
-
 
 ##########################################################
 # Author:	Sascha Grimm
@@ -14,8 +12,6 @@ import menus as gui
 # where you can choose one or multiple files to be converted from binary to a readable .txt file
 ###########################################################
 
-
-########################################################### 
 class Pnt(object):
     def __init__(self, filename):
         """Object Pnt contains raw data (binary), header infos (dict) and measurement data (array)"""
@@ -89,7 +85,6 @@ class Pnt(object):
 
         return raw
 
-    ###########################################################
     def getHeader(self):
         """Read Header from raw data"""
 
@@ -196,7 +191,6 @@ class Pnt(object):
         return header, units
 
 
-###########################################################
 def plotData(self):
     """plot force against penetration depth"""
     plt.figure('Snow Micro Pen')
@@ -207,24 +201,23 @@ def plotData(self):
     plt.show()
 
 
-###########################################################
-def main():
-    """Convert selected .pnt binarys to readable .txt files"""
-    show = gui.ask('Show Measurement Graph?')
-    files = gui.openFile()
-    converted = []
-    for path in files:
-        pnt = Pnt(path)
-        if show:
-            plotData(pnt)
-        pnt.printHeader()
-        pnt.printData()
-        converted.append(pnt.writeFile(False))
-    str = '\n'
-    list = str.join(converted)
-    gui.infoScroll('Converted %d file(s):\n %s' % (len(converted), list))
+#import snowmicropyn.gui.menus as gui
 
-
-###########################################################
-if __name__ == '__main__':
-    main()
+# def main():
+#     """Convert selected .pnt binaries to readable .txt files"""
+#     show = gui.ask('Show Measurement Graph?')
+#     files = gui.openFile()
+#     converted = []
+#     for path in files:
+#         pnt = Pnt(path)
+#         if show:
+#             plotData(pnt)
+#         pnt.printHeader()
+#         pnt.printData()
+#         converted.append(pnt.writeFile(False))
+#     list = '\n'.join(converted)
+#     gui.infoScroll('Converted %d file(s):\n %s' % (len(converted), list))
+#
+#
+# if __name__ == '__main__':
+#     main()

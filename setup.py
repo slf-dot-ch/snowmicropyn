@@ -15,7 +15,7 @@ setup(
     install_requires=[
         'scipy==0.17.*',
         'matplotlib==1.5.*',
-        'wxpython==3.*',
+        'wxpython==3.*', 'numpy',
     ],
     entry_points={
         'gui_scripts': [
