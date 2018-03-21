@@ -21,13 +21,14 @@ Features
 - Superpose and subtract plots
 - Frequency analysis
 
+Prerequisites
+-------------
+
+A recent Python Installation. An Anaconda Installation if finetoo, of
+course.
+
 Installation
 ------------
-
-Prerequisites:
-
-    A recent Python Installation. An Anaconda Installation if fine
-    too, of course.
 
 Install and update using `pip`_:
 
@@ -35,8 +36,8 @@ Install and update using `pip`_:
 
     pip install -U snowmicropyn
 
-Run SnowMicroPyn UI
--------------------
+Run SnowMicroPyn Desktop Application
+------------------------------------
 
 On Windows, type:
 
@@ -74,9 +75,9 @@ A Simple Scripting Example
     p = Profile.load('S31M0067.pnt')
 
     # Read some information about the profile
-    t = p.timestamp
+    timestamp = p.timestamp
     smp_serial = p.smp_serial
-    lat, long = p.coordinates  # WGS84 latitude and longitude
+    latitude, longitude = p.coordinates  # WGS84 latitude and longitude
 
     # Export samples into CSV format
     # (By default, filename will be S31M0067_samples.csv)
