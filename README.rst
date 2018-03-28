@@ -24,7 +24,7 @@ Features
 Prerequisites
 -------------
 
-A recent Python Installation. An Anaconda Installation if finetoo, of
+A recent Python Installation. An Anaconda Installation if fine too, of
 course.
 
 Installation

@@ -18,10 +18,10 @@ from wx.lib.agw.floatspin import FloatSpin
 import snowmicropyn.analysis.mathematics as smp_calc
 import snowmicropyn.analysis.shotnoise as smp_shotnoise
 import snowmicropyn.gui.extensions.map as smp_map
-import snowmicropyn.io as smp_io
+import snowmicropyn.profile as smp_io
 from snowmicropyn.gui.extensions import mean
 from snowmicropyn.gui.menus import HeaderInfo, GraphOptions, SaveOptions, SuperPosition
-from snowmicropyn.analysis.residual_analysis import residual_analysis
+from snowmicropyn.gui.extensions.residual_analysis import residual_analysis
 
 # determine if application is a script file or frozen exe
 EXEC_PATH = dirname(__file__)
@@ -520,7 +520,7 @@ class UI(wx.Frame):
 
     def drawMedian(self, x, y):
         if self.shmed.IsChecked():
-            x_median, y_median = smp_calc.subtractMedian(x, y, self.plotOptions.median_sampling)
+            x_median, y_median = smp_calc.subtract_median(x, y, self.plotOptions.median_sampling)
             self.axes.plot(
                 x_median, y_median,
                 color=self.plotOptions.median_color,
@@ -732,7 +732,7 @@ class UI(wx.Frame):
         e.Skip()
 
     def OnHist(self, e):
-        smp_calc.forceDrops(self.File[self.current].data[:, 0], self.File[self.current].data[:, 1])
+        smp_calc.force_drops(self.File[self.current].data[:, 0], self.File[self.current].data[:, 1])
         e.Skip()
 
     def OnLayers(self, e):
@@ -825,11 +825,8 @@ class UI(wx.Frame):
             filename = filename.replace('.pnt', '_Header.txt')
 
         filename = join(path, filename)
-        with open(filename, 'w') as f:
-            f.write('#Automatic written Header by %s\n#%s\n\n' % (NAME, COMPANY))
-            for entry, value in sorted(self.File[self.current].header.items()):
-                f.write('%s %s\n' % (entry.ljust(15), str(value)))
-
+        header = self.File[self.current].header
+        smp_io.save_header(filename, header)
         self.updateStatus('Saved Header to %s' % path)
 
     def SaveData(self, path=os.getcwd(), filename="", precision=3):

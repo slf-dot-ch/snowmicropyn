@@ -11,7 +11,8 @@ from wx.lib.agw.floatspin import FloatSpin
 from wx.lib.mixins.listctrl import CheckListCtrlMixin, ListCtrlAutoWidthMixin
 
 import snowmicropyn.analysis
-from snowmicropyn.io import Pnt
+import snowmicropyn.helpers
+from snowmicropyn.profile import Pnt
 
 
 ##########################################################
@@ -982,9 +983,9 @@ class SuperPosition(wx.Frame):
         self.canvas.draw()
 
     def adaptData(self, pnt):
-        x_corrected = (snowmicropyn.analysis.downsample(pnt.data[:, 0],
-                                                        pnt.smooth.GetValue()) + pnt.dx.GetValue()) * pnt.stretch.GetValue()
-        y_corrected = snowmicropyn.analysis.downsample(pnt.data[:, 1], pnt.smooth.GetValue()) + pnt.dy.GetValue()
+        x_corrected = (snowmicropyn.helpers.downsample(pnt.data[:, 0],
+                                                       pnt.smooth.GetValue()) + pnt.dx.GetValue()) * pnt.stretch.GetValue()
+        y_corrected = snowmicropyn.helpers.downsample(pnt.data[:, 1], pnt.smooth.GetValue()) + pnt.dy.GetValue()
         return x_corrected, y_corrected
 
     def OnQuit(self, e):

@@ -95,7 +95,3 @@ class Drift(object):
         self.ax2.plot(x, y_fit, "r--", x, y_fit + std, "b:", x, y_fit - std, "b:")
         self.ax2.text(0.05, 0.9, 'Mean: (%.2e +- %.2e) N\nSlope: %.2e N/m\nStd: %.2e N' % (mean, dev, m * 1000, std),
                       transform=self.ax2.transAxes, va='top')
-
-
-if __name__ == "__main__":
-    test = Drift(np.arange(0, 1000), np.random.normal(0, 1, 1000))
