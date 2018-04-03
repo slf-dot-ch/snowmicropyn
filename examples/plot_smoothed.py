@@ -6,12 +6,11 @@
 
 from matplotlib import pyplot as plt
 from scipy import signal
-from snowmicropyn.profile import Profile
+from snowmicropyn import Profile
 
 p = Profile.load('/Users/marcel/Dropbox/SMP/pnt_examples/S31M0067.pnt')
 
-x, y = p.distance_arr, p.force_arr
-
+x, y = p.samples.distance, p.samples.force
 y_smoothed = signal.savgol_filter(y, 242*5+1, 2)
 
 plt.plot(x, y)

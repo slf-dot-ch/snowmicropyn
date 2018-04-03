@@ -6,12 +6,11 @@
 
 from matplotlib import pyplot as plt
 
-from snowmicropyn.profile import Profile
+from snowmicropyn import Profile
 
 p = Profile.load('/Users/marcel/Dropbox/SMP/pnt_examples/S31M0067.pnt')
-x, y = p.distance_arr, p.force_arr
 
-plt.plot(x, y)
+plt.plot(p.samples.distance, p.samples.force)
 
 plt.title(p.name)
 plt.ylabel('Force [N]')

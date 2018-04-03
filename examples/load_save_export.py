@@ -10,7 +10,7 @@
 import logging
 import sys
 
-from snowmicropyn.profile import Profile
+from snowmicropyn import Profile
 
 # Enable logging to stdout to see what's going on under the hood
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -27,7 +27,7 @@ print('Markers: {}'.format(p.markers))
 # Export measurements samples (depth, force) into a CSV. Pass a
 # filename in case your got special needs for naming your file.
 # Default naming convention: x.pnt --> x_samples.csv
-p.export_samples()
+p.export_samples(snowpack_only=True)
 
 # Export meta information (pnt header, markers) into a CSV. Pass a
 # filename in case your got special needs for naming your file.

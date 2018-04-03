@@ -2,12 +2,14 @@ import ConfigParser as Cfg
 import csv
 import logging
 from datetime import datetime
-from os.path import exists, splitext, split
+from os.path import exists, splitext, split, join, dirname
 
 import numpy as np
+import pandas as pd
 
 from pnt import Pnt
-from snowmicropyn.analysis import detect_surface, detect_ground
+from .analysis import detect_surface, detect_ground
+from .models import model_shotnoise, model_ssa_and_density
 
 log = logging.getLogger(__name__)
 
@@ -16,13 +18,14 @@ class Profile(object):
     def __init__(self, pnt_filename, ini_filename=None, name=None):
         # Set name of profile (by default pnt filename without extension)
         self.name = name
-        if not name:
-            # Use default name (Filename without extension
+        if not self.name:
             self.name = splitext(split(pnt_filename)[1])[0]
 
         # Load pnt file, returns samples and header (dict)
         self.pnt_filename = pnt_filename
-        self.samples, self.pnt_header = Pnt.load_pnt(pnt_filename)
+        samples, self.pnt_header = Pnt.load_pnt(pnt_filename)
+        # Create data frame of samples
+        self.samples = pd.DataFrame(samples, columns=('distance', 'force'))
 
         # Get a clean comment form pnt header (unfortunately not zero terminated string)
         length = self.pnt_header_value(Pnt.COMMENT_LENGTH)
@@ -77,19 +80,17 @@ class Profile(object):
             self._ini.add_section('markers')
 
     def __str__(self):
-        length = self.distance_arr[-1] - self.distance_arr[0]
+        first = self.samples.distance.iloc[0]
+        last = self.samples.distance.iloc[-1]
+        length = last - first
         return 'Profile(name={}, {:.3f} mm, {} samples)'.format(repr(self.name), length, len(self))
 
     def __len__(self):
-        return len(self.distance_arr)
+        return len(self.samples.distance)
 
-    @property
-    def distance_arr(self):
-        return self.samples[:, 0]
-
-    @property
-    def force_arr(self):
-        return self.samples[:, 1]
+    def default_filename(self, suffix, extension='.csv'):
+        head, tail = split(self.pnt_filename)
+        return join(head, self.name + '_' + suffix + extension)
 
     def pnt_header_value(self, pnt_id):
         return self.pnt_header[pnt_id].value
@@ -133,16 +134,15 @@ class Profile(object):
             log.info('Saving ini info of {} to file {}'.format(self, filename))
             self._ini.write(f)
 
-    def export_samples(self, filename=None, precision=3, snowpack_only=False, relativize_distance=False):
+    def export_samples(self, filename=None, precision=4, snowpack_only=True):
         if not filename:
             filename = splitext(self.pnt_filename)[0] + '_samples.csv'
         log.info('Exporting samples of {} to {}'.format(self, filename))
         samples = self.samples
         if snowpack_only:
-            samples = self.snowpack(relativize_distance)
-        header = 'Depth [mm],Force [N]'
+            samples = self.snowpack()
         fmt = '%.{}f'.format(precision)
-        np.savetxt(filename, samples, delimiter=',', header=header, comments='', fmt=fmt)
+        samples.to_csv(filename, header=True, index=False, float_format=fmt)
 
     def export_meta(self, filename=None, full_pnt_header=False):
         if not filename:
@@ -191,21 +191,22 @@ class Profile(object):
 
         # In case limits are None, use start begin or end of profile
         if start is None:
-            start = self.distance_arr[0]
+            start = self.samples.distance.iloc[0]
         if end is None:
-            end = self.distance_arr[-1]
+            end = self.samples.distance.iloc[-1]
 
         # Flip range if necessary, so lower number is always first
         if start >= end:
             end, start = start, end
 
-        condition = np.logical_and(self.distance_arr > start, self.distance_arr < end)
-        samples = self.samples[condition]
+        distance = self.samples.distance
+        within = (distance >= start) & (distance < end)
+        samples = self.samples[within]
 
         # Subtract offset to get relative distance
         if relativize_distance:
-            offset = samples[0, 0]
-            samples = np.subtract(samples, [offset, 0])
+            offset = samples.distance.iloc[0]
+            samples.distance = samples.distance - offset
         return samples
 
     def snowpack(self, relativize_distance=True):
@@ -214,16 +215,22 @@ class Profile(object):
             g = self.marker('ground')
             return self.samples_within(s, g, relativize_distance)
         except KeyError as e:
-            raise KeyError('Required marker missing in {}. Error: {}'.format(self, e))
+            raise KeyError('Required marker missing in {}. Error: {}'.format(self, str(e)))
 
-    def detect_surface(self, exception_on_failure=False):
-        # TODO: Implement raise_on_failure in detect_surface
-        surface = detect_surface(self.samples)
+    def detect_surface(self):
+        surface = detect_surface(self.samples.values)
         self.set_marker('surface', surface)
         return surface
 
-    def detect_ground(self, exception_on_failure=False):
-        # TODO: Implement raise_on_failure in detect_ground
-        ground = detect_ground(self.samples, self.overload)
+    def detect_ground(self):
+        ground = detect_ground(self.samples.values, self.overload)
         self.set_marker('ground', ground)
         return ground
+
+    def model_shotnoise(self, save_to_file=False, filename_suffix='shotnoise'):
+        sn = model_shotnoise(self.samples)
+        sn.to_csv(self.default_filename(suffix=filename_suffix), index=False)
+        return sn
+
+    def model_ssa(self):
+        return model_ssa_and_density(self.samples)

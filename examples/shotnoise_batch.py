@@ -6,11 +6,11 @@
 
 import glob
 
-from snowmicropyn.profile import Profile
-from snowmicropyn.models import model_shotnoise
+from snowmicropyn import Profile
 
 match = '/Users/marcel/Dropbox/SMP/pnt_examples/*.pnt'
+
 for f in glob.glob(match):
     print('Processing file ' + f)
     p = Profile.load(f)
-    sn = model_shotnoise(p.samples)
+    sn = p.model_shotnoise(save_to_file=True)

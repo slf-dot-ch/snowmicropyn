@@ -10,14 +10,14 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 p = Profile.load('/Users/marcel/Dropbox/SMP/pnt_examples/S31M0067.pnt')
 
 # Explicit
-ground = detect_ground(p.samples, p.overload)
-surface = detect_surface(p.samples)
+ground = detect_ground(p.samples.values, p.overload)
+surface = detect_surface(p.samples.values)
 
 # Implicit, this also set markers 'ground' and 'surface' on the profile
 g = p.detect_ground()
 s = p.detect_surface()
 
-print('Profile: from {:.3f} mm to {:.3f} mm'.format(p.distance_arr[0], p.distance_arr[-1]))
+print(p)
 print('Surface: {} mm'.format(surface))
 print('Ground: {} mm'.format(ground))
 

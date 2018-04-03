@@ -1,6 +1,7 @@
 import math
 
 import numpy as np
+import pandas as pd
 from scipy.signal import detrend
 
 DENSITY_ICE = 917.
@@ -106,7 +107,8 @@ def agg_force_windows(samples, window, overlap, agg=np.median):
     while block_center < distance_arr[-1]:
         block_begin = block_center - block_length / 2.
         block_end = block_center + block_length / 2.
-        within_block = np.logical_and(distance_arr >= block_begin, distance_arr < block_end)
+        within_block = np.logical_and(distance_arr >= block_begin,
+                                      distance_arr < block_end)
         d = block_center
         f = agg(samples[within_block][:, 1])
         blocks.append((d, f))
@@ -115,20 +117,19 @@ def agg_force_windows(samples, window, overlap, agg=np.median):
 
 
 def chunkup(samples, window, overlap_factor):
-    distance_arr = samples[:, 0]
-
     block_length = window * overlap_factor
 
     blocks = []
-    center = distance_arr[0]
-    while center < distance_arr[-1]:
+    center = samples.distance.iloc[0]
+    while center < samples.distance.iloc[-1]:
         # Calculate where block begins and ends
         begin = center - block_length / 2.
         end = center + block_length / 2.
 
         # Filter for samples with a block and add it to the list of
         # blocks along with its center (the blocks center distance)
-        within_block = np.logical_and(distance_arr >= begin, distance_arr < end)
+        within_block = np.logical_and(samples.distance >= begin,
+                                      samples.distance < end)
         block_samples = samples[within_block]
         blocks.append((center, block_samples))
 
@@ -136,18 +137,20 @@ def chunkup(samples, window, overlap_factor):
     return blocks
 
 
-def model_shotnoise(samples, window=_DEFAULT_WINDOW, overlap_factor=_DEFAULT_WINDOW_OVERLAP):
-    spatial_res = np.mean(np.diff(samples[:, 0]))
+def model_shotnoise(samples, window=_DEFAULT_WINDOW,
+                    overlap_factor=_DEFAULT_WINDOW_OVERLAP):
+    spatial_res = np.median(np.diff(samples.distance.values))
     chunks = chunkup(samples, window, overlap_factor)
     result = []
     for center, chunk in chunks:
-        force_chunk = chunk[:, 1]
+        force_chunk = chunk.force
         shotnoise = shotnoise_from_evalSMP(spatial_res, force_chunk)
         r = (center,) + shotnoise
         result.append(r)
-    return np.array(result)
+    return pd.DataFrame(result)
 
 
-def model_ssa_and_density(samples, window=_DEFAULT_WINDOW, overlap_factor=_DEFAULT_WINDOW_OVERLAP):
+def model_ssa_and_density(samples, window=_DEFAULT_WINDOW,
+                          overlap_factor=_DEFAULT_WINDOW_OVERLAP):
     # Shot noise model is to base
     shotnoise = model_shotnoise(samples, window, overlap_factor)
