@@ -4,7 +4,11 @@
 # interactive plot is shown, you can pan, zoom, export by using the
 # toolbar buttons. Happy examining!
 
+import matplotlib as mpl
+mpl.use('Qt4Agg')
+
 from matplotlib import pyplot as plt
+
 from scipy import signal
 from snowmicropyn import Profile
 

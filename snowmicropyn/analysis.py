@@ -3,7 +3,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 
-from snowmicropyn.helpers import downsample, smooth
+from .tools import downsample, smooth
 
 log = logging.getLogger(__name__)
 

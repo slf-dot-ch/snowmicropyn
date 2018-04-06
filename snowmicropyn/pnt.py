@@ -14,7 +14,7 @@ pnt_header_field = namedtuple('pnt_header_field', ['label', 'value', 'unit'])
 
 # noinspection PyClassHasNoInit
 class Pnt:
-    VERSION = 'version'
+    FIRMWARE = 'smp.firmware'
     SAMPLES_COUNT = 'samples.count'
     SAMPLES_SPATIALRES = 'samples.spatialres'
     SAMPLES_CONVFACTOR_FORCE = 'samples.conv.force'
@@ -60,12 +60,12 @@ class Pnt:
     SENSOR_SENSITIVITIY = 'sensor.sensitivity'
     SENSOR_TEMPOFFSET = 'sensor.tempoffset'
     SENSOR_HANDOP = 'sensor.handop'
-    SENSOR_DIAMETER = 'sensor.diameter'
+    TIP_DIAMETER = 'smp.diameter'
     SENSOR_OVERLOAD = 'sensor.overload'
     SENSOR_TYPE = 'sensor.type'
     AMPLIFIER_TYPE = 'amplifier.type'
     SMP_SERIAL = 'smp.serial'
-    SMP_MAXLENGTH = 'smp.maxlength'
+    SMP_LENGTH = 'smp.length'
     # RESERVED3 = 'reserved.3'
     SENSOR_SERIAL = 'sensor.serial'
     AMPLIFIER_SERIAL = 'amplifier.serial'
@@ -73,7 +73,7 @@ class Pnt:
 
     _PNT_HEADER = [
         # offset (from start of header), format (struct.unpack), id, label, unit
-        (0, '>h', VERSION, 'Firmware Version', None),
+        (0, '>h', FIRMWARE, 'Firmware Version', None),
         (2, '>i', SAMPLES_COUNT, 'Total of Samples', None),
         (6, '>f', SAMPLES_SPATIALRES, 'Distance', 'mm'),
         (10, '>f', SAMPLES_CONVFACTOR_FORCE, 'Conversion Factor Force', 'N/mV'),
@@ -119,12 +119,12 @@ class Pnt:
         (370, '>h', SENSOR_SENSITIVITIY, 'Sensitivity', 'pC/N'),
         (372, '>h', SENSOR_TEMPOFFSET, 'Temp Offset', '°C'),
         (374, '>h', SENSOR_HANDOP, 'Hand Operation', None),
-        (376, '>l', SENSOR_DIAMETER, 'Diameter', 'µm'),
+        (376, '>l', TIP_DIAMETER, 'Diameter', 'µm'),
         (380, '>h', SENSOR_OVERLOAD, 'Overload', 'N'),
         (382, '>c', SENSOR_TYPE, 'Sensor Type', None),
         (383, '>c', AMPLIFIER_TYPE, 'Amplifier Type', None),
         (384, '>h', SMP_SERIAL, 'SMP Serial', None),
-        (386, '>h', SMP_MAXLENGTH, 'SMP Length', 'mm'),
+        (386, '>h', SMP_LENGTH, 'SMP Length', 'mm'),
         # (388, '4B', RESERVED3, 'Reserved 3', None),
         (392, '20s', SENSOR_SERIAL, 'Sensor Serial', None),
         (412, '20s', AMPLIFIER_SERIAL, 'Amplifier Serial', None),

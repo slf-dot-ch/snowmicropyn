@@ -2,6 +2,7 @@ import ConfigParser as Cfg
 import csv
 import logging
 from datetime import datetime
+import pytz
 from os.path import exists, splitext, split, join, dirname
 
 import numpy as np
@@ -51,16 +52,24 @@ class Profile(object):
         minute = self.pnt_header_value(Pnt.TIMESTAMP_MINUTE)
         second = self.pnt_header_value(Pnt.TIMESTAMP_SECOND)
         try:
-            self.timestamp = datetime(year, month, day, hour, minute, second)
+            self.timestamp = datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC)
+            log.info('Timestamp of profile as reported by pnt header is {}'.format(self.timestamp))
         except ValueError:
             log.warn('Unable to build timestamp from pnt header info')
 
         # Get other important entries from header
+        self.smp_firmware = self.pnt_header_value(Pnt.FIRMWARE)
+        self.smp_serial = self.pnt_header_value(Pnt.SMP_SERIAL)
+        self.smp_length = self.pnt_header_value(Pnt.SMP_LENGTH)
+        self.smp_tipdiameter = self.pnt_header_value(Pnt.TIP_DIAMETER)
+        self.spatial_resolution = self.pnt_header_value(Pnt.SAMPLES_SPATIALRES)
+        self.overload = self.pnt_header_value(Pnt.SENSOR_OVERLOAD)
+        self.speed = self.pnt_header_value(Pnt.SAMPLES_SPEED)
         self.gps_pdop = self.pnt_header_value(Pnt.GPS_PDOP)
         self.gps_numsats = self.pnt_header_value(Pnt.GPS_NUMSATS)
-        self.smp_serial = self.pnt_header_value(Pnt.SMP_SERIAL)
-        self.smp_length = self.pnt_header_value(Pnt.SMP_MAXLENGTH)
-        self.overload = self.pnt_header_value(Pnt.SENSOR_OVERLOAD)
+        self.amplifier_range = self.pnt_header_value(Pnt.AMPLIFIER_RANGE)
+        self.amplifier_serial = self.pnt_header_value(Pnt.AMPLIFIER_SERIAL)
+        self.sensor_sensivity = self.default_filename(Pnt.SENSOR_SENSITIVITIY)
 
         # When no ini file provided, use default name which
         # is same as pnt file but ini extension
@@ -117,6 +126,20 @@ class Profile(object):
     def remove_marker(self, name):
         self._ini.remove_option('markers', name)
 
+    @property
+    def surface(self):
+        """Convenience property to access value of
+        marker named 'surface'
+        """
+        return self.marker('surface')
+
+    @property
+    def ground(self):
+        """Convenience property to access value of
+        marker named 'ground'
+        """
+        return self.marker('ground')
+
     @staticmethod
     def load(pnt_filename, ini_filename=None):
         return Profile(pnt_filename, ini_filename)
@@ -134,13 +157,13 @@ class Profile(object):
             log.info('Saving ini info of {} to file {}'.format(self, filename))
             self._ini.write(f)
 
-    def export_samples(self, filename=None, precision=4, snowpack_only=True):
+    def export_samples(self, filename=None, precision=4, snowpack_only=False):
         if not filename:
             filename = splitext(self.pnt_filename)[0] + '_samples.csv'
         log.info('Exporting samples of {} to {}'.format(self, filename))
         samples = self.samples
         if snowpack_only:
-            samples = self.snowpack()
+            samples = self.samples_within_snowpack()
         fmt = '%.{}f'.format(precision)
         samples.to_csv(filename, header=True, index=False, float_format=fmt)
 
@@ -150,7 +173,8 @@ class Profile(object):
         log.info('Exporting meta information of {} to {}'.format(self, filename))
         with open(filename, 'w') as f:
             writer = csv.writer(f)
-            writer.writerow(['key', 'value'])  # CSV header
+            # CSV header
+            writer.writerow(['key', 'value'])
             # Export important properties of profile
             writer.writerow(('name', self.name))
             writer.writerow(('pnt_file', self.pnt_filename))
@@ -176,44 +200,44 @@ class Profile(object):
         index = np.argmax(self.samples[:, 1])
         return self.samples[index]
 
-    def samples_within(self, start, end, relativize_distance=False):
+    def samples_within_distance(self, begin=None, end=None, relativize=False):
         """Return samples which within a range.
 
-        :param start: Start of distance of interest. When ``None``,
+        :param begin: Start of distance of interest. When ``None``,
             start of Profile is used.
         :param end: End of distance of interest. When ``None``, end of
             the Profile is used.
-        :param relativize_distance: Default set to ``False``. When set
+        :param relativize: Default set to ``False``. When set
             to ``True``, the distance in the samples returned starts
             with 0.
         :return: Samples within the range.
         """
 
         # In case limits are None, use start begin or end of profile
-        if start is None:
-            start = self.samples.distance.iloc[0]
+        if begin is None:
+            begin = self.samples.distance.iloc[0]
         if end is None:
             end = self.samples.distance.iloc[-1]
 
         # Flip range if necessary, so lower number is always first
-        if start >= end:
-            end, start = start, end
+        if begin >= end:
+            end, begin = begin, end
 
         distance = self.samples.distance
-        within = (distance >= start) & (distance < end)
-        samples = self.samples[within]
+        within = (distance >= begin) & (distance < end)
+        samples = pd.DataFrame(self.samples[within])
 
         # Subtract offset to get relative distance
-        if relativize_distance:
+        if relativize:
             offset = samples.distance.iloc[0]
             samples.distance = samples.distance - offset
-        return samples
+        return samples.reset_index(drop=True)
 
-    def snowpack(self, relativize_distance=True):
+    def samples_within_snowpack(self, relativize=True):
         try:
             s = self.marker('surface')
             g = self.marker('ground')
-            return self.samples_within(s, g, relativize_distance)
+            return self.samples_within_distance(s, g, relativize)
         except KeyError as e:
             raise KeyError('Required marker missing in {}. Error: {}'.format(self, str(e)))
 
@@ -232,5 +256,7 @@ class Profile(object):
         sn.to_csv(self.default_filename(suffix=filename_suffix), index=False)
         return sn
 
-    def model_ssa(self):
-        return model_ssa_and_density(self.samples)
+    def model_ssa(self, save_to_file=False, filename_suffix='ssa'):
+        ssa = model_ssa_and_density(self.samples)
+        ssa.to_csv(self.default_filename(filename_suffix), index=False)
+        return ssa

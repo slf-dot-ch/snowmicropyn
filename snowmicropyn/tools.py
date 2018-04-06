@@ -1,5 +1,18 @@
 import numpy as np
 
+import collections
+
+pub_fields = ['title', 'authors', 'journal', 'url', 'pubdate']
+Publication = collections.namedtuple('Publication', pub_fields)
+
+
+def merge_profiles(profiles):
+    """
+    :param profiles:
+    :return: A single
+    """
+    raise NotImplementedError('merge_profiles not implemented yet')
+
 
 def subtract_median(x, y, window=200):
     """Subtract median of frame from original signal y"""

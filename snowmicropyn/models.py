@@ -12,7 +12,8 @@ _DEFAULT_WINDOW = 2.5
 _DEFAULT_WINDOW_OVERLAP = 1.2
 
 
-def shotnoise_from_evalSMP(spatial_res, force_arr, area_cone=(SMP_CONE_DIAMETER / 2.) ** 2 * math.pi):
+def shotnoise_from_evalSMP(spatial_res, force_arr,
+        area_cone=(SMP_CONE_DIAMETER / 2.) ** 2 * math.pi):
     # this version is taken from evalSMP and returns 5 parameters (instead of 4): lambda, f0, delta, L and median(F)
     """Returns the parameters lambda, f0, delta, L of the (uniform
     strength) shot noise model according to Loewe, van Herwijnen CRST
@@ -34,8 +35,6 @@ def shotnoise_from_evalSMP(spatial_res, force_arr, area_cone=(SMP_CONE_DIAMETER 
 
     # Covariance/auto-correlation
     c_f = np.correlate(force_arr, force_arr, mode='full')  # eq. 8 in LvH 2012
-
-    # Retrieve shot noise parameters
 
     # Equation 11 in publication
     delta = -(3. / 2) * c_f[n - 1] / (c_f[n] - c_f[n - 1]) * spatial_res
@@ -65,7 +64,7 @@ def calc_density_ssa_proksch2015(median_force, element_size):
     :return: Tuple containing density and ssa
     """
 
-    L = element_size
+    l = element_size
     fm = median_force
     rho_ice = DENSITY_ICE
 
@@ -74,18 +73,18 @@ def calc_density_ssa_proksch2015(median_force, element_size):
     a2 = 102.47
     a3 = -121.15
     a4 = -169.96
-    rho = a1 + a2 * np.log(fm) + a3 * np.log(fm) * L + a4 * L
+    rho = a1 + a2 * np.log(fm) + a3 * np.log(fm) * l + a4 * l
 
     # Equation 11 in publication
     c1 = 0.131
     c2 = 0.355
     c3 = 0.0291
-    lc = c1 + c2 * L + c3 * np.log(fm)
+    lc = c1 + c2 * l + c3 * np.log(fm)
 
     # Equation 12 in publication
-    SSA = 4 * (1 - (rho / rho_ice)) / lc
+    ssa = 4 * (1 - (rho / rho_ice)) / lc
 
-    return rho, SSA
+    return rho, ssa
 
 
 def agg_force_windows(samples, window, overlap, agg=np.median):
@@ -137,8 +136,7 @@ def chunkup(samples, window, overlap_factor):
     return blocks
 
 
-def model_shotnoise(samples, window=_DEFAULT_WINDOW,
-                    overlap_factor=_DEFAULT_WINDOW_OVERLAP):
+def model_shotnoise(samples, window=_DEFAULT_WINDOW, overlap_factor=_DEFAULT_WINDOW_OVERLAP):
     spatial_res = np.median(np.diff(samples.distance.values))
     chunks = chunkup(samples, window, overlap_factor)
     result = []
@@ -147,10 +145,14 @@ def model_shotnoise(samples, window=_DEFAULT_WINDOW,
         shotnoise = shotnoise_from_evalSMP(spatial_res, force_chunk)
         r = (center,) + shotnoise
         result.append(r)
-    return pd.DataFrame(result)
+    return pd.DataFrame(result, columns=['distance', 'lambda', 'f0', 'delta', 'L'])
 
 
-def model_ssa_and_density(samples, window=_DEFAULT_WINDOW,
-                          overlap_factor=_DEFAULT_WINDOW_OVERLAP):
-    # Shot noise model is to base
+def model_ssa_and_density(samples, window=_DEFAULT_WINDOW, overlap_factor=_DEFAULT_WINDOW_OVERLAP):
+    # Base: shot noise model
     shotnoise = model_shotnoise(samples, window, overlap_factor)
+    result = []
+    for index, row in shotnoise.iterrows():
+        rho, ssa = calc_density_ssa_proksch2015(row.f0, row.L)
+        result.append((rho, ssa))
+    return pd.DataFrame(result, columns=['rho', 'ssa'])
