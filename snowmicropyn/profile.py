@@ -1,4 +1,4 @@
-import ConfigParser as Cfg
+import configparser as Cfg
 import csv
 import logging
 from datetime import datetime
@@ -8,7 +8,7 @@ from os.path import exists, splitext, split, join, dirname
 import numpy as np
 import pandas as pd
 
-from pnt import Pnt
+from .pnt import Pnt
 from .analysis import detect_surface, detect_ground
 from .models import model_shotnoise, model_ssa_and_density
 
@@ -16,6 +16,9 @@ log = logging.getLogger(__name__)
 
 
 class Profile(object):
+    """Represents the content of a loaded pnt file.
+
+    """
     def __init__(self, pnt_filename, ini_filename=None, name=None):
         # Set name of profile (by default pnt filename without extension)
         self.name = name
@@ -39,9 +42,9 @@ class Profile(object):
         north = self.pnt_header_value(Pnt.GPS_WGS84_NORTH)
         east = self.pnt_header_value(Pnt.GPS_WGS84_EAST)
         if north.upper() != 'N':
-            self._latitude = -self._latitude
+            self.latitude = -self.latitude
         if east.upper() != 'E':
-            self._longitude = -self._longitude
+            self.longitude = -self.longitude
 
         # Get a proper timestamp by putting pnt entries together
         self.timestamp = None

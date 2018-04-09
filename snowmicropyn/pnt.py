@@ -167,7 +167,7 @@ class Pnt:
                     value = value[0]
                 # Drop non printable chars in string values
                 if 's' in fmt or 'c' in fmt:
-                    value = filter(lambda x: x in string.printable, value)
+                    value = str(filter(lambda x: x in string.printable, value))
                 log.debug('Read header entry {} = {}{}'.format(
                     pnt_id, repr(value), ' ' + unit if unit else '')
                 )
