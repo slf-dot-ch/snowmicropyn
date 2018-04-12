@@ -21,7 +21,7 @@ setup(
     ],
     entry_points={
         'gui_scripts': [
-            'smpaxaminer = snowmicropyn.examiner.app'
+            'smpexaminer = snowmicropyn.examiner.app'
         ]
     },
     classifiers=[
