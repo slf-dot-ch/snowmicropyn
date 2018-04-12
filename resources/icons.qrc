@@ -1,0 +1,30 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>drop.png</file>
+    <file>drop@2x.png</file>
+    <file>export.png</file>
+    <file>export@2x.png</file>
+    <file>info.png</file>
+    <file>info@2x.png</file>
+    <file>next.png</file>
+    <file>next@2x.png</file>
+    <file>open.png</file>
+    <file>open@2x.png</file>
+    <file>previous.png</file>
+    <file>previous@2x.png</file>
+    <file>save.png</file>
+    <file>save@2x.png</file>
+    <file>saveall.png</file>
+    <file>saveall@2x.png</file>
+    <file>settings.png</file>
+    <file>settings@2x.png</file>
+    <file>shutdown.png</file>
+    <file>shutdown@2x.png</file>
+    <file>autodetect.png</file>
+    <file>autodetect@2x.png</file>
+    <file>map.png</file>
+    <file>map@2x.png</file>
+    <file>logs.png</file>
+    <file>logs@2x.png</file>
+  </qresource>
+</RCC>

@@ -154,5 +154,5 @@ def model_ssa_and_density(samples, window=_DEFAULT_WINDOW, overlap_factor=_DEFAU
     result = []
     for index, row in shotnoise.iterrows():
         rho, ssa = calc_density_ssa_proksch2015(row.f0, row.L)
-        result.append((rho, ssa))
-    return pd.DataFrame(result, columns=['rho', 'ssa'])
+        result.append((row.distance, rho, ssa))
+    return pd.DataFrame(result, columns=['distance', 'rho', 'ssa'])

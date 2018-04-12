@@ -1,16 +1,15 @@
-import configparser as Cfg
+import configparser
 import csv
 import logging
 from datetime import datetime
-import pytz
-from os.path import exists, splitext, split, join, dirname
+from os.path import exists, splitext, split, join
 
-import numpy as np
 import pandas as pd
+import pytz
 
-from .pnt import Pnt
 from .analysis import detect_surface, detect_ground
 from .models import model_shotnoise, model_ssa_and_density
+from .pnt import Pnt
 
 log = logging.getLogger(__name__)
 
@@ -80,7 +79,7 @@ class Profile(object):
         if not self.ini_filename:
             self.ini_filename = splitext(self.pnt_filename)[0] + '.ini'
 
-        self._ini = Cfg.ConfigParser()
+        self._ini = configparser.ConfigParser()
 
         # Load ini file, if available
         if exists(self.ini_filename):
@@ -118,7 +117,7 @@ class Profile(object):
     def marker(self, name, fallback=None):
         try:
             return self._ini.getfloat('markers', name)
-        except Cfg.NoOptionError as e:
+        except configparser.NoOptionError as e:
             if fallback:
                 return fallback
             raise KeyError(e)
@@ -134,14 +133,20 @@ class Profile(object):
         """Convenience property to access value of
         marker named 'surface'
         """
-        return self.marker('surface')
+        try:
+            return self.marker('surface')
+        except KeyError:
+            return None
 
     @property
     def ground(self):
         """Convenience property to access value of
         marker named 'ground'
         """
-        return self.marker('ground')
+        try:
+            return self.marker('ground')
+        except KeyError:
+            return None
 
     @staticmethod
     def load(pnt_filename, ini_filename=None):
@@ -196,12 +201,11 @@ class Profile(object):
                     writer.writerow(['pnt.' + pnt_id, value])
 
     @property
-    def max_force_sample(self):
+    def max_force(self):
         """ Get max force in this profile
         :return: Tuple with max force value and its distance
         """
-        index = np.argmax(self.samples[:, 1])
-        return self.samples[index]
+        return self.samples.force.max()
 
     def samples_within_distance(self, begin=None, end=None, relativize=False):
         """Return samples which within a range.
