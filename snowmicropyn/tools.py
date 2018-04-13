@@ -1,6 +1,6 @@
-import numpy as np
-
 import collections
+
+from pandas import np as np
 
 pub_fields = ['title', 'authors', 'journal', 'url', 'pubdate']
 Publication = collections.namedtuple('Publication', pub_fields)

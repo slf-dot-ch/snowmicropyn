@@ -1,3 +1,3 @@
-APP_NAME = 'snowmicropyn Profile Examiner'
-APP_TECH_NAME = 'snowmicropyn_profile_examiner'
-VERSION = '0.1'
+APP_NAME = 'snowmicropyn Examiner'
+ORG_NAME = 'slf.ch'
+VERSION = '0.1.0-alpha.1'

@@ -44,6 +44,12 @@ class Profile(object):
             self.latitude = -self.latitude
         if east.upper() != 'E':
             self.longitude = -self.longitude
+        if abs(self.latitude) > 90:
+            log.warning('Latitude value {} invalid, replacing by None'.format(self.latitude))
+            self.latitude = None
+        if abs(self.longitude) > 90:
+            log.warning('Longitude value {} invalid, replacing by None'.format(self.longitude))
+            self.longitude = None
 
         # Get a proper timestamp by putting pnt entries together
         self.timestamp = None
@@ -57,7 +63,7 @@ class Profile(object):
             self.timestamp = datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC)
             log.info('Timestamp of profile as reported by pnt header is {}'.format(self.timestamp))
         except ValueError:
-            log.warn('Unable to build timestamp from pnt header info')
+            log.warning('Unable to build timestamp from pnt header fields')
 
         # Get other important entries from header
         self.smp_firmware = self.pnt_header_value(Pnt.FIRMWARE)
@@ -108,7 +114,9 @@ class Profile(object):
 
     @property
     def coordinates(self):
-        return self.latitude, self.longitude
+        if self.latitude and self.longitude:
+            return self.latitude, self.longitude
+        return None
 
     @property
     def markers(self):

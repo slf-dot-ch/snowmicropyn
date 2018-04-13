@@ -5,7 +5,7 @@ import string
 import struct
 from collections import namedtuple
 
-import numpy as np
+from pandas import np as np
 
 log = logging.getLogger(__name__)
 
@@ -165,9 +165,10 @@ class Pnt:
                 value = struct.unpack_from(fmt, raw, offset)
                 if len(value) == 1:
                     value = value[0]
-                # Drop non printable chars in string values
                 if 's' in fmt or 'c' in fmt:
-                    value = str(filter(lambda x: x in string.printable, value))
+                    value = value.decode('utf-8', errors='ignore')
+                    # Drop non printable chars
+                    value = ''.join([x if x in string.printable else '' for x in value])
                 log.debug('Read header entry {} = {}{}'.format(
                     pnt_id, repr(value), ' ' + unit if unit else '')
                 )
@@ -182,6 +183,7 @@ class Pnt:
         spatial_res = header[Pnt.SAMPLES_SPATIALRES].value
         conv_factor = header[Pnt.SAMPLES_CONVFACTOR_FORCE].value
 
+        # TODO: This may could be improved to use pandas methods instead of numpy
         distances = np.arange(0, count) * spatial_res
         forces = np.asarray(samples) * conv_factor
         samples = np.column_stack([distances, forces])
