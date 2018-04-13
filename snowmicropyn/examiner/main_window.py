@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
         self.saveall_action = QAction('Save &All', self)
         self.drop_action = QAction('Drop', self)
         self.export_action = QAction('Export', self)
-        self.info_action = QAction('Info', self)
+        #self.info_action = QAction('Info', self)
         self.next_action = QAction('Next Profile', self)
         self.previous_action = QAction('Previous Profile', self)
         self.surface_action = QAction('Show Surface', self)
@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
         self.ssa_action = QAction('Show SSA', self)
         self.density_action = QAction('Show Density', self)
         self.autodetect_action = QAction('Detect Surface + Ground', self)
-        self.map_action = QAction('Show Map', self)
+        #self.map_action = QAction('Show Map', self)
         self.show_log_action = QAction('Show Log', self)
 
         self.profile_combobox = QComboBox(self)
@@ -165,10 +165,10 @@ class MainWindow(QMainWindow):
         action.setStatusTip('Export Profile to CSV')
         action.triggered.connect(self.export_profile)
 
-        action = self.info_action
-        action.setIcon(QIcon(':/icons/info.png'))
-        action.setShortcut('Ctrl+I')
-        action.setStatusTip('Info')
+        #action = self.info_action
+        #action.setIcon(QIcon(':/icons/info.png'))
+        #action.setShortcut('Ctrl+I')
+        #action.setStatusTip('Info')
 
         action = self.next_action
         action.setIcon(QIcon(':/icons/next.png'))
@@ -219,11 +219,11 @@ class MainWindow(QMainWindow):
         action.triggered.connect(force_plot)
         action.setChecked(QSettings().value(MainWindow.SETTING_SHOW_DENSITY, defaultValue=True))
 
-        action = self.map_action
-        action.setIcon(QIcon(':/icons/map.png'))
-        action.setShortcut('Ctrl+M')
-        action.setStatusTip('Show Map')
-        action.triggered.connect(self.show_map)
+        #action = self.map_action
+        #action.setIcon(QIcon(':/icons/map.png'))
+        #action.setShortcut('Ctrl+M')
+        #action.setStatusTip('Show Map')
+        #action.triggered.connect(self.show_map)
 
         action = self.show_log_action
         action.setIcon(QIcon(':/icons/logs.png'))
@@ -268,13 +268,13 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.drop_action)
         toolbar.addAction(self.export_action)
         toolbar.addSeparator()
-        toolbar.addAction(self.info_action)
+        #toolbar.addAction(self.info_action)
         toolbar.addAction(self.autodetect_action)
         toolbar.addAction(self.previous_action)
         toolbar.addWidget(self.profile_combobox)
         toolbar.addAction(self.next_action)
-        toolbar.addSeparator()
-        toolbar.addAction(self.map_action)
+        #toolbar.addSeparator()
+        #toolbar.addAction(self.map_action)
 
     @staticmethod
     def about():
