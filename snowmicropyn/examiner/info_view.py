@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QTreeView, QAbstractItemView
+from PyQt5.QtWidgets import QAbstractItemView, QTreeView
 
 
 class InfoView(QTreeView):
@@ -10,8 +10,9 @@ class InfoView(QTreeView):
 
         model = QStandardItemModel(0, 2, self)
 
-        # Get rid of the ugly focus rectangle around the tree view
+        # Get rid of the ugly focus rectangle and border
         self.setAttribute(Qt.WA_MacShowFocusRect, False)
+        self.setStyleSheet('outline: 0; border: 0;')
 
         # Hide header of tree view
         self.header().hide()

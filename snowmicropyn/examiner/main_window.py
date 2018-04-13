@@ -282,7 +282,7 @@ class MainWindow(QMainWindow):
         # in the same directory as this file, read its content and use
         # string.Template to replace some content
         folder = dirname(abspath(__file__))
-        with open(join(folder, 'about.html')) as f:
+        with open(join(folder, 'about.html'), encoding='utf-8') as f:
             content = f.read()
         content = Template(content).substitute(app_name=escape(APP_NAME), version=escape(VERSION))
 

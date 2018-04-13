@@ -1,23 +1,31 @@
 from setuptools import setup
-from setuptools import find_packages
+import re
+
+with open('README.rst', 'rt', encoding='utf8') as f:
+    readme = f.read()
+
+with open('snowmicropyn/__init__.py', 'rt', encoding='utf8') as f:
+    version = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
 
 setup(
     name='snowmicropyn',
-    description='SnowMicroPyn, an Application to view and analyze Snow Profiles recorded by Snow Micro Pen by SLF',
-    version='0.1.0a1',
+    description='A python package to read process data recorded by SnowMicroPen© by SLF.',
+    long_description=readme,
+    version=version,
     author='WSL Institute for Snow and Avalanche Research SLF',
     author_email='snowmicropen@slf.ch',
     url='https://www.slf.ch/en/about-the-slf/instrumented-field-sites-and-laboratories/cold-chambers/snowmicropenr.html',
+    download_url='https://github.com/slf-dot-ch/snowmicropyn/tarball/' + version,
     keywords=['SLF', 'SnowMicroPen', 'Snow Micro Pen', 'SMP', 'Snow', 'Science', 'Research', 'Probe'],
-    packages=find_packages(),
-    package_data={'snowmicropyn': ['artwork/*']},
-    python_requires='>=3',
+    packages=['snowmicropyn', 'snowmicropyn.examiner'],
+    package_data={'snowmicropyn': ['examiner/about.html']},
+    python_requires='>=3.0',
     install_requires=[
-        'scipy>=1',
-        'pandas>=0.22',
-        'matplotlib>=2',
+        'scipy >= 1',
+        'pandas >= 0.22',
+        'matplotlib >= 2',
         'pytz',
-        'PyQt5'
+        'PyQt5 >= 5'
     ],
     entry_points={
         'gui_scripts': [
