@@ -414,7 +414,6 @@ class MainWindow(QMainWindow):
 
         self.figure.clf()
         host = self.figure.add_subplot(111)
-        host.axis('off')
         host.set_title(p.pnt_filename, y=1.04)
 
         if self.surface_action.isChecked() and p.surface:
