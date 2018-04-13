@@ -1,7 +1,7 @@
 import math
 
-import numpy as np
 import pandas as pd
+from pandas import np as np
 from scipy.signal import detrend
 
 DENSITY_ICE = 917.

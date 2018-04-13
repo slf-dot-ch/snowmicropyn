@@ -1,22 +1,23 @@
 import logging
+from html import escape
 from os.path import expanduser, dirname, abspath, join
+from string import Template
 
-from PyQt5.QtCore import QRect, Qt, QSettings, QCoreApplication
+from PyQt5.QtCore import QRect, Qt, QSettings
 from PyQt5.QtGui import QIcon, QCursor, QFont
-from PyQt5.QtWidgets import QMainWindow, QStackedWidget, QAction, QMenu, QComboBox, QDialog, QLabel, \
-    QVBoxLayout, QFileDialog, QWidget
+from PyQt5.QtWidgets import *
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 from snowmicropyn import Profile
 from snowmicropyn.examiner.globals import APP_NAME, VERSION
+from snowmicropyn.examiner.info_view import InfoView
 
 # This import statement is important, no icons appear in case it's missing!
 import snowmicropyn.examiner.icons
 
 log = logging.getLogger(__name__)
-settings = QSettings()
 
 
 class MainWindow(QMainWindow):
@@ -36,15 +37,21 @@ class MainWindow(QMainWindow):
 
         self.profiles = []
 
-        self._last_directory = settings.value('MainFrame/last_directory', defaultValue=expanduser('~'))
+        self._last_directory = QSettings().value('MainFrame/last_directory', defaultValue=expanduser('~'))
 
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
         self.canvas.mpl_connect('button_press_event', self.mouse_button_pressed)
 
+        self.profile_info = InfoView()
+
+        splitter = QSplitter()
+        splitter.addWidget(self.canvas)
+        splitter.addWidget(self.profile_info)
+
         self.stacked_widget = QStackedWidget(self)
         self.stacked_widget.addWidget(NoProfileWidget())
-        self.stacked_widget.addWidget(self.canvas)
+        self.stacked_widget.addWidget(splitter)
 
         self.setCentralWidget(self.stacked_widget)
 
@@ -63,7 +70,7 @@ class MainWindow(QMainWindow):
         self.clicked_distance = None
 
         self.about_action = QAction('About', self)
-        self.exit_action = QAction('Exit', self)
+        self.quit_action = QAction('Quit', self)
         self.settings_action = QAction('Settings', self)
         self.open_action = QAction('&Open', self)
         self.save_action = QAction('&Save', self)
@@ -89,15 +96,22 @@ class MainWindow(QMainWindow):
         self.update_ui()
 
     def closeEvent(self, event):
-        settings.setValue(MainWindow.SETTING_GEOMETRY, self.geometry())
-        settings.setValue(MainWindow.SETTING_LAST_DIRECTORY, self._last_directory)
-        settings.setValue(MainWindow.SETTING_SHOW_SURFACE, self.surface_action.isChecked())
-        settings.setValue(MainWindow.SETTING_SHOW_GROUND, self.ground_action.isChecked())
-        settings.setValue(MainWindow.SETTING_SHOW_SSA, self.ssa_action.isChecked())
-        settings.setValue(MainWindow.SETTING_SHOW_DENSITY, self.density_action.isChecked())
+        log.info('Saving settings of MainWindow')
+        QSettings().setValue(MainWindow.SETTING_GEOMETRY, self.geometry())
+        QSettings().setValue(MainWindow.SETTING_LAST_DIRECTORY, self._last_directory)
+        QSettings().setValue(MainWindow.SETTING_SHOW_SURFACE, self.surface_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_SHOW_GROUND, self.ground_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_SHOW_SSA, self.ssa_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_SHOW_DENSITY, self.density_action.isChecked())
+
+        # This is the main window. In case it's closed, we close all
+        # other windows too which results in quitting the application
+
+        # noinspection PyArgumentList
+        QApplication.instance().closeAllWindows()
 
     def init_ui(self):
-        geometry = settings.value('MainFrame/geometry', defaultValue=MainWindow.DEFAULT_GEOMETRY)
+        geometry = QSettings().value('MainFrame/geometry', defaultValue=MainWindow.DEFAULT_GEOMETRY)
         self.setGeometry(geometry)
 
         self.profile_combobox.currentIndexChanged.connect(self.switch_profile)
@@ -106,11 +120,15 @@ class MainWindow(QMainWindow):
         action.setStatusTip('About ' + APP_NAME)
         action.triggered.connect(self.about)
 
-        action = self.exit_action
+        action = self.quit_action
         action.setIcon(QIcon(':/icons/shutdown.png'))
         action.setShortcut('Ctrl+Q')
-        action.setStatusTip('Exit application')
-        action.triggered.connect(exit)
+        action.setStatusTip('Quit application')
+        # Call MainFrame.close when user want's to quit the application,
+        # causing a call of MainFrame.closeEvent where we close all
+        # other windows too (like LogWindow for example), which quits
+        # the application itself
+        action.triggered.connect(self.close)
 
         action = self.settings_action
         action.setIcon(QIcon(':/icons/settings.png'))
@@ -178,28 +196,28 @@ class MainWindow(QMainWindow):
         action.setStatusTip('Show Surface')
         action.setCheckable(True)
         action.triggered.connect(force_plot)
-        action.setChecked(settings.value(MainWindow.SETTING_SHOW_SURFACE, defaultValue=True))
+        action.setChecked(QSettings().value(MainWindow.SETTING_SHOW_SURFACE, defaultValue=True))
 
         action = self.ground_action
         action.setShortcut('Alt+G')
         action.setStatusTip('Show Ground')
         action.setCheckable(True)
         action.triggered.connect(force_plot)
-        action.setChecked(settings.value(MainWindow.SETTING_SHOW_GROUND, defaultValue=True))
+        action.setChecked(QSettings().value(MainWindow.SETTING_SHOW_GROUND, defaultValue=True))
 
         action = self.ssa_action
         action.setShortcut('Alt+A')
         action.setStatusTip('Show SSA')
         action.setCheckable(True)
         action.triggered.connect(force_plot)
-        action.setChecked(settings.value(MainWindow.SETTING_SHOW_SSA, defaultValue=True))
+        action.setChecked(QSettings().value(MainWindow.SETTING_SHOW_SSA, defaultValue=True))
 
         action = self.density_action
         action.setShortcut('Alt+D')
         action.setStatusTip('Show Density')
         action.setCheckable(True)
         action.triggered.connect(force_plot)
-        action.setChecked(settings.value(MainWindow.SETTING_SHOW_DENSITY, defaultValue=True))
+        action.setChecked(QSettings().value(MainWindow.SETTING_SHOW_DENSITY, defaultValue=True))
 
         action = self.map_action
         action.setIcon(QIcon(':/icons/map.png'))
@@ -217,7 +235,7 @@ class MainWindow(QMainWindow):
 
         menu = menubar.addMenu('&File')
         menu.addAction(self.about_action)
-        menu.addAction(self.exit_action)
+        menu.addAction(self.quit_action)
         menu.addAction(self.open_action)
         menu.addAction(self.save_action)
         menu.addAction(self.saveall_action)
@@ -241,7 +259,7 @@ class MainWindow(QMainWindow):
         menu.addAction(self.autodetect_action)
 
         toolbar = self.addToolBar('Exit')
-        toolbar.addAction(self.exit_action)
+        toolbar.addAction(self.quit_action)
         toolbar.addAction(self.settings_action)
         toolbar.addSeparator()
         toolbar.addAction(self.open_action)
@@ -260,20 +278,24 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def about():
-        # Show an dialog with info about this application
-        # noinspection PyArgumentList
-        dialog = QDialog()
-        dialog.setMaximumSize(400, 300)
-        dialog.setWindowTitle('About')
-
+        # Read the content of the file about.html which must be located
+        # in the same directory as this file, read its content and use
+        # string.Template to replace some content
         folder = dirname(abspath(__file__))
         with open(join(folder, 'about.html')) as f:
             content = f.read()
-        label = QLabel(content.replace('$VERSION$', VERSION))
+        content = Template(content).substitute(app_name=escape(APP_NAME), version=escape(VERSION))
+
+        label = QLabel()
+        label.setText(content)
         label.setOpenExternalLinks(True)
+
         layout = QVBoxLayout()
-        # noinspection PyArgumentList
         layout.addWidget(label)
+
+        # noinspection PyArgumentList
+        dialog = QDialog()
+        dialog.setWindowTitle('About')
         dialog.setLayout(layout)
         dialog.exec_()
 
@@ -301,6 +323,10 @@ class MainWindow(QMainWindow):
             first_new_index = self.profile_combobox.count()
             self.profile_combobox.addItems([p.name for p in new_profiles])
             self.profile_combobox.setCurrentIndex(first_new_index)
+
+        # Save directory where we were to open at same place next time
+        # for user's convenience
+        if self.current_profile:
             self._last_directory = dirname(self.current_profile.pnt_filename)
 
     def save_profile(self):
@@ -312,7 +338,7 @@ class MainWindow(QMainWindow):
 
     def export_profile(self):
         p = self.current_profile
-        p.export_meta()
+        p.export_meta(full_pnt_header=True)
         p.export_samples()
 
     def drop_profile(self):
@@ -378,6 +404,8 @@ class MainWindow(QMainWindow):
             self.canvas.draw()
             return
 
+        self.profile_info.set_profile(p)
+
         FORCE_COLOR = 'C0'
         SSA_COLOR = 'C1'
         DENSITY_COLOR = 'C2'
@@ -386,6 +414,7 @@ class MainWindow(QMainWindow):
 
         self.figure.clf()
         host = self.figure.add_subplot(111)
+        host.axis('off')
         host.set_title(p.pnt_filename, y=1.04)
 
         if self.surface_action.isChecked() and p.surface:
@@ -455,7 +484,7 @@ class NoProfileWidget(QWidget):
         super(NoProfileWidget, self).__init__(parent)
         font = QFont()
         font.setPointSize(30)
-        self.label = QLabel('Please open a pnt File')
+        self.label = QLabel('No open pnt Files')
         self.label.setFont(font)
         self.setStyleSheet('color: lightgray')
         layout = QVBoxLayout()

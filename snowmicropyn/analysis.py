@@ -1,7 +1,7 @@
 import logging
 
 import matplotlib.pyplot as plt
-import numpy as np
+from pandas import np as np
 
 from .tools import downsample, smooth
 
