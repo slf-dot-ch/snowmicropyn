@@ -25,7 +25,7 @@ Pre Overhaul Changelog
 ????-??-??
 
 - Version 0.0.25 alpha
-- Man kann jetzt unter Menu->View->Show Density oder ->Show SSA
+- Man kann jetzt unter Menu -> View -> Show Density oder -> Show SSA
   auswählen
 - Dann wird SSA oder Dichte mit zweiter y-Achse geplottet.
 
@@ -45,9 +45,8 @@ Pre Overhaul Changelog
 - Beim öffnen der files werden shotnoiseparameter für jedes file
   berechnet, daher etwas langsamer beim öffnen (vor allem bei vielen
   dateien)
-- Range für zweite y-achse festgelegt
-    - Dichte: 0-700 kg/m^3
-    - SSA: 0-60 m^2/kg
+- Range für zweite y-Achse festgelegt: Dichte: 0-700 kg/m^3 SSA: 0-60
+  m^2/kg
 
 ????-??-??
 
