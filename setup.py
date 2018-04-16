@@ -1,38 +1,27 @@
-from setuptools import setup
+#!/usr/bin/env python
+
+import os
 import re
 
-with open('README.rst', 'rt', encoding='utf8') as f:
-    readme = f.read()
+from setuptools import setup
 
-with open('snowmicropyn/__init__.py', 'rt', encoding='utf8') as f:
-    version = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
+# Load the package's __version__.py to get version string
+here = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(here, 'snowmicropyn', '__init__.py')) as f:
+    VERSION = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
 
 setup(
     name='snowmicropyn',
-    description='A python package to read process data recorded by SnowMicroPen© by SLF.',
-    long_description=readme,
-    version=version,
+    version=VERSION,
+    description='A python package to read process data recorded by SnowMicroPen© by SLF',
     author='WSL Institute for Snow and Avalanche Research SLF',
     author_email='snowmicropen@slf.ch',
-    url='https://www.slf.ch/en/about-the-slf/instrumented-field-sites-and-laboratories/cold-chambers/snowmicropenr.html',
-    download_url='https://github.com/slf-dot-ch/snowmicropyn/tarball/' + version,
-    keywords=['SLF', 'SnowMicroPen', 'Snow Micro Pen', 'SMP', 'Snow', 'Science', 'Research', 'Probe'],
-    packages=['snowmicropyn', 'snowmicropyn.examiner'],
-    package_data={'snowmicropyn': ['examiner/about.html']},
-    python_requires='>=3.0',
-    install_requires=[
-        'scipy >= 1',
-        'pandas >= 0.22',
-        'matplotlib >= 2',
-        'pytz',
-        'PyQt5 >= 5'
-    ],
-    entry_points={
-        'gui_scripts': [
-            'smpexaminer = snowmicropyn.examiner.app'
-        ]
-    },
+    keywords=['SLF', 'SnowMicroPen', 'Snow Micro Pen', 'SMP', 'Snow', 'Science', 'Research'],
+    url='https://github.com/slf-dot-ch/snowmicropyn',
+    license='GPL',
     classifiers=[
+        # Trove classifiers
+        # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Development Status :: 1 - Planning',
@@ -42,5 +31,23 @@ setup(
         'Operating System :: OS Independent',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Scientific/Engineering :: Atmospheric Science'
-    ]
+    ],
+
+    packages=['snowmicropyn', 'snowmicropyn.examiner'],
+    package_data={'snowmicropyn.examiner': ['about.html']},
+    include_package_data=True,
+    entry_points={
+        'gui_scripts': [
+            'smpexaminer = snowmicropyn.examiner.app:main'
+        ]
+    },
+
+    python_requires='>=3.0',
+    install_requires=[
+        'scipy >= 1',
+        'pandas >= 0.22',
+        'matplotlib >= 2',
+        'pytz',
+        'PyQt5 >= 5',
+    ],
 )
