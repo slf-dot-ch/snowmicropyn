@@ -281,10 +281,10 @@ class MainWindow(QMainWindow):
         # Read the content of the file about.html which must be located
         # in the same directory as this file, read its content and use
         # string.Template to replace some content
-        folder = dirname(abspath(__file__))
-        with open(join(folder, 'about.html'), encoding='utf-8') as f:
+        here = dirname(abspath(__file__))
+        with open(join(here, 'about.html'), encoding='utf-8') as f:
             content = f.read()
-        content = Template(content).substitute(app_name=escape(APP_NAME), version=escape(VERSION))
+        content = Template(content).substitute(app_name=escape(APP_NAME), version=escape(VERSION), hash=snowmicropyn.git_hash())
 
         label = QLabel()
         label.setText(content)

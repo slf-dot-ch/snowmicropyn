@@ -13,7 +13,7 @@ with open(os.path.join(here, 'snowmicropyn', '__init__.py')) as f:
 setup(
     name='snowmicropyn',
     version=VERSION,
-    description='A python package to read process data recorded by SnowMicroPen© by SLF',
+    description='A python package to read and process data recorded by SnowMicroPen© by SLF',
     author='WSL Institute for Snow and Avalanche Research SLF',
     author_email='snowmicropen@slf.ch',
     keywords=['SLF', 'SnowMicroPen', 'Snow Micro Pen', 'SMP', 'Snow', 'Science', 'Research'],

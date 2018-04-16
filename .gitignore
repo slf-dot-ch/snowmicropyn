@@ -108,3 +108,6 @@ venv.bak/
 
 # macOS
 .DS_Store
+
+# Release folders
+RELEASE_*
