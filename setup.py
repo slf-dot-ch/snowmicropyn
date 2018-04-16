@@ -34,7 +34,10 @@ setup(
     ],
 
     packages=['snowmicropyn', 'snowmicropyn.examiner'],
-    package_data={'snowmicropyn.examiner': ['about.html']},
+    package_data={
+        'snowmicropyn': ['githash'],
+        'snowmicropyn.examiner': ['about.html'],
+    },
     include_package_data=True,
     entry_points={
         'gui_scripts': [
