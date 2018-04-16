@@ -12,6 +12,7 @@ Version 0.1.0a1
 - Add basic Sphinx documentation (concept, not content)
 - Requires Python 3, no support for Python 2
 - Reimplmenting UI using Qt, not yet feature complete though
+- Publishing on PyPI
 
 Pre Overhaul Changelog
 ----------------------
@@ -45,8 +46,8 @@ Pre Overhaul Changelog
 - Beim öffnen der files werden shotnoiseparameter für jedes file
   berechnet, daher etwas langsamer beim öffnen (vor allem bei vielen
   dateien)
-- Range für zweite y-Achse festgelegt: Dichte: 0-700 kg/m^3 SSA: 0-60
-  m^2/kg
+- Range für zweite y-Achse festgelegt: Dichte: 0-700 kg/m^3. SSA: 0-60
+  m^2/kg.
 
 ????-??-??
 
