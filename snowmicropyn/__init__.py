@@ -1,6 +1,6 @@
 from os.path import dirname, abspath, join
 
-__version__ = '0.1.0a1'
+__version__ = '0.1.0dev1'
 
 from .profile import Profile
 
