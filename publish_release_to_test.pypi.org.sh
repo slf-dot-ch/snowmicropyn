@@ -5,15 +5,31 @@ set -e
 
 REPO_URL=https://github.com/slf-dot-ch/snowmicropyn
 
-if [ $# -eq 1 ]
-then
-    echo "Publishing release with tag $1..."
-else
-    echo "Provide git tag to release as argument"
-    exit 1
-fi
 
-TAG="$1"
+case $# in
+1)
+    TAG=$1
+    SYSTEM="TEST"
+    ;;
+2)
+    TAG=$1
+    if [ $2 == "LIVE" ]
+    then
+        SYSTEM="LIVE"
+    else
+        echo "Second Argument not equal LIVE, refusing publishing"
+        exit 1
+    fi
+    ;;
+*)
+    echo "Usage: `basename "$0"` <tag> [LIVE]";
+    echo "Publishing to PyPI live index when String LIVE is provided, otherwise publish to test index";
+    exit 1
+    ;;
+esac
+
+read -p "Publishing release with tag ${TAG} to ${SYSTEM} index on PyPI. Press enter to continue"
+
 RELEASE_DIR=RELEASE_${TAG}
 
 CLONE="git clone ${REPO_URL} --branch ${TAG} --single-branch --depth=1 --quiet ${RELEASE_DIR}"
@@ -34,6 +50,11 @@ echo "Building Pure Python Wheel..."
 python setup.py bdist_wheel
 
 echo "Uploading to PyPI test index..."
-twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+if [ ${SYSTEM} == "LIVE" ]
+then
+    twine upload dist/*
+else
+    twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+fi
 
-echo "Publishing snowmicropyn ${TAG} test.pypi.org complete. Have a beer."
+echo "Publishing snowmicropyn ${TAG} to ${SYSTEM} PyPI complete. Have a beer."
