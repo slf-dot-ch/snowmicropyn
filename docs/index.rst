@@ -30,6 +30,10 @@ want to install a certain version, specify its version number as follows
 
     pip install snowmicropyn==0.1.3
 
+Information on Developers
+-------------------------
+
+In case your hacking on snowmicropyn, read :doc:`devs`.
 
 .. _PyPI: https://pypi.org/
 .. _pip: https://pip.pypa.io/en/stable/quickstart/
