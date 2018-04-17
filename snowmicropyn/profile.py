@@ -96,6 +96,14 @@ class Profile(object):
         if not self._ini.has_section('markers'):
             self._ini.add_section('markers')
 
+        # Check for invalid values in 'markers' section
+        for k, v in self._ini.items('markers'):
+            try:
+                float(v)
+            except ValueError:
+                log.warning('Ignoring value {} for marker {}, not float value'.format(repr(v), repr(k)))
+                self._ini.remove_option('markers', k)
+
     def __str__(self):
         first = self.samples.distance.iloc[0]
         last = self.samples.distance.iloc[-1]
@@ -120,17 +128,23 @@ class Profile(object):
 
     @property
     def markers(self):
-        return self._ini.items('markers')
+        markers = self._ini.items('markers')
+        markers = [(k, self.marker(k)) for k, v in markers]
+        return markers
 
-    def marker(self, name, fallback=None):
+    # configparser._UNSET is required to enable None as a valid value to
+    # pass as fallback value
+    def marker(self, name, fallback=configparser._UNSET):
         try:
-            return self._ini.getfloat('markers', name)
-        except configparser.NoOptionError as e:
-            if fallback:
-                return fallback
-            raise KeyError(e)
+            # Always return floats
+            return self._ini.getfloat('markers', name, fallback=fallback)
+        except configparser.NoOptionError:
+            raise KeyError('No marker named {} available'.format(name))
 
     def set_marker(self, name, value):
+        # Make sure value is a float, ValueError is raised otherwise,
+        # None is ok too
+        value = float(value) if value else None
         return self._ini.set('markers', name, str(value))
 
     def remove_marker(self, name):
