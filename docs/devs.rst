@@ -42,11 +42,11 @@ Releasing a New Version of snowmicropyn
 
     Some examples for <version-number>, also consider reading PEP440_.
 
-    - ``0.2.dev21`` (Development Release)
-    - ``0.2a4`` (Alpha Release)
-    - ``0.2b7`` (Beta Release)
-    - ``0.2.0`` (Final Release)
-    - ``0.2.11`` (Bugfix Release)
+    - ``v0.2.dev21`` (Development Release)
+    - ``v0.2a4`` (Alpha Release)
+    - ``v0.2b7`` (Beta Release)
+    - ``v0.2.0`` (Final Release)
+    - ``v0.2.11`` (Bugfix Release)
 
 #.  Push the Tag to github
 
