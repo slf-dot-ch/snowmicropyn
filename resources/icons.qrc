@@ -26,5 +26,7 @@
     <file>map@2x.png</file>
     <file>logs.png</file>
     <file>logs@2x.png</file>
+    <file>slflogo.png</file>
+    <file>slflogo@2x.png</file>
   </qresource>
 </RCC>

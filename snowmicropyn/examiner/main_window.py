@@ -3,7 +3,7 @@ from html import escape
 from os.path import expanduser, dirname, abspath, join
 from string import Template
 
-from PyQt5.QtCore import QRect, Qt, QSettings
+from PyQt5.QtCore import QRect, Qt, QSettings, QSize
 from PyQt5.QtGui import QIcon, QCursor, QFont
 from PyQt5.QtWidgets import *
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
@@ -475,6 +475,7 @@ class MainWindow(QMainWindow):
     def show_log(self):
         self.log_window.show()
         self.log_window.activateWindow()
+        self.log_window.raise_()
 
 
 class NoProfileWidget(QWidget):
@@ -483,7 +484,11 @@ class NoProfileWidget(QWidget):
         super(NoProfileWidget, self).__init__(parent)
         font = QFont()
         font.setPointSize(30)
-        self.label = QLabel('No open pnt Files')
+        self.label = QLabel()
+        icon = QIcon(':/icons/slflogo@2x.png')
+        pixmap = icon.pixmap(icon.actualSize(QSize(512, 512)))
+        pixmap.setDevicePixelRatio(3)
+        self.label.setPixmap(pixmap)
         self.label.setFont(font)
         self.setStyleSheet('color: lightgray')
         layout = QVBoxLayout()
