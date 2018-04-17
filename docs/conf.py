@@ -18,9 +18,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, '..', 'snowmicropyn', '__init__.py')) as f:
     VERSION = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
 
-if 'dev' in VERSION:
-    release = ''.join(VERSION.partition('dev')[:2])
-
+release = VERSION
 version = '.'.join(release.split('.')[:2])
 
 source_suffix = '.rst'
