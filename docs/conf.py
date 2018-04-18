@@ -5,6 +5,8 @@ import re
 import sys
 from os.path import join
 
+extensions = ['sphinx.ext.autodoc']
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -36,3 +38,5 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+html_show_sourcelink = False
