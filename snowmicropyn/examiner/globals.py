@@ -1,6 +1,7 @@
 import snowmicropyn
 
 APP_NAME = 'snowmicropyn Examiner'
-ORG_NAME = 'slf.ch'
-HASH = snowmicropyn.git_hash()
+ORG_NAME = 'SLF'
+ORG_DOMAIN = 'slf.ch'
 VERSION = snowmicropyn.__version__
+GITHASH = snowmicropyn.githash()

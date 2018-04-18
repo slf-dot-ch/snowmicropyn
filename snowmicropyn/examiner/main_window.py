@@ -11,7 +11,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 from snowmicropyn import Profile
-from snowmicropyn.examiner.globals import APP_NAME, VERSION
+from snowmicropyn.examiner.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.examiner.info_view import InfoView
 
 # This import statement is important, no icons appear in case it's missing!
@@ -284,7 +284,7 @@ class MainWindow(QMainWindow):
         here = dirname(abspath(__file__))
         with open(join(here, 'about.html'), encoding='utf-8') as f:
             content = f.read()
-        content = Template(content).substitute(app_name=escape(APP_NAME), version=escape(VERSION), hash=snowmicropyn.git_hash())
+        content = Template(content).substitute(app_name=escape(APP_NAME), version=escape(VERSION), hash=GITHASH if GITHASH else 'None')
 
         label = QLabel()
         label.setText(content)

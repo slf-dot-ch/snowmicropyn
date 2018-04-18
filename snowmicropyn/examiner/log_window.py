@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import QMainWindow, QPlainTextEdit
 
 
 class LogWindow(QMainWindow, logging.Handler):
-
     FORMAT = '%(asctime)s\t%(levelname)s\t%(message)s'
 
     def __init__(self, *args, **kwargs):
