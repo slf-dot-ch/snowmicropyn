@@ -3,11 +3,11 @@
 Installation
 ============
 
-Prerequisites
--------------
+Prerequisite: Python 3
+----------------------
 
 snowmicropyn is written in the Python_ programming language. You need to have
-Python 3 installed on your machine to install the *snowmicropyn* package.
+Python 3 installed on your machine to install *snowmicropyn*.
 
 To check if your computer has Python installed, open a Terminal Window and type
 
@@ -21,7 +21,7 @@ To check if your computer has Python installed, open a Terminal Window and type
 
 If you have Python installed, you'll get a version string returned. In case you
 get a response like "``command not found``" or a version smaller than 3.x.x, you
-have or install or update Python.
+have or install Python 3.
 
 How to install Python? Download an
 `official package <https://www.python.org/downloads/>`_ or follow the
@@ -43,7 +43,7 @@ cake. Open a terminal window and type:
 .. note:: When both, Python 2 and Python 3 is installed on your computer, you
    may need to type :command:`pip3` instead of command :command:`pip`.
 
-This will install the latest version available on PyPI_and its dependencies.
+This will install the latest version available on PyPI_ and its dependencies.
 In case youwant to install a specific version of snowmicropyn, append it to
 the package name as in this example:
 
@@ -52,8 +52,7 @@ the package name as in this example:
    pip install snowmicropyn==0.1.3
 
 You may consider using a `virtual environment`_ to separate your *snowmicropyn*
-projects from other projects. But that's already a more advanced topic.
-
+installation from other projects. But that's already an more advanced topic.
 
 
 .. _Python: https://www.python.org/
