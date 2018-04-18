@@ -13,7 +13,7 @@ with open(os.path.join(here, 'snowmicropyn', '__init__.py')) as f:
 setup(
     name='snowmicropyn',
     version=VERSION,
-    description='A python package to read and process data recorded by SnowMicroPen© by SLF',
+    description='A python package to read, export and post process data (*.pnt files) recorded by SnowMicroPen, a snow penetration probe for scientific applications developed at SLF.',
     author='WSL Institute for Snow and Avalanche Research SLF',
     author_email='snowmicropen@slf.ch',
     keywords=['SLF', 'SnowMicroPen', 'Snow Micro Pen', 'SMP', 'Snow', 'Science', 'Research'],
@@ -41,7 +41,7 @@ setup(
     include_package_data=True,
     entry_points={
         'gui_scripts': [
-            'smpexaminer = snowmicropyn.examiner.app:main'
+            'examiner = snowmicropyn.examiner.app:main'
         ]
     },
 
