@@ -19,6 +19,19 @@ changes in the resources folder:
 This command generates an updated version of the file called :file:`icons.py`.
 Don't ever edit this file manually.
 
+Help, the icons are gone!
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In case you're suddenly see no more icons when running :program:`Examiner`, it's
+likely due to your IDE has optimized your imports and dropped the statement
+
+.. code-block:: python
+
+   import snowmicropyn.examiner.icons
+
+as it seems to not have an effect. But it actually does. No icons without this
+import statement!
+
 Releasing a New Version of snowmicropyn
 ---------------------------------------
 
@@ -61,6 +74,9 @@ Releasing a New Version of snowmicropyn
 
       publish_to_pypi.sh <version-number>
 
+   .. warning:: :command:`publish_to_pypi.sh` is a unix shell script. You won't be able
+      to run it on Windows unless you install Cygwin_, Gow_ or a similar tool.
+
    If all goes fine, you should be able to install the release using the
    following commands:
 
@@ -75,3 +91,6 @@ Releasing a New Version of snowmicropyn
         .. code-block:: console
 
             pip install --index-url https://test.pypi.org/simple/ --no-cache-dir snowmicropyn
+
+.. _Cygwin: https://www.cygwin.com/
+.. _Gow: https://github.com/bmatzelle/gow/wiki
