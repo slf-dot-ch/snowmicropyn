@@ -1,6 +1,14 @@
 snowmicropyn Changelog
 ======================
 
+Version 0.1.dev4
+----------------
+
+2018-04-18
+
+- Improve structure and content of documentation (not yet complete though).
+- Log version and git hash on import of package.
+
 Version 0.1.dev3
 ----------------
 
