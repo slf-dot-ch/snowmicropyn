@@ -48,7 +48,6 @@ Acknowledgements
 Thanks to PyPI_, GitHub_, `Read the Docs`_ for hosting our project!
 
 
-
 .. _SLF: https://www.slf.ch/
 .. _SnowMicroPen: https://www.slf.ch/en/services-and-products/research-instruments/snowmicropen-r-smp4-version.html
 .. _GPL: https://www.gnu.org/licenses/gpl.txt

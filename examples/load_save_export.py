@@ -1,5 +1,3 @@
-# SnowMicroPyn Example: load_save_export.py
-#
 # This examples demonstrates load, saving and exporting a SMP
 # profile. First, the profile is loaded from a binary pnt file. Some
 # information is printed.
@@ -10,10 +8,10 @@
 import logging
 import sys
 
-from snowmicropyn import Profile
-
 # Enable logging to stdout to see what's going on under the hood
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+
+from snowmicropyn import Profile
 
 p = Profile.load('/Users/marcel/Dropbox/SMP/pnt_examples/S31M0067.pnt')
 print('Timestamp: {}'.format(p.timestamp))
@@ -32,7 +30,7 @@ p.export_samples(snowpack_only=True)
 # Export meta information (pnt header, markers) into a CSV. Pass a
 # filename in case your got special needs for naming your file.
 # Default naming convention: x.pnt --> x_meta.csv
-p.export_meta(full_pnt_header=True)
+p.export_meta(include_pnt_header=True)
 
 # Save profile. This call writes an ini file containing parameters
 # not stored in the binary pnt file like the markers for example.

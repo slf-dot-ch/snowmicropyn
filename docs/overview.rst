@@ -6,16 +6,13 @@ What's inside?
 
 The *snowmicropyn* package consits of two entities:
 
-- :program:`Examiner`, a desktop application to read, export and post process
-  pnt files
-- An :abbr:`API (Application Programming Interface)` to automate reading,
-  exporting and post processing pnt files using the python language. You'll need
-  some basic programming skills to use it.
+- An :doc:`API <api_usersguide>` to automate reading, exporting and post processing pnt files using
+  the python language. You'll need some basic programming skills to use it.
+- :doc:`Examiner <examiner>`, a desktop application to read, export and post process
+  pnt files. The Examiner uses the API itself too.
 
-You guessed it, :program:`Examiner` uses the API itself too.
-
-Installation
-------------
+How do I get it?
+----------------
 
 Installing *snowmicropyn* is a trivial task in case you're experienced with
 Python:
@@ -24,10 +21,11 @@ Python:
 
    pip install snowmicropyn
 
-Peep peep? No clue what we're talking about? Hop to section :doc:`install`!
+No clue what we're talking about? You find a more detailed describtion in
+section :doc:`install`!
 
-First steps with the API
-------------------------
+*snowmicropyn*'s API
+--------------------
 
 The following snippet is a simple example how to read a pnt file, read some of
 it's meta information and export the samples (measured distance & force) into
@@ -47,7 +45,8 @@ CSV format.
    # (By default, filename will be S31M0067_samples.csv)
    p.export_samples()
 
-You find more information about the API in the :doc:`api_usersguide`.
+You find more information about the API in the :doc:`api_usersguide`. For more
+details about the API's elements, checkout the :doc:`api_reference`.
 
 Launch the :program:`Examiner`
 ------------------------------

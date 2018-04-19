@@ -5,12 +5,12 @@ import re
 import sys
 from os.path import join
 
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.extlinks']
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.append(os.path.dirname(__file__))
+sys.path.append(join(os.path.dirname(__file__), '..'))
 
 project = 'snowmicropyn'
 copyright = '2018, SLF'
@@ -26,6 +26,13 @@ version = '.'.join(release.split('.')[:2])
 source_suffix = '.rst'
 
 master_doc = 'index'
+
+github_url = 'https://github.com/slf-dot-ch/snowmicropyn/tree/{}/%s'.format(release)
+
+extlinks = {
+    'github_issue': ('https://github.com/slf-dot-ch/snowmicropyn/issues/%s', 'Issue '),
+    'github_tree': ('https://github.com/slf-dot-ch/snowmicropyn/tree/v{}/%s'.format(release), ' '),
+}
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

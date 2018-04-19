@@ -15,44 +15,67 @@ log = logging.getLogger(__name__)
 
 
 class Profile(object):
-    """Represents the content of a loaded pnt file.
+    """ Represents a loaded pnt file.
 
+    SnowMicroPen stores a recorded profile in a proprietary and binary format
+    with a ``pnt`` file extension. A pnt file consists of a header with meta
+    information and the recorded force measurement values. When a pnt file is
+    loaded using this class, it reads this data. Meta information then can be
+    accessed by many properties like :attr:`timestamp` or :attr:`overload`.
+    The measurement data is called "samples". Its accessed using the property
+    :attr:`samples` or methods prefix with ``samples_``.
+
+    The class supports the settings of "markers". They identified by name and
+    mark a certain distance value on the profile. You can set markers, read
+    marker values, and remove markers. The two *well known* markers called
+    "surface" and "ground" are used to determine the snowpack. Markers are not
+    stored in a pnt file. As a fact, the pnt file is always just read and never
+    written by the *snowmicropyn* package. To store marker values, this class
+    writes ini files (``*.ini``), usually named alike the pnt file but with its
+    ini file extension. However, you can specify a different filename, but it's not
+    recommended to do so. Use the method :meth:`save` to save your markers.
+
+    When a profile is loaded, the class tries to find a
+    ini file named as the pnt file. In case one is found, it's read
+    automatically and your prior set markers are available again.
+
+    To improve readability of the code, your encouraged to load a profile using
+    the static method :meth:`load`. Here's an example::
+
+        import snowmicropyn
+        p = snowmicropyn.Profile.load('./S13M0013.pnt')
     """
+
     def __init__(self, pnt_filename, ini_filename=None, name=None):
         # Set name of profile (by default pnt filename without extension)
-        self.name = name
-        if not self.name:
-            self.name = splitext(split(pnt_filename)[1])[0]
+        self._name = name
+        if not self._name:
+            self._name = splitext(split(pnt_filename)[1])[0]
 
         # Load pnt file, returns samples and header (dict)
-        self.pnt_filename = pnt_filename
-        samples, self.pnt_header = Pnt.load_pnt(pnt_filename)
+        self._pnt_filename = pnt_filename
+        samples, self._pnt_header = Pnt.load_pnt(pnt_filename)
         # Create data frame of samples
-        self.samples = pd.DataFrame(samples, columns=('distance', 'force'))
-
-        # Get a clean comment form pnt header (unfortunately not zero terminated string)
-        length = self.pnt_header_value(Pnt.COMMENT_LENGTH)
-        content = self.pnt_header_value(Pnt.COMMENT_CONTENT)
-        self._comment = content[0:length]
+        self._samples = pd.DataFrame(samples, columns=('distance', 'force'))
 
         # Get clean WGS84 coordinates (use +/- instead of N/E)
-        self.latitude = self.pnt_header_value(Pnt.GPS_WGS84_LATITUDE)
-        self.longitude = self.pnt_header_value(Pnt.GPS_WGS84_LONGITUDE)
+        self._latitude = self.pnt_header_value(Pnt.GPS_WGS84_LATITUDE)
+        self._longitude = self.pnt_header_value(Pnt.GPS_WGS84_LONGITUDE)
         north = self.pnt_header_value(Pnt.GPS_WGS84_NORTH)
         east = self.pnt_header_value(Pnt.GPS_WGS84_EAST)
         if north.upper() != 'N':
-            self.latitude = -self.latitude
+            self._latitude = -self._latitude
         if east.upper() != 'E':
-            self.longitude = -self.longitude
-        if abs(self.latitude) > 90:
-            log.warning('Latitude value {} invalid, replacing by None'.format(self.latitude))
-            self.latitude = None
-        if abs(self.longitude) > 90:
-            log.warning('Longitude value {} invalid, replacing by None'.format(self.longitude))
-            self.longitude = None
+            self._longitude = -self._longitude
+        if abs(self._latitude) > 90:
+            log.warning('Latitude value {} invalid, replacing by None'.format(self._latitude))
+            self._latitude = None
+        if abs(self._longitude) > 90:
+            log.warning('Longitude value {} invalid, replacing by None'.format(self._longitude))
+            self._longitude = None
 
         # Get a proper timestamp by putting pnt entries together
-        self.timestamp = None
+        self._timestamp = None
         year = self.pnt_header_value(Pnt.TIMESTAMP_YEAR)
         month = self.pnt_header_value(Pnt.TIMESTAMP_MONTH)
         day = self.pnt_header_value(Pnt.TIMESTAMP_DAY)
@@ -60,37 +83,37 @@ class Profile(object):
         minute = self.pnt_header_value(Pnt.TIMESTAMP_MINUTE)
         second = self.pnt_header_value(Pnt.TIMESTAMP_SECOND)
         try:
-            self.timestamp = datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC)
+            self._timestamp = datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC)
             log.info('Timestamp of profile as reported by pnt header is {}'.format(self.timestamp))
         except ValueError:
             log.warning('Unable to build timestamp from pnt header fields')
 
         # Get other important entries from header
-        self.smp_firmware = self.pnt_header_value(Pnt.FIRMWARE)
-        self.smp_serial = self.pnt_header_value(Pnt.SMP_SERIAL)
-        self.smp_length = self.pnt_header_value(Pnt.SMP_LENGTH)
-        self.smp_tipdiameter = self.pnt_header_value(Pnt.TIP_DIAMETER)
-        self.spatial_resolution = self.pnt_header_value(Pnt.SAMPLES_SPATIALRES)
-        self.overload = self.pnt_header_value(Pnt.SENSOR_OVERLOAD)
-        self.speed = self.pnt_header_value(Pnt.SAMPLES_SPEED)
-        self.gps_pdop = self.pnt_header_value(Pnt.GPS_PDOP)
-        self.gps_numsats = self.pnt_header_value(Pnt.GPS_NUMSATS)
-        self.amplifier_range = self.pnt_header_value(Pnt.AMPLIFIER_RANGE)
-        self.amplifier_serial = self.pnt_header_value(Pnt.AMPLIFIER_SERIAL)
-        self.sensor_sensivity = self.default_filename(Pnt.SENSOR_SENSITIVITIY)
+        self._smp_firmware = self.pnt_header_value(Pnt.FIRMWARE)
+        self._smp_serial = self.pnt_header_value(Pnt.SMP_SERIAL)
+        self._smp_length = self.pnt_header_value(Pnt.SMP_LENGTH)
+        self._smp_tipdiameter = self.pnt_header_value(Pnt.TIP_DIAMETER)
+        self._spatial_resolution = self.pnt_header_value(Pnt.SAMPLES_SPATIALRES)
+        self._overload = self.pnt_header_value(Pnt.SENSOR_OVERLOAD)
+        self._speed = self.pnt_header_value(Pnt.SAMPLES_SPEED)
+        self._gps_pdop = self.pnt_header_value(Pnt.GPS_PDOP)
+        self._gps_numsats = self.pnt_header_value(Pnt.GPS_NUMSATS)
+        self._amplifier_range = self.pnt_header_value(Pnt.AMPLIFIER_RANGE)
+        self._amplifier_serial = self.pnt_header_value(Pnt.AMPLIFIER_SERIAL)
+        self._sensor_sensivity = self.default_filename(Pnt.SENSOR_SENSITIVITIY)
 
         # When no ini file provided, use default name which
         # is same as pnt file but ini extension
-        self.ini_filename = ini_filename
-        if not self.ini_filename:
-            self.ini_filename = splitext(self.pnt_filename)[0] + '.ini'
+        self._ini_filename = ini_filename
+        if not self._ini_filename:
+            self._ini_filename = splitext(self._pnt_filename)[0] + '.ini'
 
         self._ini = configparser.ConfigParser()
 
         # Load ini file, if available
-        if exists(self.ini_filename):
-            log.info('Reading ini file {} for {}'.format(self.ini_filename, self))
-            self._ini.read(self.ini_filename)
+        if exists(self._ini_filename):
+            log.info('Reading ini file {} for {}'.format(self._ini_filename, self))
+            self._ini.read(self._ini_filename)
 
         # Ensure a section called 'markers' does exist
         if not self._ini.has_section('markers'):
@@ -101,7 +124,8 @@ class Profile(object):
             try:
                 float(v)
             except ValueError:
-                log.warning('Ignoring value {} for marker {}, not float value'.format(repr(v), repr(k)))
+                log.warning(
+                    'Ignoring value {} for marker {}, not float value'.format(repr(v), repr(k)))
                 self._ini.remove_option('markers', k)
 
     def __str__(self):
@@ -113,28 +137,139 @@ class Profile(object):
     def __len__(self):
         return len(self.samples.distance)
 
+    @property
+    def name(self):
+        """ Returns the name of this profile as ``str``. """
+        return self._name
+
+    @property
+    def timestamp(self):
+        """ Returns the timestamp when this profile was recorded. The timestamp
+        is timezone aware.
+        """
+        return self._timestamp
+
+    @property
+    def overload(self):
+        """ Returns the overload configured when this profile was recorded. The
+        unit of this value is N (Newton).
+        """
+        return self._overload
+
+    @property
+    def spatial_resolution(self):
+        """ Returns the spatial resolution of this profile in mm (millimeters).
+        """
+        return self._spatial_resolution
+
+    @property
+    def speed(self):
+        """ Returns the speed used to record this profile in mm/s (millimeters
+        per second). """
+        return self._speed
+
+    @property
+    def smp_length(self):
+        """ Returns the length on the SnowMicroPen used. """
+        return self._smp_length
+
+    @property
+    def smp_tipdiameter(self):
+        """ Returns the tip diameter of SnowMicroPen used. """
+        return self._smp_tipdiameter
+
+    @property
+    def smp_serial(self):
+        """ Returns the serial number of the SnowMicroPen used to record this
+        profile.
+        """
+        return self._smp_serial
+
+    @property
+    def smp_firmware(self):
+        """ Returns the firmware version of the SnowMicroPen at the time of
+        recording this profile.
+        """
+        return self._smp_firmware
+
+    @property
+    def gps_numsats(self):
+        """ Returns the number of satellites available when location was
+        determined using GPS. Acts as an indicator of location's quality.
+        """
+        return self._gps_numsats
+
+    @property
+    def gps_pdop(self):
+        """ Returns positional DOP (dilution of precision) value when location
+        was determined using GPS. Acts as an indicator of location's quality.
+        """
+        return self._gps_pdop
+
+    @property
+    def amplifier_serial(self):
+        """ Returns the amplifier's serial number of the SnowMicroPen used to
+        record this profile.
+        """
+        return self._amplifier_serial
+
+    @property
+    def amplifier_range(self):
+        """ Returns the amplifier's range of the SnowMicroPen used to record
+        this profile.
+        """
+        return self._amplifier_range
+
+    @property
+    def samples(self):
+        """ Returns the samples. This is a pandas dataframe."""
+        return self._samples
+
     def default_filename(self, suffix, extension='.csv'):
-        head, tail = split(self.pnt_filename)
+        head, tail = split(self._pnt_filename)
         return join(head, self.name + '_' + suffix + extension)
 
-    def pnt_header_value(self, pnt_id):
-        return self.pnt_header[pnt_id].value
+    def pnt_header_value(self, pnt_header_id):
+        """ Return the value of the pnt header by its ID which is a string. """
+        return self._pnt_header[pnt_header_id].value
 
     @property
     def coordinates(self):
-        if self.latitude and self.longitude:
-            return self.latitude, self.longitude
+        """ Returns WGS 84 coordinates (latitude, longitude) of this profile in
+        decimal format as a tuple of ``(float, float)`` or ``None`` when no
+        coordinates are available.
+
+        The coordinates are constructed by header fields of the pnt file. In
+        case these header fields are empty or contain garbage, ``None`` is
+        returned. You always can read the header fields yourself using the
+        :meth:`pnt_header_value` of this class for investigating what's
+        present in the pnt header fields.
+        """
+        if self._latitude and self._longitude:
+            return self._latitude, self._longitude
         return None
 
     @property
     def markers(self):
+        """ Returns a list of all markers. The lists contains tuples of name
+        and value and its type is ``(str, float)``.
+        """
         markers = self._ini.items('markers')
         markers = [(k, self.marker(k)) for k, v in markers]
         return markers
 
-    # configparser._UNSET is required to enable None as a valid value to
-    # pass as fallback value
+    # configparser._UNSET as default value for fallback is required to enable
+    # None as a valid value to pass
     def marker(self, name, fallback=configparser._UNSET):
+        """ Returns the value of a marker as a ``float``. In case a
+        fallback value is provided and no marker is found, the fallback value
+        is returned. It's recommended to pass a ``float`` fallback value.
+        ``None`` is a valid fallback value.
+
+        :param name: Name of the marker requested.
+        :param fallback: Fallback value returned in case no marker exists for
+               the provided name.
+        """
         try:
             # Always return floats
             return self._ini.getfloat('markers', name, fallback=fallback)
@@ -142,39 +277,54 @@ class Profile(object):
             raise KeyError('No marker named {} available'.format(name))
 
     def set_marker(self, name, value):
+        """ Sets a marker value.
+
+        The provided value is converted into a ``float``. Raises
+        :exc:`ValueError` in case this fails.
+
+        :param name: Name of the marker.
+        :param value: Value for the marker. Passing a ``float`` is recommended.
+        """
         # Make sure value is a float, ValueError is raised otherwise,
         # None is ok too
-        value = float(value) if value else None
-        return self._ini.set('markers', name, str(value))
+        value = float(value)
+        self._ini.set('markers', name, str(value))
 
     def remove_marker(self, name):
-        self._ini.remove_option('markers', name)
+        """ Remove a marker.
+
+        Raises :exc:`KeyError` in case no such marker is found.
+
+        :param name: Name (``str``) of the marker to remove.
+        """
+        return float(self._ini.remove_option('markers', name))
 
     @property
     def surface(self):
-        """Convenience property to access value of
-        marker named 'surface'
-        """
-        try:
-            return self.marker('surface')
-        except KeyError:
-            return None
+        """ Convenience property to access value of 'surface' marker. """
+        return self.marker('surface')
 
     @property
     def ground(self):
-        """Convenience property to access value of
-        marker named 'ground'
-        """
-        try:
-            return self.marker('ground')
-        except KeyError:
-            return None
+        """ Convenience property to access value of 'ground' marker. """
+        return self.marker('ground')
 
     @staticmethod
     def load(pnt_filename, ini_filename=None):
+        """ Loads a pnt file and its corresponding ini file too.
+
+        :param pnt_filename:
+        :param ini_filename:
+        :return: A new instance of the ``Profile`` class.
+        """
         return Profile(pnt_filename, ini_filename)
 
     def save(self, ini_filename=None):
+        """ Save markers of this profile in a INI file.
+
+        :param ini_filename:
+        :return:
+        """
         filename = self.ini_filename
         if ini_filename:
             filename = ini_filename
@@ -188,6 +338,15 @@ class Profile(object):
             self._ini.write(f)
 
     def export_samples(self, filename=None, precision=4, snowpack_only=False):
+        """ Export the samples of this profile into a CSV file.
+
+        :param filename: Name of CSV file.
+        :param precision: Precision (number of digits after comma) of the
+               values. Default value is 4.
+        :param snowpack_only: In case set to true, only samples within the
+               markers surface and ground are exported.
+        """
+
         if not filename:
             filename = splitext(self.pnt_filename)[0] + '_samples.csv'
         log.info('Exporting samples of {} to {}'.format(self, filename))
@@ -197,7 +356,7 @@ class Profile(object):
         fmt = '%.{}f'.format(precision)
         samples.to_csv(filename, header=True, index=False, float_format=fmt)
 
-    def export_meta(self, filename=None, full_pnt_header=False):
+    def export_meta(self, filename=None, include_pnt_header=False):
         if not filename:
             filename = splitext(self.pnt_filename)[0] + '_meta.csv'
         log.info('Exporting meta information of {} to {}'.format(self, filename))
@@ -218,15 +377,13 @@ class Profile(object):
             for k, v in self.markers:
                 writer.writerow(('ini.marker.' + k, v))
             # Export pnt header entries
-            if full_pnt_header:
+            if include_pnt_header:
                 for pnt_id, (label, value, unit) in sorted(self.pnt_header.items()):
                     writer.writerow(['pnt.' + pnt_id, value])
 
     @property
     def max_force(self):
-        """ Get max force in this profile
-        :return: Tuple with max force value and its distance
-        """
+        """ Return the maximum force value of all samples of this profile. """
         return self.samples.force.max()
 
     def samples_within_distance(self, begin=None, end=None, relativize=False):

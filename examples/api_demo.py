@@ -14,7 +14,7 @@ print(p.coordinates)
 print(p.smp_serial)
 
 # Export profile data
-p.export_meta(full_pnt_header=False)
+p.export_meta(include_pnt_header=False)
 p.export_samples()
 
 # Access measurements as pandas dataframe
@@ -41,7 +41,7 @@ p.detect_ground()
 # the snowpack.
 p.set_marker('slab_begin', p.surface)
 p.set_marker('slab_end', p.surface + 200)
-p.export_meta(full_pnt_header=True)
+p.export_meta(include_pnt_header=True)
 
 # Save, so markers are not lost
 # This saves an ini file named same as the pnt file

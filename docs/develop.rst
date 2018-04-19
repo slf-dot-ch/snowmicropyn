@@ -19,8 +19,8 @@ changes in the resources folder:
 This command generates an updated version of the file called :file:`icons.py`.
 Don't ever edit this file manually.
 
-Help, the icons are gone!
-^^^^^^^^^^^^^^^^^^^^^^^^^
+WTF, the icons are gone!
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 In case you're suddenly see no more icons when running :program:`Examiner`, it's
 likely due to your IDE has optimized your imports and dropped the statement
@@ -43,15 +43,15 @@ Releasing a New Version of snowmicropyn
 
 #. Commit you changes
 
-   .. code-block:: console
+.. code-block:: console
 
-      git commit -m "Some nice words about your changes"
+   git commit -m "Some nice words about your changes"
 
 #. Add an annotated tag in your repo
 
-   .. code-block:: console
+.. code-block:: console
 
-      git tag -a <version-number> -m "Version <version-number>"
+   git tag -a <version-number> -m "Version <version-number>"
 
    Some examples for <version-number>, also consider reading :pep:`440`.
 
