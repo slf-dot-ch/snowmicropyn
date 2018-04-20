@@ -14,7 +14,7 @@ Launch :program:`Examiner`
 
 When the *snowicropyn* package is installed, a simple script to start
 :program:`Examiner` is registered too. Open a Terminal Window and type
-:kbd:`smpexaminer` and hit :kbd:`return`. A window should open which looks alike
+:kbd:`examiner` and hit :kbd:`return`. A window should open which looks alike
 this screenshot:
 
 .. figure:: images/screenshot_examiner.png

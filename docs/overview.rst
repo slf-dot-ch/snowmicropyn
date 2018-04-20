@@ -53,4 +53,4 @@ Launch the :program:`Examiner`
 
 After installing *snowmicropyn* , open a Terminal Window and type
 :kbd:`examiner` and hit :kbd:`return` to start the
-:program:`Examiner`. Happy examining.
+:program:`Examiner`. Happy examining!

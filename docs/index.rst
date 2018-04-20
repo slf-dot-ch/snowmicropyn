@@ -12,9 +12,9 @@ For feedback and suggestions, please write to
 What is where?
 --------------
 
-- Source Code Repository_ on GitHub.
-- Documentation_ on Read the Docs.
-- Releases_ on PyPI.
+- Our `Source Code Repository`_ is on *GitHub*.
+- This Documentation_ can be studied on *Read the Docs*.
+- Our Releases_ are placed on *PyPI* (Use :command:`pip` to install!)
 
 Table of Content
 ----------------
@@ -45,7 +45,14 @@ The software and its documentation is released under GPL_.
 Acknowledgements
 ----------------
 
-Thanks to PyPI_, GitHub_, `Read the Docs`_ for hosting our project!
+Thanks to PyPI_, GitHub_ and `Read the Docs`_ for hosting our project!
+
+Also, many thanks to the people behind the products who made developing this
+package possible in reasonable time:
+
+- The beloved language of Python_
+- The beautiful Qt_ toolkit and its python inding PyQt_
+- The awesome python packages matplotlib_, numpy_, scipy_, pandas_ and pytz_.
 
 
 .. _SLF: https://www.slf.ch/
@@ -53,7 +60,7 @@ Thanks to PyPI_, GitHub_, `Read the Docs`_ for hosting our project!
 .. _GPL: https://www.gnu.org/licenses/gpl.txt
 
 .. _GitHub: https://github.com/
-.. _Repository: https://github.com/slf-dot-ch/snowmicropyn/
+.. _Source Code Repository: https://github.com/slf-dot-ch/snowmicropyn/
 .. _Issue Tracker: https://github.com/slf-dot-ch/snowmicropyn/issues/
 
 .. _Read the Docs: https://readthedocs.org/
@@ -61,3 +68,12 @@ Thanks to PyPI_, GitHub_, `Read the Docs`_ for hosting our project!
 
 .. _PyPI: https://pypi.org/
 .. _Releases: https://pypi.org/project/snowmicropyn/
+
+.. _Python: https://www.python.org/
+.. _Qt: https://www.qt.io/
+.. _PyQt: https://riverbankcomputing.com/software/pyqt/intro
+.. _numpy: http://www.numpy.org/
+.. _scipy: https://scipy.org/scipylib/
+.. _pandas: http://pandas.pydata.org/
+.. _matplotlib: https://matplotlib.org/
+.. _pytz: https://pypi.org/project/pytz/
