@@ -45,8 +45,8 @@ Some examples will help you to get an overview of *snowmicropyn*'s features.
 
 .. hint::
 
-    You these and other examples in our collection of :github_tree:`examples` in
-    our GitHub repository.
+    You find these and other examples in our collection of
+    :github_tree:`examples` on GitHub.
 
 Explore properties
 ^^^^^^^^^^^^^^^^^^

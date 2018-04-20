@@ -5,7 +5,7 @@ from .pnt import Pnt
 
 import logging
 
-__version__ = '0.1.dev6'
+__version__ = '0.1.dev7'
 
 
 def githash():
