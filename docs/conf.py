@@ -3,7 +3,21 @@
 import os
 import re
 import sys
+import sys
 from os.path import join
+from unittest.mock import MagicMock
+
+
+# This mocking stuff is required to get Read the Docs getting building autodocs.
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+MOCK_MODULES = ['numpy', 'pandas', 'PyQt5']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.extlinks']
 

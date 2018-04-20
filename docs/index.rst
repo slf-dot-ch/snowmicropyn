@@ -50,8 +50,8 @@ Thanks to PyPI_, GitHub_ and `Read the Docs`_ for hosting our project!
 Also, many thanks to the people behind the products who made developing this
 package possible in reasonable time:
 
-- The beloved language of Python_
-- The beautiful Qt_ toolkit and its python inding PyQt_
+- The beloved language of Python_.
+- The beautiful Qt_ toolkit and its python inding PyQt_.
 - The awesome python packages matplotlib_, numpy_, scipy_, pandas_ and pytz_.
 
 
