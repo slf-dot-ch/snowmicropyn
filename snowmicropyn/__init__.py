@@ -1,6 +1,8 @@
 from os.path import dirname, abspath, join
 
 from .profile import Profile
+from .pnt import Pnt
+
 import logging
 
 __version__ = '0.1.dev4'
