@@ -1,19 +1,16 @@
-# SnowMicroPyn Example: plot.py
-#
-# Plotting the signal of a SMP profile using the library matploblib.
-# An interactive plot is shown, you can pan, zoom, export by using
-# the toolbar buttons. Happy examining!
-
 from matplotlib import pyplot as plt
 
 from snowmicropyn import Profile
 
-p = Profile.load('/Users/marcel/Dropbox/SMP/pnt_examples/S31M0067.pnt')
+p = Profile.load('./some_directory/S31M0067.pnt')
 
+# Plot distance on x and samples on y axis
 plt.plot(p.samples.distance, p.samples.force)
 
+# Prettify our plot a bit
 plt.title(p.name)
 plt.ylabel('Force [N]')
 plt.xlabel('Depth [mm]')
 
+# Show interactive plot with zoom, export and other features
 plt.show()
