@@ -4,6 +4,8 @@ import io
 
 from setuptools import setup
 
+ON_RTD = os.environ.get('READTHEDOCS') == 'True'
+
 # Load the package's __version__.py to get version string
 here = os.path.abspath(os.path.dirname(__file__))
 init_py = os.path.join(here, 'snowmicropyn', '__init__.py')
@@ -17,6 +19,22 @@ SnowMicroPen, a snow penetration probe for scientific applications developed at 
 readme_rst = os.path.join(here, 'README.rst')
 with io.open(readme_rst, encoding='utf-8') as f:
     LONG_DESRIPTION = f.read()
+
+DEPENDENCIES = [
+        'pytz',
+        'scipy >= 1',
+        'pandas >= 0.22',
+        'matplotlib >= 2',
+        'PyQt5 >= 5',
+]
+
+if ON_RTD:
+    DEPENDENCIES = [
+        'pytz',
+        'scipy >= 1',
+        'pandas >= 0.22',
+        'matplotlib >= 2',
+    ]
 
 setup(
     name='snowmicropyn',
@@ -55,11 +73,5 @@ setup(
     },
 
     python_requires='>=3.4',
-    install_requires=[
-        'pytz',
-        'scipy >= 1',
-        'pandas >= 0.22',
-        'matplotlib >= 2',
-        'PyQt5 >= 5',
-    ]
+    install_requires=DEPENDENCIES
 )
