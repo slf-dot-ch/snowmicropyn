@@ -1,11 +1,42 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QAbstractItemView, QTreeView
+from PyQt5.QtCore import Qt, QMargins
+from PyQt5.QtGui import QStandardItemModel, QStandardItem, QIcon, QDoubleValidator
+from PyQt5.QtWidgets import *
+import logging
+
+log = logging.getLogger(__name__)
+
+import snowmicropyn.examiner.icons
+
+class ButtonThing(QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        layout = QHBoxLayout()
+
+        self.value_textedit = QLineEdit()
+        self.value_textedit.setValidator(QDoubleValidator())
+
+        self.setAutoFillBackground(True)
+
+        self.detect_button = QPushButton()
+        self.detect_button.setIcon(QIcon(':/icons/autodetect.png'))
+        self.detect_button.setToolTip('Detect automatically')
+
+
+        def detect():
+            log.info('The toolbutton was clicked!')
+
+        self.detect_button.clicked.connect(detect)
+
+        layout.addWidget(self.value_textedit)
+        layout.addWidget(self.detect_button)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+
 
 
 class InfoView(QTreeView):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
 
         model = QStandardItemModel(0, 2, self)
@@ -17,6 +48,7 @@ class InfoView(QTreeView):
         # Hide header of tree view
         self.header().hide()
 
+        self.section_recording = QStandardItem('Recording')
         self.name = QStandardItem()
         self.name.setEditable(False)
         self.pnt_filename = QStandardItem()
@@ -34,6 +66,7 @@ class InfoView(QTreeView):
         self.speed = QStandardItem()
         self.speed.setEditable(False)
 
+        self.section_smp = QStandardItem('SnowMicroPen')
         self.smp_serial = QStandardItem()
         self.smp_serial.setEditable(False)
         self.smp_firmware = QStandardItem()
@@ -45,6 +78,16 @@ class InfoView(QTreeView):
         self.smp_amp = QStandardItem()
         self.smp_amp.setEditable(False)
 
+        self.section_markers = QStandardItem('Markers')
+
+        self.section_noise = QStandardItem('Noise, Drift, Offset')
+        self.offset = QStandardItem()
+        self.offset.setEditable(False)
+        self.drift = QStandardItem()
+        self.drift.setEditable(False)
+        self.noise = QStandardItem()
+        self.noise.setEditable(False)
+
         self.setModel(model)
         self.init_ui()
         self.expandAll()
@@ -53,7 +96,7 @@ class InfoView(QTreeView):
     def init_ui(self):
         model = self.model()
 
-        section = QStandardItem('Recording')
+        section = self.section_recording
         section.setEnabled(False)
         model.appendRow(section)
 
@@ -89,7 +132,7 @@ class InfoView(QTreeView):
         label.setEnabled(False)
         section.appendRow((label, self.speed))
 
-        section = QStandardItem('SnowMicroPen')
+        section = self.section_smp
         section.setEnabled(False)
         model.appendRow(section)
 
@@ -113,13 +156,26 @@ class InfoView(QTreeView):
         label.setEnabled(False)
         section.appendRow((label, self.smp_amp))
 
-        section = QStandardItem('Markers')
+        section = self.section_markers
         section.setEnabled(False)
         model.appendRow(section)
 
-        section = QStandardItem('Noise, Drift, Offset')
+        section = self.section_noise
         section.setEnabled(False)
         model.appendRow(section)
+
+        label = QStandardItem('Offset')
+        label.setEnabled(False)
+        section.appendRow((label, self.offset))
+
+        label = QStandardItem('Drift')
+        label.setEnabled(False)
+        section.appendRow((label, self.drift))
+
+        label = QStandardItem('Noise')
+        label.setEnabled(False)
+        section.appendRow((label, self.noise))
+
 
     def set_profile(self, profile):
         self.name.setText(profile.name)
@@ -139,4 +195,24 @@ class InfoView(QTreeView):
         self.smp_length.setText('{} mm'.format(profile.smp_length))
         self.smp_tipdiameter.setText('{:.1f} mm'.format(profile.smp_tipdiameter/1000))
         self.smp_amp.setText(str(profile.amplifier_serial))
+
+        # Remove all existing children from marker section
+        row_count = self.section_markers.rowCount()
+        self.section_markers.removeRows(0, row_count)
+
+        for k, v in profile.markers:
+
+            label = QStandardItem(k)
+            label.setEditable(False)
+            placeholder = QStandardItem('')
+
+            self.section_markers.appendRow((label, placeholder))
+
+            lineedit_with_button = ButtonThing()
+            lineedit_with_button.value_textedit.setText('{:.3f}'.format(v))
+            self.setIndexWidget(placeholder.index(), lineedit_with_button)
+
+    def detect(self, event):
+        log.debug('Detect got clicked')
+
 
