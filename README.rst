@@ -1,95 +1,47 @@
-SnowMicroPyn
+snowmicropyn
 ============
 
-SnowMicroPyn, a python package for analyzing snow profiles recorded
-with the snow penetrometer `SnowMicroPen`_ by `SLF`_. It contains a
-Desktop Application (using `wxpython`_) for straigt forward plot
-creation and data export. But it can also be used within your own
-python scripts to enable batch processing or other tasks.
+*snowmicropyn* is a python package to read, export and post process data
+(``*.pnt`` files) recorded by SnowMicroPen_, a snow penetration probe for
+scientifc applications developed at SLF_.
 
-SnowMicroPyn is open source and released under `GPLv3`_. Any
-contribution is welcome. For bug reports, please use github issue
-tracking or write to snowmicropen@slf.ch.
+*snowmicropyn* is open source and released under `GPL`_. Contributions are
+welcome.
 
-Features
---------
+Installing
+----------
 
-- Read and plot .pnt Files
-- Export measurement, information and plots into human readable format
-- View and save measurement GPS locations using Google Static API
-- Noise, drift and offset analysis
-- Superpose and subtract plots
-- Frequency analysis
+Install and update using ``pip``:
 
-Prerequisites
--------------
-
-A recent Python Installation. An Anaconda Installation if fine too, of
-course.
-
-Installation
-------------
-
-Install and update using `pip`_:
-
-.. code-block:: text
+.. code-block:: console
 
     pip install -U snowmicropyn
 
-Run SnowMicroPyn Desktop Application
-------------------------------------
+A Simple Example
+----------------
 
-On Windows, type:
+.. code-block:: python
 
-.. code-block:: text
+    from snowmicropyn import Profile
 
-    python -m snowmicropyn.SnowMicroPyn
+    p = Profile.load('./some_directory/S31M0067.pnt')
 
-On macOS, type:
+    ts = p.timestamp
+    coords = p.coordinates
+    samples = p.samples  # It's a pandas dataframe
 
-.. code-block:: text
+Documentation
+-------------
 
-    pythonw -m snowmicropyn.SnowMicroPyn
+The project's documentation_ can be studied on *Read the Docs*.
 
 Contact
 -------
 
-If you like to get in touch with the team, please write to
-snowmicropen@slf.ch.
-
-Contributors
-------------
-
-- Sascha Grimm, SLF
-- Henning Löwe, SLF
-- Thiemo Theile, SLF
-- Marcel Schoch, SLF
-
-A Simple Scripting Example
---------------------------
-
-.. code-block:: python
-
-    from snowmicropyn.io import Profile
-
-    p = Profile.load('S31M0067.pnt')
-
-    # Read some information about the profile
-    timestamp = p.timestamp
-    smp_serial = p.smp_serial
-    latitude, longitude = p.coordinates  # WGS84 latitude and longitude
-
-    # Export samples into CSV format
-    # (By default, filename will be S31M0067_samples.csv)
-    p.export_samples()
-
-    # Export meta info into CSV format
-    # (By default, filename will be S31M0067_meta.csv)
-    p.export_meta()
+To get in touch, please write to snowmicropen@slf.ch.
 
 
 .. _SLF: https://www.slf.ch
 .. _SnowMicroPen: https://www.slf.ch/en/services-and-products/research-instruments/snowmicropen-r-smp4-version.html
-.. _GPLv3: https://www.gnu.org/licenses/gpl-3.0.en.html
-.. _pip: https://pip.pypa.io/en/stable/quickstart/
-.. _wxpython: https://wxpython.org/
+.. _GPL: https://www.gnu.org/licenses/gpl-3.0.en.html
+.. _documentation: https://snowmicropyn.readthedocs.io/
