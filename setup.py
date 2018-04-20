@@ -11,9 +11,7 @@ init_py = os.path.join(here, 'snowmicropyn', '__init__.py')
 with open(init_py) as f:
     VERSION = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
 
-DESC = """A python package to read, export and post process data (*.pnt files) 
-recorded by SnowMicroPen, a snow penetration probe for scientific applications 
-developed at SLF."""
+DESC = 'A python package to read, export and post process data (*.pnt files) recorded by SnowMicroPen, a snow penetration probe for scientific applications developed at SLF.'
 
 readme_rst = os.path.join(here, 'README.rst')
 with open(readme_rst) as f:
@@ -40,7 +38,6 @@ setup(
     version=VERSION,
     description=DESC,
     long_description=LONG_DESC,
-    long_description_content_type='text/x-rst',
     author='WSL Institute for Snow and Avalanche Research SLF',
     author_email='snowmicropen@slf.ch',
     keywords=['SLF', 'SnowMicroPen', 'Snow Micro Pen', 'SMP', 'Snow', 'Science', 'Research'],
