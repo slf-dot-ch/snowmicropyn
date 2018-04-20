@@ -60,6 +60,8 @@ setup(
         'pandas >= 0.22',
         'matplotlib >= 2',
         'pytz',
-        'PyQt5 >= 5',
     ],
+    extras_require=[
+        'PyQt5 >= 5',
+    ]
 )
