@@ -15,7 +15,7 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-MOCK_MODULES = ['numpy', 'pandas', 'PyQt5']
+MOCK_MODULES = ['PyQt5']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
