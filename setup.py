@@ -56,12 +56,10 @@ setup(
 
     python_requires='>=3.4',
     install_requires=[
+        'pytz',
         'scipy >= 1',
         'pandas >= 0.22',
         'matplotlib >= 2',
-        'pytz',
-    ],
-    extras_require=[
         'PyQt5 >= 5',
     ]
 )
