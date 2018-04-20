@@ -40,7 +40,7 @@ setup(
     version=VERSION,
     description=DESC,
     long_description=LONG_DESC,
-    long_description_content_type='text/markdown',
+    long_description_content_type='text/x-rst',
     author='WSL Institute for Snow and Avalanche Research SLF',
     author_email='snowmicropen@slf.ch',
     keywords=['SLF', 'SnowMicroPen', 'Snow Micro Pen', 'SMP', 'Snow', 'Science', 'Research'],
