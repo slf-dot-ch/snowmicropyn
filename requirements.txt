@@ -1,0 +1,5 @@
+pytz
+scipy >= 1
+matplotlib >= 2
+pandas >= 0.22
+PyQt5 >= 5
