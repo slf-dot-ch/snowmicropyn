@@ -1,11 +1,11 @@
 snowmicropyn
 ============
 
-*snowmicropyn* is a python package to read, export and post process data
-(``*.pnt`` files) recorded by SnowMicroPen_, a snow penetration probe for
-scientifc applications developed at SLF_.
+A python package to read, export and post process data (``*.pnt`` files)
+recorded by SnowMicroPen_, a snow penetration probe for scientifc applications
+developed at SLF_.
 
-*snowmicropyn* is open source and released under `GPL`_. Contributions are
+The software is open source and released under `GPL`_. Contributions are
 welcome.
 
 Installing

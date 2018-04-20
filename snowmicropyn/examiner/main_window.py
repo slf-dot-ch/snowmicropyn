@@ -416,14 +416,22 @@ class MainWindow(QMainWindow):
         host = self.figure.add_subplot(111)
         host.set_title(p.pnt_filename, y=1.04)
 
-        if self.surface_action.isChecked() and p.surface:
-            host.axvline(x=p.surface, color=SURFACE_COLOR)
-            middle = p.max_force
-            host.text(x=p.surface, y=middle, s='surface', rotation=90, verticalalignment='top', color=SURFACE_COLOR)
+        try:
+            surface = p.surface
+        except KeyError:
+            surface = None
+        if self.surface_action.isChecked() and surface:
+            host.axvline(x=surface, color=SURFACE_COLOR)
+            middle = p.max_force()
+            host.text(x=surface, y=middle, s='surface', rotation=90, verticalalignment='top', color=SURFACE_COLOR)
 
-        if self.ground_action.isChecked() and p.ground:
-            host.axvline(x=p.ground, color=GROUND_COLOR)
-            middle = p.max_force
+        try:
+            ground = p.ground
+        except KeyError:
+            ground = None
+        if self.ground_action.isChecked() and ground:
+            host.axvline(x=ground, color=GROUND_COLOR)
+            middle = p.max_force()
             host.text(x=p.ground, y=middle, s='ground', rotation=90, verticalalignment='top', color=GROUND_COLOR)
 
         host.xaxis.set_label_text('Distance [mm]')

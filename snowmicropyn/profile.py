@@ -169,6 +169,11 @@ class Profile(object):
         return self._name
 
     @property
+    def pnt_filename(self):
+        """ Name of the pnt file this data was loaded from. """
+        return self._pnt_filename
+
+    @property
     def timestamp(self):
         """ Returns the timestamp when this profile was recorded. The timestamp
         is timezone aware.
