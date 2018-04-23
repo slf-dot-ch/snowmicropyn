@@ -61,6 +61,16 @@ That's about it. We hope you managed to get *snowmicropyn* on your machine.
 .. tip:: A good place to start getting into Python is the `Python Guide`_.
 
 
+Uninstalling
+------------
+
+Get rid of *snowmicropyn* is simple too:
+
+.. code-block:: console
+
+   pip uninstall snowmicropyn
+
+
 .. _Python: https://www.python.org/
 .. _PyPI: https://pypi.org/
 .. _virtual environment: https://docs.python.org/3/tutorial/venv.html
