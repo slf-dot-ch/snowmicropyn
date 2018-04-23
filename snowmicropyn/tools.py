@@ -1,5 +1,6 @@
 import collections
 
+from matplotlib import pyplot as plt
 from pandas import np as np
 
 pub_fields = ['title', 'authors', 'journal', 'url', 'pubdate']
@@ -85,3 +86,37 @@ def lin_fit(x, y, surface=None):
     std = np.std(y - y_fit)
 
     return x, y_fit, m, c, std
+
+
+def force_drops(x, y, max_dx=0.02, min_dy=0.05, dx_bins=0.02):
+    dy = -min_dy
+    start = 0
+    end = 1
+    down = []
+    i_max = len(y)
+
+    while end < i_max:
+
+        delta = y[start] - y[end]
+
+        if x[end] - x[start] > max_dx:
+            start += 1
+            end = start + 1
+            continue
+
+        elif delta > dy:
+            end += 1
+            continue
+
+        down.append(delta)
+
+        start = end
+        end = start + 1
+
+    down = np.abs(down)
+    bin_down = (max(down) - min(down)) / dx_bins
+
+    plt.hist(down, normed=True, stacked=False, bins=bin_down)
+    plt.show()
+
+    return down

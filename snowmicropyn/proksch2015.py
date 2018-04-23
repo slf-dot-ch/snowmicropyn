@@ -1,15 +1,7 @@
-from datetime import date
-
 import pandas as pd
 
-from .models import model_shotnoise
-from .tools import Publication
-
-AUTHORS = 'Martin Proksch, Henning Löwe, Martin Schneebeli'
-TITLE = 'Density, specific surface area, and correlation length of snow measured by high-resolution penetrometry'
-JOURNAL = 'Journal of Geophysical Research: Earth Surface, Volume 120, Issue 2'
-PUBLISHED = date(year=2015, month=1, day=16)
-URL = 'https://agupubs.onlinelibrary.wiley.com/doi/epdf/10.1002/2014JF003266'
+from snowmicropyn.loewe2011 import model_shotnoise
+from snowmicropyn.windowing import DEFAULT_WINDOW, DEFAULT_WINDOW_OVERLAP
 
 DENSITY_ICE = 917.
 
@@ -17,9 +9,8 @@ DENSITY_ICE = 917.
 def calc_density_ssa(median_force, element_size):
     """Calculation of density and ssa
 
-    This function calculates density and ssa (specific surface area)
-    according to publication Proksch, 2015, Journal of Geophysical
-    Research.
+    This function calculates density and ssa (specific surface area) according
+    to publication Proksch, 2015, Journal of Geophysical Research.
 
     https://agupubs.onlinelibrary.wiley.com/doi/epdf/10.1002/2014JF003266
 
@@ -51,16 +42,11 @@ def calc_density_ssa(median_force, element_size):
     return rho, ssa
 
 
-# noinspection PyClassHasNoInit
-class Proksch2015:
-    pubinfo = Publication(TITLE, AUTHORS, JOURNAL, PUBLISHED, URL)
-
-    @staticmethod
-    def apply(profile):
-        # First we need to get the shot noise params
-        shotnoise = model_shotnoise(profile.samples, 2.5, 1.4)
-        result = []
-        for index, row in shotnoise.iterrows():
-            rho, ssa = calc_density_ssa(row.f0, row.L)
-            result.append((rho, ssa))
-        return pd.DataFrame(result, columns=['rho', 'ssa'])
+def model_ssa_and_density(samples, window=DEFAULT_WINDOW, overlap_factor=DEFAULT_WINDOW_OVERLAP):
+    # Base: shot noise model
+    shotnoise = model_shotnoise(samples, window, overlap_factor)
+    result = []
+    for index, row in shotnoise.iterrows():
+        rho, ssa = calc_density_ssa(row.f0, row.L)
+        result.append((row.distance, rho, ssa))
+    return pd.DataFrame(result, columns=['distance', 'rho', 'ssa'])

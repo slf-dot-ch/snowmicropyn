@@ -23,7 +23,6 @@ class Pnt:
         print(raw_samples[2000:2005])
 
     This may prints lines like ``2017`` and ``(40, 41, 42, 43, 42)``.
-
     """
     class Header(Enum):
         """ Identifiers for pnt header entries """

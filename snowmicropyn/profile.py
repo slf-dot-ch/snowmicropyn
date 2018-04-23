@@ -8,8 +8,9 @@ import pandas as pd
 import pytz
 from pandas import np as np
 
-from .analysis import detect_surface, detect_ground
-from .models import model_shotnoise, model_ssa_and_density
+from .detection import detect_ground, detect_surface
+from .loewe2011 import model_shotnoise
+from .proksch2015 import model_ssa_and_density
 from .pnt import Pnt
 
 log = logging.getLogger(__name__)
@@ -128,7 +129,8 @@ class Profile(object):
 
         # Create a pandas dataframe with distance and force
         distances = np.arange(0, self._samples_count) * self._spatial_resolution
-        forces = np.asarray(pnt_samples) * self.pnt_header_value(Pnt.Header.SAMPLES_CONVFACTOR_FORCE)
+        forces = np.asarray(pnt_samples) * self.pnt_header_value(
+            Pnt.Header.SAMPLES_CONVFACTOR_FORCE)
         stacked = np.column_stack([distances, forces])
         self._samples = pd.DataFrame(stacked, columns=('distance', 'force'))
 
