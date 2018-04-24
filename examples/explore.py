@@ -1,12 +1,15 @@
 import logging
 import sys
 
+import snowmicropyn
+
 # Enable logging to stdout to see what's going on under the hood
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
-from snowmicropyn import Profile
+print(snowmicropyn.__version__)
+print(snowmicropyn.githash())
 
-p = Profile.load('./some_directory/S31M0067.pnt')
+p = snowmicropyn.Profile.load('./some_directory/S31M0067.pnt')
 
 print('Timestamp: {}'.format(p.timestamp))
 print('SMP Serial Number: {}'.format(p.smp_serial))

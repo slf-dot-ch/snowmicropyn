@@ -4,8 +4,8 @@ import sys
 # Enable logging to stdout to see what's going on under the hood
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
-from snowmicropyn.profile import Profile
-from snowmicropyn.analysis import detect_surface, detect_ground
+from snowmicropyn import Profile
+from snowmicropyn.detection import detect_ground, detect_surface
 
 p = Profile.load('./some_directory/S31M0067.pnt')
 

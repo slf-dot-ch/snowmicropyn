@@ -1,3 +1,15 @@
+"""Calculation of density and ssa.
+
+This module implements the methods to derive density and specific surface area
+(SSA) from SnowMicroPen's signal as described in publication
+`Density, specific surface area, and correlation length of snow measured by
+high‐resolution penetrometry <https://doi.org/10.1002/2014JF003266>`_ by Martin
+Proksch, Henning Löwe and Martin Schneebeli, publicised in `Journal of
+Geophysical Research: Earth Surface
+<https://agupubs.onlinelibrary.wiley.com/journal/21699011>`_, Volume 120,
+Issue 2, February 2015.
+"""
+
 import pandas as pd
 
 from snowmicropyn.loewe2011 import model_shotnoise
@@ -8,11 +20,6 @@ DENSITY_ICE = 917.
 
 def calc_density_ssa(median_force, element_size):
     """Calculation of density and ssa
-
-    This function calculates density and ssa (specific surface area) according
-    to publication Proksch, 2015, Journal of Geophysical Research.
-
-    https://agupubs.onlinelibrary.wiley.com/doi/epdf/10.1002/2014JF003266
 
     :param median_force: median of force
     :param element_size: element size

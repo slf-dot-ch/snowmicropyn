@@ -1,6 +1,6 @@
 import numpy as np
 
-from snowmicropyn.models import model_shotnoise
+from snowmicropyn.loewe2011 import model_shotnoise
 from snowmicropyn.profile import Profile
 
 np.set_printoptions(precision=4, suppress=True)

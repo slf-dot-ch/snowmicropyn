@@ -1,16 +1,37 @@
 API Reference
 =============
 
-.. module::snowmicropyn
+Receive Version Number and Git Hash
+-----------------------------------
 
-Its core: The :class:`Profile`
-------------------------------
+To receive the version of *snowmicropyn* and the githash of *snowmicropyn* your
+using, do the following:
+
+.. code-block:: python
+
+   import snowmicropyn
+   version = snowmicropyn.__version__  #  e.g. '0.1.2'
+   hash = snowmicropyn.githash()  # e.g. '55623b2d71e7cb7...'
+
+Receiving and logging this is useful for tracking purposes. The version and the
+git hash are 
+
+.. autofunction:: snowmicropyn.githash
+
+Its Core: The :class:`Profile` Class
+------------------------------------
 
 .. autoclass:: snowmicropyn.Profile
    :members:
 
-Proksch 2015
-------------
+Shotnoise Model (Löwe, 2011)
+----------------------------
+
+.. automodule:: snowmicropyn.loewe2011
+   :members:
+
+SSA & Density (Proksch, 2015)
+-----------------------------
 
 .. automodule:: snowmicropyn.proksch2015
    :members:

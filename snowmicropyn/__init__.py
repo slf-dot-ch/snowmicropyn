@@ -10,8 +10,10 @@ __version__ = '0.1.dev8'
 
 def githash():
     """
-    Get the git hash of this release of snowmicropyn.
-    :return: Hash as a string, None in case its a non official release.
+    Get the git hash of this release of *snowmicropyn*.
+
+    The Hash is a string. It can be None, which means you're using a non
+    official release of *snowmicropyn*.
     """
     here = dirname(abspath(__file__))
     with open(join(here, 'githash'), encoding='utf-8') as f:
