@@ -9,7 +9,7 @@ import pytz
 from pandas import np as np
 
 from .detection import detect_ground, detect_surface
-from .loewe2011 import model_shotnoise
+from .loewe2011 import shotnoise
 from .proksch2015 import model_ssa_and_density
 from .pnt import Pnt
 
@@ -414,8 +414,8 @@ class Profile(object):
                 writer.writerow(('ini.marker.' + k, v))
             # Export pnt header entries
             if include_pnt_header:
-                for pnt_id, (label, value, unit) in sorted(self._pnt_header.items()):
-                    writer.writerow(['pnt.' + pnt_id, value])
+                for header_id, (label, value, unit) in self._pnt_header.items():
+                    writer.writerow(['pnt.' + header_id.name, str(value)])
 
     def samples_within_distance(self, begin=None, end=None, relativize=False):
         """ Get samples within a certain distance, specified by parameters
@@ -479,11 +479,17 @@ class Profile(object):
         return ground
 
     def model_shotnoise(self, save_to_file=False, filename_suffix='shotnoise'):
-        sn = model_shotnoise(self.samples)
-        sn.to_csv(self.default_filename(suffix=filename_suffix), index=False)
+        sn = shotnoise(self.samples)
+        if save_to_file:
+            fname = self.default_filename(suffix=filename_suffix)
+            log.info('Saving shot noise dataframe to {} to {}'.format(self, fname))
+            sn.to_csv(fname, index=False)
         return sn
 
     def model_ssa(self, save_to_file=False, filename_suffix='ssa'):
         ssa = model_ssa_and_density(self.samples)
-        ssa.to_csv(self.default_filename(filename_suffix), index=False)
+        if save_to_file:
+            fname = self.default_filename(suffix=filename_suffix)
+            log.info('Saving ssa + density dataframe to {} to {}'.format(self, fname))
+            ssa.to_csv(self.default_filename(filename_suffix), index=False)
         return ssa

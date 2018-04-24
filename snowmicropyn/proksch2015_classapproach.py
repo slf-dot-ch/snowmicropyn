@@ -2,7 +2,7 @@ from datetime import date
 
 import pandas as pd
 
-from snowmicropyn.loewe2011 import model_shotnoise
+from snowmicropyn.loewe2011 import shotnoise
 from .tools import Publication
 
 AUTHORS = 'Martin Proksch, Henning Löwe, Martin Schneebeli'
@@ -58,9 +58,9 @@ class Proksch2015:
     @staticmethod
     def apply(profile):
         # First we need to get the shot noise params
-        shotnoise = model_shotnoise(profile.samples, 2.5, 1.4)
+        sn = shotnoise(profile.samples, 2.5, 1.4)
         result = []
-        for index, row in shotnoise.iterrows():
+        for index, row in sn.iterrows():
             rho, ssa = calc_density_ssa(row.f0, row.L)
             result.append((rho, ssa))
         return pd.DataFrame(result, columns=['rho', 'ssa'])

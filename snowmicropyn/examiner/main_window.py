@@ -338,8 +338,10 @@ class MainWindow(QMainWindow):
 
     def export_profile(self):
         p = self.current_profile
-        p.export_meta(full_pnt_header=True)
+        p.export_meta(include_pnt_header=True)
         p.export_samples()
+        p.model_shotnoise(save_to_file=True)
+        p.model_ssa(save_to_file=True)
 
     def drop_profile(self):
         log.debug('method drop_profile called')
@@ -451,7 +453,7 @@ class MainWindow(QMainWindow):
             density = host.twinx()
             density.yaxis.set_label_text('Density [$kg/m^3$]')
             density.yaxis.label.set_color(DENSITY_COLOR)
-            density.plot(ssa_data.distance, ssa_data.rho, DENSITY_COLOR)
+            density.plot(ssa_data.distance, ssa_data.density, DENSITY_COLOR)
             # Place y-axis outside in case SSA axis is also present
             if self.ssa_action.isChecked():
                 density.spines['right'].set_position(('outward', 60))

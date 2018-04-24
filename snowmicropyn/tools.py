@@ -73,7 +73,9 @@ def smooth(x, window_len=11, window='hanning'):
     return y
 
 
+# This function is used to calculate offset, drift and noise.
 def lin_fit(x, y, surface=None):
+
     x = x[10:]
     y = y[10:]
 
