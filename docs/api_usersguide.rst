@@ -38,6 +38,36 @@ you can load a profile:
 In the load call, there's also a check for a corresponding ini file, in this
 case for the :file:`S13M0067.ini`.
 
+Logging *snowmicropyn*'s Version and Git Hash
+---------------------------------------------
+
+As a scientist, you may interested to keep a log so you can reproduce what you
+calculated with what version of *snowmicropyn*. The package contains a version
+string and a git hash identifier.
+
+To access the packages version string, you do:
+
+.. code-block:: python
+
+   import snowmicropyn
+   v = snowmicropyn.__version__
+
+To access the git hash string of this release, you do:
+
+.. code-block:: python
+
+   import snowmicropyn
+   gh = snowmicropyn.githash()
+
+When exporting data using this module, the created CSV files also will contain a
+comment as first line with version string and git hash to identify which version
+of *snowmicropyn* was used to create the file.
+
+.. warning::
+
+   However, this is no mechanism to protect a file from later alternation. It's
+   just some basic information which maybe will be useful to you.
+
 Examples
 --------
 

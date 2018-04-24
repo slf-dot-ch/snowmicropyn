@@ -32,9 +32,8 @@ likely due to your IDE has optimized your imports and dropped the statement
 as it seems to not have an effect. But it actually does. No icons without this
 import statement!
 
-Releasing a New Version of snowmicropyn
----------------------------------------
-
+Releasing a New Version of *snowmicropyn*
+-----------------------------------------
 
 #. Update version string (``__version__``) in file
    :file:`snowmicropyn/__init__.py`

@@ -14,7 +14,11 @@ using, do the following:
    hash = snowmicropyn.githash()  # e.g. '55623b2d71e7cb7...'
 
 Receiving and logging this is useful for tracking purposes. The version and the
-git hash are 
+git hash are loggend also when you import the package (using python's standard
+logging facility). In case this information is crucial to you, it's important
+to do logging setup before importing the package, otherwise you miss it. The
+other option is to do the logging yourself using the function
+:func:`snowmicropyn.githash` and accessing :const:`snowmicropyn.__version__`.
 
 .. autofunction:: snowmicropyn.githash
 
@@ -24,8 +28,8 @@ Its Core: The :class:`Profile` Class
 .. autoclass:: snowmicropyn.Profile
    :members:
 
-Shotnoise Model (Löwe, 2011)
-----------------------------
+Shot Noise Model (Löwe, 2011)
+-----------------------------
 
 .. automodule:: snowmicropyn.loewe2011
    :members:
