@@ -65,7 +65,11 @@ def shotnoise_chunk(spatial_res, forces, cone_area=SMP_CONE_AREA):
 
 
 def shotnoise(samples, window=DEFAULT_WINDOW, overlap_factor=DEFAULT_WINDOW_OVERLAP):
+    # Calculate spatial resolution of the distance samples as median of all
+    # step sizes.
     spatial_res = np.median(np.diff(samples.distance.values))
+
+    # Split dataframe into chunks
     chunks = chunkup(samples, window, overlap_factor)
     result = []
     for center, chunk in chunks:

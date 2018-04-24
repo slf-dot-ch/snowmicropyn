@@ -12,6 +12,7 @@ from .detection import detect_ground, detect_surface
 from .loewe2011 import shotnoise
 from .proksch2015 import model_ssa_and_density
 from .pnt import Pnt
+from . import __version__, githash
 
 log = logging.getLogger(__name__)
 
@@ -390,7 +391,11 @@ class Profile(object):
         if snowpack_only:
             samples = self.samples_within_snowpack()
         fmt = '%.{}f'.format(precision)
-        samples.to_csv(filename, header=True, index=False, float_format=fmt)
+        with open(filename, 'w') as f:
+            # Write version and git hash as comment for tracking
+            crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
+            f.write(crumbs)
+            samples.to_csv(f, header=True, index=False, float_format=fmt)
 
     def export_meta(self, filename=None, include_pnt_header=False):
         if not filename:
@@ -398,6 +403,9 @@ class Profile(object):
         log.info('Exporting meta information of {} to {}'.format(self, filename))
         with open(filename, 'w') as f:
             writer = csv.writer(f)
+            # Write version and git hash as comment for tracking
+            crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
+            f.write(crumbs)
             # CSV header
             writer.writerow(['key', 'value'])
             # Export important properties of profile
@@ -483,7 +491,11 @@ class Profile(object):
         if save_to_file:
             fname = self.default_filename(suffix=filename_suffix)
             log.info('Saving shot noise dataframe to {} to {}'.format(self, fname))
-            sn.to_csv(fname, index=False)
+            with open(fname, 'w') as f:
+                # Write version and git hash as comment for tracking
+                crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
+                f.write(crumbs)
+                sn.to_csv(f, index=False)
         return sn
 
     def model_ssa(self, save_to_file=False, filename_suffix='ssa'):
@@ -491,5 +503,9 @@ class Profile(object):
         if save_to_file:
             fname = self.default_filename(suffix=filename_suffix)
             log.info('Saving ssa + density dataframe to {} to {}'.format(self, fname))
-            ssa.to_csv(self.default_filename(filename_suffix), index=False)
+            with open(fname, 'w') as f:
+                # Write version and git hash as comment for tracking
+                crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
+                f.write(crumbs)
+                ssa.to_csv(f, index=False)
         return ssa
