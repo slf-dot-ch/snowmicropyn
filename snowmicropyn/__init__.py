@@ -2,7 +2,7 @@ from os.path import dirname, abspath, join
 
 import logging
 
-__version__ = '0.1.dev8'
+__version__ = '0.1.dev9'
 
 
 def githash():
