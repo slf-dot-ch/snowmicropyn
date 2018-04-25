@@ -1,37 +1,17 @@
 snowmicropyn Changelog
 ======================
 
-Version 0.1.dev4
+Version 0.1.0a1
 ----------------
 
-2018-04-18
+NOT YET RELEASED
 
-- Improve structure and content of documentation (not yet complete though).
-- Log version and git hash on import of package.
-
-Version 0.1.dev3
-----------------
-
-2018-04-17
-
-- Better handling of markers of a profile, always convert to fload when
-  reading a marker. Log warning in case a value of a marker is no float
-  when ini file is read.
-- SLF logo on background when no file open.
-- Add documentation for developers.
-
-Version 0.1.dev2
-----------------
-
-2018-04-16
-
-- Complete overhaul, restruct code base
-- API design (not final yet)
-- API examples
-- Add basic Sphinx documentation (mostly concept, very few content)
-- Requires Python 3, no support for Python 2
-- Reimplmenting UI using Qt, not yet feature complete though
-- Publishing on PyPI
+Huge overhaul of snowmicropyn including:
+- Source code repository moved to GitHub.
+- Restructuring/Rewrite of code base.
+- Deployment as package on PyPI.
+- Documentation (using Sphinx), publishing on Read the Docs.
+- New UI called "snowmicropyn Examiner".
 
 Pre Overhaul Changelog
 ----------------------
