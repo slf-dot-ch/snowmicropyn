@@ -3,15 +3,15 @@ import re
 
 from setuptools import setup
 
-ON_RTD = os.environ.get('READTHEDOCS') == 'True'
-
 # Load the package's __version__.py to get version string
 here = os.path.abspath(os.path.dirname(__file__))
 init_py = os.path.join(here, 'snowmicropyn', '__init__.py')
 with open(init_py) as f:
-    VERSION = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
+    VERSION = re.search("__version__ = \'(.*?)\'", f.read()).group(1)
 
-DESC = 'A python package to read, export and post process data (*.pnt files) recorded by SnowMicroPen, a snow penetration probe for scientific applications developed at SLF.'
+DESC = 'A python package to read, export and post process data (*.pnt files) ' \
+       'recorded by SnowMicroPen, a snow penetration probe for scientific ' \
+       'applications developed at SLF.'
 
 readme_rst = os.path.join(here, 'README.rst')
 with open(readme_rst) as f:
@@ -22,16 +22,17 @@ DEPENDENCIES = [
         'scipy >= 1',
         'pandas >= 0.22',
         'matplotlib >= 2',
-        'PyQt5 >= 5',
+        'PyQt5',
 ]
 
+# To build documentation of docstrings, Read the Docs (RTD) must install the
+# the snowmicropyn package. But RTD does not allow to install packages with
+# binary dependencies like PyQt5. So we have to drop this requirement. Pandas,
+# matplotlib, etc seems to be no issue. To know if the scripts get executed on
+# RTD, we read the environment variable READTHEDOCS.
+ON_RTD = os.environ.get('READTHEDOCS') == 'True'
 if ON_RTD:
-    DEPENDENCIES = [
-        'pytz',
-        'scipy >= 1',
-        'pandas >= 0.22',
-        'matplotlib >= 2',
-    ]
+    DEPENDENCIES.remove('PyQt5')
 
 setup(
     name='snowmicropyn',
@@ -60,7 +61,7 @@ setup(
     packages=['snowmicropyn', 'snowmicropyn.examiner'],
     package_data={
         'snowmicropyn': ['githash'],
-        'snowmicropyn.examiner': ['about.html'],
+        'snowmicropyn.examiner': ['about.html', 'map.html'],
     },
     include_package_data=True,
     entry_points={

@@ -1,11 +1,14 @@
-from PyQt5.QtCore import Qt, QMargins
+from functools import partial
+
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QIcon, QDoubleValidator
 from PyQt5.QtWidgets import *
 import logging
 
+import snowmicropyn.examiner.icons
+
 log = logging.getLogger(__name__)
 
-import snowmicropyn.examiner.icons
 
 class ButtonThing(QWidget):
     def __init__(self, *args, **kwargs):
@@ -21,7 +24,6 @@ class ButtonThing(QWidget):
         self.detect_button.setIcon(QIcon(':/icons/autodetect.png'))
         self.detect_button.setToolTip('Detect automatically')
 
-
         def detect():
             log.info('The toolbutton was clicked!')
 
@@ -33,10 +35,14 @@ class ButtonThing(QWidget):
         self.setLayout(layout)
 
 
+class Sidebar(QTreeView):
 
-class InfoView(QTreeView):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, main_win, *args, **kwargs):
+        self.main_window = main_win
         super().__init__(*args, **kwargs)
+
+        self.doc = None
+
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
 
         model = QStandardItemModel(0, 2, self)
@@ -176,8 +182,13 @@ class InfoView(QTreeView):
         label.setEnabled(False)
         section.appendRow((label, self.noise))
 
+    def set_document(self, doc):
+        if doc is None:
+            return
 
-    def set_profile(self, profile):
+        self.doc = doc
+
+        profile = doc.profile
         self.name.setText(profile.name)
         self.pnt_filename.setText(profile.pnt_filename)
         self.timestamp.setText(str(profile.timestamp))
@@ -196,23 +207,27 @@ class InfoView(QTreeView):
         self.smp_tipdiameter.setText('{:.1f} mm'.format(profile.smp_tipdiameter/1000))
         self.smp_amp.setText(str(profile.amplifier_serial))
 
+        self.init_markers(profile)
+
+    def init_markers(self, profile):
         # Remove all existing children from marker section
-        row_count = self.section_markers.rowCount()
-        self.section_markers.removeRows(0, row_count)
+        self.section_markers.removeRows(0, self.section_markers.rowCount())
 
-        for k, v in profile.markers:
-
-            label = QStandardItem(k)
-            label.setEditable(False)
+        for label, value in profile.markers:
+            label_item = QStandardItem(label)
+            label_item.setEditable(False)
             placeholder = QStandardItem('')
 
-            self.section_markers.appendRow((label, placeholder))
+            self.section_markers.appendRow((label_item, placeholder))
 
             lineedit_with_button = ButtonThing()
-            lineedit_with_button.value_textedit.setText('{:.3f}'.format(v))
+            lineedit_with_button.value_textedit.setText('{:.3f}'.format(value))
+
+            value_func = lineedit_with_button.value_textedit.text
+            slot = partial(self.main_window.set_marker, label, value_func)
+            lineedit_with_button.value_textedit.editingFinished.connect(slot)
+
             self.setIndexWidget(placeholder.index(), lineedit_with_button)
 
     def detect(self, event):
         log.debug('Detect got clicked')
-
-

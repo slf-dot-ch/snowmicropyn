@@ -9,7 +9,7 @@ from snowmicropyn.examiner.log_window import LogWindow
 from snowmicropyn.examiner.main_window import MainWindow
 
 
-def main():
+def main(files):
     app = QApplication(sys.argv)
     app.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
@@ -20,18 +20,21 @@ def main():
 
     log_window = LogWindow()
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     logger.addHandler(log_window)
     logger.addHandler(logging.StreamHandler(stream=sys.stdout))
 
     log = logging.getLogger(__name__)
-    log.info('Launching {}, Version {}, Git Hash: {}'.format(APP_NAME, VERSION, GITHASH))
+    log.info('Launching {}, version {}, git hash: {}'.format(APP_NAME, VERSION, GITHASH))
 
     main_window = MainWindow(log_window)
+    #for f in files:
+    #    main_window.open_pnt(f)
     main_window.show()
 
     sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
-    main()
+    files = sys.argv[1:]
+    main(files)

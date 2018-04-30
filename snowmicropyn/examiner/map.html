@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <style media="screen" type="text/css">
+        html, body {
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        #map {
+            height: 100%;
+        }
+        .notification {
+            position: absolute;
+            z-index: 100;
+            bottom: 30px;
+            left: 50%;
+            width: 80%;
+            padding: 10px 2%;
+            margin-left: -42%;
+
+            background: orange;
+            color: #000;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+
+            border: 1px solid #dd8500;
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(0,0,0,.3);
+        }
+        a {
+            color: #0069D6;
+        }
+        a:hover,
+        a:focus {
+            color: #0050A3;
+        }
+</style>
+</head>
+<body>
+    <div id="map"></div>
+    <script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDLyX8qe57dDWN1RQwoGnLDNCll0_1-9gI"></script>
+    <script language="javascript">
+        (function() {
+            window.onload = function() {
+
+                var map = new google.maps.Map(document.getElementById("map"), {
+                    center: new google.maps.LatLng(46.8, 9.87),
+                    zoom: 9,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                });
+
+                var json = [
+                    ${json}
+                //{"title": "One", "lat": 46.845104217529297, "lng": 9.871776580810547},
+                //{"title": "Two", "lat": 46.845104217529297, "lng": 9.871780395507812},
+                ];
+
+                // Creating a global infoWindow object that will be reused by all markers
+                var infoWindow = new google.maps.InfoWindow();
+
+                // Looping through the JSON data
+                for (var i = 0, length = json.length; i < length; i++) {
+                    var data = json[i],
+                    latLng = new google.maps.LatLng(data.lat, data.lng);
+
+                    // Creating a marker and putting it on the map
+                    var marker = new google.maps.Marker({
+                        position: latLng,
+                        map: map,
+                        label: data.title,
+                        title: data.title
+                    });
+
+                    // Creating a closure to retain the correct data, notice how I pass the current data in the loop into the closure (marker, data)
+                    (function(marker, data) {
+
+                        // Attaching a click event to the current marker
+                        google.maps.event.addListener(marker, "click", function(e) {
+                            infoWindow.setContent(data.title);
+                            infoWindow.open(map, marker);
+                        });
+
+                    })(marker, data);
+                }
+            }
+        }
+        )();
+    </script>
+</body>
+</html>
