@@ -13,6 +13,7 @@ from snowmicropyn.examiner.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.examiner.map_window import MapWindow
 from snowmicropyn.examiner.info_view import Sidebar
 from snowmicropyn.examiner.plot_canvas import PlotCanvas
+import snowmicropyn.examiner.kml
 
 # This import statement is important, no icons appear in case it's missing!
 import snowmicropyn.examiner.icons
@@ -78,6 +79,7 @@ class MainWindow(QMainWindow):
         self.plot_density_proksch2015_action = QAction('Proksch 2015', self)
         self.autodetect_action = QAction('Detect Surface + Ground', self)
         self.map_action = QAction('Show Map', self)
+        self.kml_action = QAction('Export to KML', self)
         self.show_log_action = QAction('Show Log', self)
 
         self.profile_combobox = QComboBox(self)
@@ -212,6 +214,12 @@ class MainWindow(QMainWindow):
         action.setStatusTip('Show Map')
         action.triggered.connect(self._showmap_triggered)
 
+        action = self.kml_action
+        action.setIcon(QIcon(':/icons/kml.png'))
+        action.setShortcut('Ctrl+K')
+        action.setStatusTip('Export to KML')
+        action.triggered.connect(self._kml_triggered)
+
         action = self.show_log_action
         action.setIcon(QIcon(':/icons/logs.png'))
         action.setShortcut('Ctrl+L')
@@ -268,6 +276,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.next_action)
         toolbar.addSeparator()
         toolbar.addAction(self.map_action)
+        toolbar.addAction(self.kml_action)
 
     def closeEvent(self, event):
         log.info('Saving settings of MainWindow')
@@ -400,6 +409,12 @@ class MainWindow(QMainWindow):
         dialog.setWindowTitle('About')
         dialog.setLayout(layout)
         dialog.exec_()
+
+    def _kml_triggered(self):
+        profile = self.current_document.profile
+        d = dirname(profile.pnt_filename)
+        f = 'snowmicropyn_profiles.kml'
+        snowmicropyn.examiner.kml.export2kml(join(d, f), self.documents)
 
     def switch_document(self):
         doc = self.current_document
