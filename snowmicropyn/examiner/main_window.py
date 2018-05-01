@@ -3,7 +3,7 @@ from os.path import expanduser, dirname, abspath, join
 from string import Template
 
 from PyQt5.QtCore import QRect, Qt, QSettings, QSize
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QDoubleValidator, QValidator
 from PyQt5.QtWidgets import *
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 
@@ -39,6 +39,7 @@ class MainWindow(QMainWindow):
         self.log_window = log_window
         self.map_window = MapWindow()
         self.notify_dialog = NotificationDialog()
+        self.new_marker_dialog = NewMarkerDialog(self)
 
         self.documents = []
 
@@ -452,6 +453,13 @@ class MainWindow(QMainWindow):
 
         self.switch_document()
 
+    def new_marker(self, value_func):
+        value = value_func()
+        name, value = self.new_marker_dialog.getNewMarker(value)
+        if name and value:
+            profile = self.current_document.profile
+            profile.set_marker(name, value)
+
 
 # The NoDocWidget is visible when no document is open. It's just a label
 class NoDocWidget(QWidget):
@@ -497,4 +505,53 @@ class NotificationDialog(QDialog):
         self.setWindowTitle('Notification')
         self.hint_label.setText('File{} written:'.format('s' if multipe else ''))
         self.content_textedit.setText('\n'.join(files))
-        self.exec_()
+        self.exec()
+
+
+class NewMarkerDialog(QDialog):
+    def __init__(self, parent, *args):
+        super(NewMarkerDialog, self).__init__(parent, *args)
+        self.mainwin = parent
+        self.setWindowTitle('Add Marker')
+
+        self.name_lineedit = QLineEdit()
+        self.name_lineedit.setMinimumWidth(200)
+        self.value_lineedit = QLineEdit()
+        self.value_lineedit.setMinimumWidth(200)
+        self.validator = QDoubleValidator()
+        self.value_lineedit.setValidator(self.validator)
+        ok_and_cancel = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        self.button_box = QDialogButtonBox(ok_and_cancel)
+
+        def check():
+            ok_button = self.button_box.button(QDialogButtonBox.Ok)
+            name = self.name_lineedit.text()
+            existing_markers = [k for k, v in self.mainwin.current_document.profile.markers]
+            valid_name = bool(name) and (name not in existing_markers)
+            valid_value = self.validator.validate(self.value_lineedit.text(), 0)[0] == QValidator.Acceptable
+            ok_button.setEnabled(valid_name and valid_value)
+
+        self.value_lineedit.textChanged.connect(check)
+        self.name_lineedit.textChanged.connect(check)
+
+        self.button_box.rejected.connect(self.reject)
+        self.button_box.accepted.connect(self.accept)
+
+        form_layout = QFormLayout()
+        form_layout.addRow('Name:', self.name_lineedit)
+        form_layout.addRow('Value:', self.value_lineedit)
+
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(form_layout)
+        main_layout.addWidget(self.button_box)
+        self.setLayout(main_layout)
+
+    def getNewMarker(self, default_value):
+        self.value_lineedit.setText(str(default_value))
+        self.name_lineedit.setFocus()
+        result = self.exec()
+        if result == QDialog.Accepted:
+            name = self.name_lineedit.text()
+            value = float(self.value_lineedit.text())
+            return name, value
+        return None, None

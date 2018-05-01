@@ -1,5 +1,4 @@
 import logging
-from collections import defaultdict
 from functools import partial
 
 from PyQt5.QtGui import QCursor
@@ -33,15 +32,21 @@ class PlotCanvas(FigureCanvas):
         set_ground_action.triggered.connect(slot)
 
         new_marker_action = QAction("New...", self)
-        # slot = partial(main_window.set_marker, 'ground', self.clicked_distance)
-        set_ground_action.triggered.connect(slot)
+        slot = partial(main_window.new_marker, self.clicked_distance)
+        new_marker_action.triggered.connect(slot)
+
+        set_drift_start_action = QAction('Set Drift Start to here', self)
+        set_drift_end_action = QAction('Set Drift End to here', self)
 
         # Context Menu, shown on right click in canvas
         menu = QMenu()
         menu.addAction(set_surface_action)
         menu.addAction(set_ground_action)
-        menu.addSeparator()
         menu.addAction(new_marker_action)
+        menu.addSeparator()
+        menu.addAction(set_drift_start_action)
+        menu.addAction(set_drift_end_action)
+
         self.context_menu = menu
 
     def clicked_distance(self):
