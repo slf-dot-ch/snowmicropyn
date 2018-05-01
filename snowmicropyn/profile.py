@@ -177,6 +177,11 @@ class Profile(object):
         return self._pnt_filename
 
     @property
+    def ini_filename(self):
+        """ Name of the ini file in which markers are saved. """
+        return self._ini_filename
+
+    @property
     def timestamp(self):
         """ Returns the timestamp when this profile was recorded. The timestamp
         is timezone aware.
@@ -396,6 +401,7 @@ class Profile(object):
             crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
             f.write(crumbs)
             samples.to_csv(f, header=True, index=False, float_format=fmt)
+        return filename
 
     def export_meta(self, filename=None, include_pnt_header=False):
         if not filename:
@@ -424,6 +430,7 @@ class Profile(object):
             if include_pnt_header:
                 for header_id, (label, value, unit) in self._pnt_header.items():
                     writer.writerow(['pnt.' + header_id.name, str(value)])
+        return filename
 
     def samples_within_distance(self, begin=None, end=None, relativize=False):
         """ Get samples within a certain distance, specified by parameters

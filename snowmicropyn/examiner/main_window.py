@@ -38,6 +38,7 @@ class MainWindow(QMainWindow):
 
         self.log_window = log_window
         self.map_window = MapWindow()
+        self.notify_dialog = NotificationDialog()
 
         self.documents = []
 
@@ -322,17 +323,22 @@ class MainWindow(QMainWindow):
 
     def _save_triggered(self):
         self.current_document.profile.save()
+        f = self.current_document.profile.ini_filename
+        self.notify_dialog.notifyFilesWritten([f])
 
     def _saveall_triggered(self):
-        for p in self.documents:
-            p.profile.save()
+        for doc in self.documents:
+            doc.profile.save()
+        f = [doc.profile.ini_filename for doc in self.documents]
+        self.notify_dialog.notifyFilesWritten(f)
 
     def _export_triggered(self):
         p = self.current_document.profile
-        p.export_meta(include_pnt_header=True)
-        p.export_samples()
+        meta_file = p.export_meta(include_pnt_header=True)
+        samples_file = p.export_samples()
         p.model_shotnoise(save_to_file=True)
         p.model_ssa(save_to_file=True)
+        self.notify_dialog.notifyFilesWritten([meta_file, samples_file])
 
     @property
     def current_document(self):
@@ -412,9 +418,9 @@ class MainWindow(QMainWindow):
 
     def _kml_triggered(self):
         profile = self.current_document.profile
-        d = dirname(profile.pnt_filename)
-        f = 'snowmicropyn_profiles.kml'
-        snowmicropyn.examiner.kml.export2kml(join(d, f), self.documents)
+        f = join(dirname(profile.pnt_filename),'snowmicropyn_profiles.kml')
+        snowmicropyn.examiner.kml.export2kml(f, self.documents)
+        self.notify_dialog.notifyFilesWritten(f)
 
     def switch_document(self):
         doc = self.current_document
@@ -461,3 +467,34 @@ class NoDocWidget(QWidget):
         layout = QVBoxLayout()
         layout.addWidget(self.label, alignment=Qt.AlignHCenter)
         self.setLayout(layout)
+
+
+class NotificationDialog(QDialog):
+    def __init__(self, *args):
+        super(NotificationDialog, self).__init__(*args)
+
+        self.hint_label = QLabel()
+        self.content_textedit = QTextEdit()
+        self.content_textedit.setReadOnly(True)
+
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(self.close)
+        close_button.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.hint_label)
+        layout.addWidget(self.content_textedit)
+        layout.addWidget(close_button)
+        layout.setAlignment(close_button, Qt.AlignRight)
+
+        self.setLayout(layout)
+        self.resize(500, 200)
+
+    def notifyFilesWritten(self, files):
+        if isinstance(files, str):
+            files = [files]
+        multipe = len(files) > 1
+        self.setWindowTitle('Notification')
+        self.hint_label.setText('File{} written:'.format('s' if multipe else ''))
+        self.content_textedit.setText('\n'.join(files))
+        self.exec_()
