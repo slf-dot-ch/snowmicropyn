@@ -25,16 +25,19 @@ class PlotCanvas(FigureCanvas):
 
         def set_surface(checked):
             main_window.set_marker('surface', self.clicked_distance())
+
         set_surface_action = QAction('Set Surface to here', self)
         set_surface_action.triggered.connect(set_surface)
 
         def set_ground(checked):
             main_window.set_marker('ground', self.clicked_distance())
+
         set_ground_action = QAction('Set Ground to here', self)
         set_ground_action.triggered.connect(set_ground)
 
         def add_marker(checked):
             main_window.add_marker(default_value=self.clicked_distance())
+
         add_marker_action = QAction("Add Marker...", self)
         add_marker_action.triggered.connect(add_marker)
 

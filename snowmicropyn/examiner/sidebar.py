@@ -1,10 +1,8 @@
-from functools import partial
-
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QDoubleValidator
-from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QLineEdit, QPushButton, QButtonGroup, QHBoxLayout
 import logging
 
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QLineEdit, QPushButton
 
 import snowmicropyn.examiner.icons
 
@@ -128,10 +126,12 @@ class SidebarWidget(QTreeWidget):
             # calls this method again...
             def set_marker(checked):
                 self.main_window.set_marker(label, item.lineedit.text())
+
             item.lineedit.editingFinished.connect(set_marker)
 
             def delete_marker(checked):
                 self.main_window.set_marker(label, None)
+
             item.delete_button.clicked.connect(delete_marker)
 
             self.marker_items[label] = item
@@ -172,7 +172,7 @@ class MarkerTreeItem(QTreeWidgetItem):
 
 
 class LineEdit(QLineEdit):
-    
+
     def __init__(self, item):
         super(LineEdit, self).__init__()
         self.item = item

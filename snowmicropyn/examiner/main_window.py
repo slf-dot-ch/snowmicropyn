@@ -2,18 +2,19 @@ import logging
 from os.path import expanduser, dirname, abspath, join
 from string import Template
 
-from PyQt5.QtCore import QRect, Qt, QSettings, QSize, QTimer
+from PyQt5.QtCore import QRect, Qt, QSettings, QSize
 from PyQt5.QtGui import QIcon, QDoubleValidator, QValidator
 from PyQt5.QtWidgets import *
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 
+import snowmicropyn.examiner.icons
+import snowmicropyn.examiner.kml
 from snowmicropyn import Profile
 from snowmicropyn.examiner.document import Document
 from snowmicropyn.examiner.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.examiner.map_window import MapWindow
-from snowmicropyn.examiner.sidebar import SidebarWidget
 from snowmicropyn.examiner.plot_canvas import PlotCanvas
-import snowmicropyn.examiner.kml
+from snowmicropyn.examiner.sidebar import SidebarWidget
 
 # This import statement is important, no icons appear in case it's missing!
 import snowmicropyn.examiner.icons
