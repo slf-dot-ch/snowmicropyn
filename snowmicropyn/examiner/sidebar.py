@@ -1,7 +1,7 @@
 import logging
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QDoubleValidator
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QLineEdit, QPushButton
 
 import snowmicropyn.examiner.icons
@@ -122,9 +122,10 @@ class SidebarWidget(QTreeWidget):
         if label not in self.marker_items:
             item = MarkerTreeItem(self.markers_item, label)
 
-            # This is a bit tricky: We call the method on main_window which
-            # calls this method again...
-            def set_marker(checked):
+            # This is a bit tricky: We call the methods on main_window which
+            # call this method again...
+
+            def set_marker():
                 self.main_window.set_marker(label, item.lineedit.text())
 
             item.lineedit.editingFinished.connect(set_marker)
@@ -152,6 +153,7 @@ class MarkerTreeItem(QTreeWidgetItem):
         self.detect_button.setIcon(QIcon(':/icons/autodetect.png'))
 
         self.lineedit = QLineEdit(self.treeWidget())
+        self.lineedit.setValidator(QDoubleValidator())
 
         self.treeWidget().setItemWidget(self, 1, self.delete_button)
         self.setText(2, name)

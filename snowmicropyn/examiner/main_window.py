@@ -457,7 +457,11 @@ class MainWindow(QMainWindow):
         self.save_action.setEnabled(at_least_one)
         self.saveall_action.setEnabled(at_least_one)
         self.export_action.setEnabled(at_least_one)
+        self.detect_surface_action.setEnabled(at_least_one)
         self.detect_ground_action.setEnabled(at_least_one)
+        self.add_marker_action.setEnabled(at_least_one)
+        self.map_action.setEnabled(at_least_one)
+        self.kml_action.setEnabled(at_least_one)
 
         self.stacked_widget.setCurrentIndex(1 if at_least_one else 0)
 
@@ -481,7 +485,7 @@ class MainWindow(QMainWindow):
 
     def add_marker(self, default_value=0):
         name, value = self.marker_dialog.getMarker(default_value=default_value)
-        if name and value:
+        if name is not None:
             self.set_marker(name, value)
 
 
