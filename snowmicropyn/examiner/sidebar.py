@@ -107,6 +107,11 @@ class SidebarWidget(QTreeWidget):
         self.smp_tipdiameter_item.setText(TEXT_COLUMN, str(p.smp_tipdiameter))
         self.smp_amp_item.setText(TEXT_COLUMN, p.amplifier_serial)
 
+        # Drop all existing markers
+        for label, item in self.marker_items.items():
+            self.markers_item.removeChild(item)
+        self.marker_items = {}
+
         for label, value in p.markers:
             self.set_marker(label, value)
 

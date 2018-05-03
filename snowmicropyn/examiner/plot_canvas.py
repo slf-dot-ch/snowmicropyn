@@ -70,26 +70,33 @@ class PlotCanvas(FigureCanvas):
         DENSITY_COLOR = 'C2'
         SURFACE_COLOR = 'C3'
         GROUND_COLOR = 'C4'
+        MARKERS_COLOR = 'C5'
 
         axes.set_title(doc.profile.pnt_filename, y=1.04)
-
         axes.xaxis.set_label_text('Distance [mm]')
-        axes.yaxis.set_label_text('Force [N]')
-        axes.plot(doc.profile.samples.distance, doc.profile.samples.force, FORCE_COLOR)
-        axes.yaxis.label.set_color(FORCE_COLOR)
 
+        plot_markers = self.main_window.plot_markers_action.isChecked()
         plot_surface = self.main_window.plot_surface_action.isChecked()
         plot_ground = self.main_window.plot_ground_action.isChecked()
+        plot_smpsignal = self.main_window.plot_smpsignal_action.isChecked()
         plot_ssa_proksch2015 = self.main_window.plot_ssa_proksch2015_action.isChecked()
         plot_density_proksch2015 = self.main_window.plot_density_proksch2015_action.isChecked()
 
         middle = doc.profile.max_force()
 
+        if plot_markers:
+            for label, value in doc.profile.markers:
+                axes.axvline(value, color=MARKERS_COLOR)
+                axes.text(x=value, y=0, s=label,
+                          rotation=90,
+                          verticalalignment='top',
+                          color=MARKERS_COLOR)
+
         if plot_surface:
             try:
                 surface = doc.profile.surface
                 axes.axvline(surface, color=SURFACE_COLOR)
-                axes.text(x=surface, y=middle, s='surface',
+                axes.text(x=surface, y=0, s='surface',
                           rotation=90,
                           verticalalignment='top',
                           color=SURFACE_COLOR)
@@ -100,12 +107,17 @@ class PlotCanvas(FigureCanvas):
             try:
                 ground = doc.profile.ground
                 axes.axvline(ground, color=GROUND_COLOR)
-                axes.text(x=ground, y=middle, s='ground',
+                axes.text(x=ground, y=0, s='ground',
                           rotation=90,
                           verticalalignment='top',
                           color=GROUND_COLOR)
             except KeyError:
                 pass
+
+        if plot_smpsignal:
+            axes.yaxis.set_label_text('Force [N]')
+            axes.plot(doc.profile.samples.distance, doc.profile.samples.force, FORCE_COLOR)
+            axes.yaxis.label.set_color(FORCE_COLOR)
 
         if plot_ssa_proksch2015 and doc.ssa_density_df is not None:
             ssa = axes.twinx()

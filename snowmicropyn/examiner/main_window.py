@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 class MainWindow(QMainWindow):
     SETTING_LAST_DIRECTORY = 'MainFrame/last_directory'
     SETTING_GEOMETRY = 'MainFrame/geometry'
+    SETTING_PLOT_SMPSIGNAL = 'MainFrame/plot/smpsignal'
     SETTING_PLOT_SURFACE = 'MainFrame/plot/surface'
     SETTING_PLOT_GROUND = 'MainFrame/plot/ground'
     SETTING_PLOT_MARKERS = 'MainFrame/plot/markers'
@@ -44,7 +45,8 @@ class MainWindow(QMainWindow):
 
         self.documents = []
 
-        self._last_directory = QSettings().value(self.SETTING_LAST_DIRECTORY, defaultValue=expanduser('~'))
+        homedir = expanduser('~')
+        self._last_directory = QSettings().value(self.SETTING_LAST_DIRECTORY, defaultValue=homedir)
 
         self.plotcanvas = PlotCanvas(main_window=self)
 
@@ -73,6 +75,7 @@ class MainWindow(QMainWindow):
         self.export_action = QAction('&Export', self)
         self.next_action = QAction('Next Profile', self)
         self.previous_action = QAction('Previous Profile', self)
+        self.plot_smpsignal_action = QAction('Plot SMP Signal', self)
         self.plot_surface_action = QAction('Plot Surface', self)
         self.plot_ground_action = QAction('Plot Ground', self)
         self.plot_markers_action = QAction('Plot other Markers', self)
@@ -172,6 +175,15 @@ class MainWindow(QMainWindow):
         def force_plot():
             self.switch_document()
 
+        action = self.plot_smpsignal_action
+        action.setShortcut('Alt+P')
+        action.setStatusTip('Plot SMP Signal')
+        action.setCheckable(True)
+        action.triggered.connect(force_plot)
+        setting = MainWindow.SETTING_PLOT_SMPSIGNAL
+        enabled = QSettings().value(setting, defaultValue=True, type=bool)
+        action.setChecked(enabled)
+
         action = self.plot_surface_action
         action.setShortcut('Alt+S')
         action.setStatusTip('Plot Surface')
@@ -255,10 +267,7 @@ class MainWindow(QMainWindow):
         menu.addAction(self.drop_action)
 
         menu = menubar.addMenu('&View')
-        menu.addAction(self.plot_surface_action)
-        menu.addAction(self.plot_ground_action)
-        menu.addAction(self.plot_markers_action)
-        menu.addSeparator()
+        menu.addAction(self.plot_smpsignal_action)
 
         ssa_menu = menu.addMenu('Plot &SSA')
         ssa_menu.addAction(self.plot_ssa_proksch2015_action)
@@ -266,6 +275,10 @@ class MainWindow(QMainWindow):
         density_menu = menu.addMenu('Plot &Density')
         density_menu.addAction(self.plot_density_proksch2015_action)
 
+        menu.addSeparator()
+        menu.addAction(self.plot_surface_action)
+        menu.addAction(self.plot_ground_action)
+        menu.addAction(self.plot_markers_action)
         menu.addSeparator()
         menu.addAction(self.next_action)
         menu.addAction(self.previous_action)
@@ -302,6 +315,7 @@ class MainWindow(QMainWindow):
         log.info('Saving settings of MainWindow')
         QSettings().setValue(MainWindow.SETTING_GEOMETRY, self.geometry())
         QSettings().setValue(MainWindow.SETTING_LAST_DIRECTORY, self._last_directory)
+        QSettings().setValue(MainWindow.SETTING_PLOT_SMPSIGNAL, self.plot_smpsignal_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_SURFACE, self.plot_surface_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_GROUND, self.plot_ground_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_MARKERS, self.plot_markers_action.isChecked())
@@ -543,15 +557,16 @@ class MarkerDialog(QDialog):
         self.setWindowTitle('Add Marker')
 
         self.label_editline = QLineEdit()
-        self.label_editline.setMinimumWidth(200)
+        self.label_editline.setMinimumWidth(150)
         self.value_lineedit = QLineEdit()
-        self.value_lineedit.setMinimumWidth(200)
+        self.value_lineedit.setMinimumWidth(150)
         self.validator = QDoubleValidator()
         self.value_lineedit.setValidator(self.validator)
         ok_and_cancel = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         self.button_box = QDialogButtonBox(ok_and_cancel)
 
         def check():
+            log.info('Checking for already existing marker labels')
             ok_button = self.button_box.button(QDialogButtonBox.Ok)
             name = self.label_editline.text()
             existing_markers = [k for k, v in self.mainwin.current_document.profile.markers]
@@ -576,6 +591,10 @@ class MarkerDialog(QDialog):
 
     def getMarker(self, default_value, default_label='label'):
         self.value_lineedit.setText(str(default_value))
+        # We need setting to '' first, cause when we just setting  default_label
+        # again, no textChanged signal is emitted and therefore no check for
+        # already existing marker labels is skipped!
+        self.label_editline.setText('')
         self.label_editline.setText(default_label)
         self.label_editline.setFocus()
         self.label_editline.selectAll()
