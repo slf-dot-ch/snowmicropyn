@@ -1,6 +1,6 @@
 from functools import partial
 
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QIcon, QDoubleValidator
 from PyQt5.QtWidgets import *
 import logging
@@ -45,7 +45,7 @@ class Sidebar(QTreeView):
 
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-        model = QStandardItemModel(0, 2, self)
+        self.setModel(QStandardItemModel(0, 2, self))
 
         # Get rid of the ugly focus rectangle and border
         self.setAttribute(Qt.WA_MacShowFocusRect, False)
@@ -94,7 +94,6 @@ class Sidebar(QTreeView):
         self.noise = QStandardItem()
         self.noise.setEditable(False)
 
-        self.setModel(model)
         self.init_ui()
         self.expandAll()
         self.resizeColumnToContents(0)
@@ -228,6 +227,3 @@ class Sidebar(QTreeView):
             lineedit_with_button.value_textedit.editingFinished.connect(slot)
 
             self.setIndexWidget(placeholder.index(), lineedit_with_button)
-
-    def detect(self, event):
-        log.debug('Detect got clicked')

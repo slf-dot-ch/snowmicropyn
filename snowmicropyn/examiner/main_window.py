@@ -2,7 +2,7 @@ import logging
 from os.path import expanduser, dirname, abspath, join
 from string import Template
 
-from PyQt5.QtCore import QRect, Qt, QSettings, QSize
+from PyQt5.QtCore import QRect, Qt, QSettings, QSize, QTimer
 from PyQt5.QtGui import QIcon, QDoubleValidator, QValidator
 from PyQt5.QtWidgets import *
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
@@ -11,7 +11,7 @@ from snowmicropyn import Profile
 from snowmicropyn.examiner.document import Document
 from snowmicropyn.examiner.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.examiner.map_window import MapWindow
-from snowmicropyn.examiner.info_view import Sidebar
+from snowmicropyn.examiner.details_view import DetailsWidget
 from snowmicropyn.examiner.plot_canvas import PlotCanvas
 import snowmicropyn.examiner.kml
 
@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
         self.log_window = log_window
         self.map_window = MapWindow()
         self.notify_dialog = NotificationDialog()
-        self.new_marker_dialog = NewMarkerDialog(self)
+        self.marker_dialog = MarkerDialog(self)
 
         self.documents = []
 
@@ -50,7 +50,7 @@ class MainWindow(QMainWindow):
         self.plotcanvas.toolbar = NavigationToolbar(self.plotcanvas, self)
         self.addToolBar(Qt.BottomToolBarArea, self.plotcanvas.toolbar)
 
-        self.sidebar = Sidebar(self)
+        self.sidebar = DetailsWidget(self)
 
         splitter = QSplitter()
         splitter.addWidget(self.plotcanvas)
@@ -65,13 +65,11 @@ class MainWindow(QMainWindow):
         self.about_action = QAction('About', self)
         self.quit_action = QAction('Quit', self)
         self.settings_action = QAction('Settings', self)
-
         self.open_action = QAction('&Open', self)
         self.save_action = QAction('&Save', self)
         self.saveall_action = QAction('Save &All', self)
         self.drop_action = QAction('&Drop', self)
         self.export_action = QAction('&Export', self)
-
         self.next_action = QAction('Next Profile', self)
         self.previous_action = QAction('Previous Profile', self)
         self.plot_surface_action = QAction('Plot Surface', self)
@@ -79,7 +77,9 @@ class MainWindow(QMainWindow):
         self.plot_markers_action = QAction('Plot other Markers', self)
         self.plot_ssa_proksch2015_action = QAction('Proksch 2015', self)
         self.plot_density_proksch2015_action = QAction('Proksch 2015', self)
-        self.autodetect_action = QAction('Detect Surface + Ground', self)
+        self.detect_surface_action = QAction('Detect Surface', self)
+        self.detect_ground_action = QAction('Detect Ground', self)
+        self.add_marker_action = QAction('New Marker', self)
         self.map_action = QAction('Show Map', self)
         self.kml_action = QAction('Export to KML', self)
         self.show_log_action = QAction('Show Log', self)
@@ -139,7 +139,7 @@ class MainWindow(QMainWindow):
         action.triggered.connect(self._drop_triggered)
 
         action = self.export_action
-        action.setIcon(QIcon(':/icons/export.png'))
+        action.setIcon(QIcon(':/icons/csv.png'))
         action.setShortcut('Ctrl+E')
         action.setStatusTip('Export Profile to CSV')
         action.triggered.connect(self._export_triggered)
@@ -156,11 +156,17 @@ class MainWindow(QMainWindow):
         action.setStatusTip('Previous Profile')
         action.triggered.connect(self._previous_triggered)
 
-        action = self.autodetect_action
-        action.setIcon(QIcon(':/icons/autodetect.png'))
-        action.setShortcut('Ctrl+D')
-        action.setStatusTip('Autodetect Surface and Ground')
-        action.triggered.connect(self._autodetect_triggered)
+        action = self.detect_surface_action
+        action.setIcon(QIcon(':/icons/detect_surface.png'))
+        action.setShortcut('Ctrl+T')
+        action.setStatusTip('Auto Detection of Surface')
+        action.triggered.connect(self._detect_surface_triggered)
+
+        action = self.detect_ground_action
+        action.setIcon(QIcon(':/icons/detect_ground.png'))
+        action.setShortcut('Ctrl+G')
+        action.setStatusTip('Auto Detection of Ground')
+        action.triggered.connect(self._detect_ground_triggered)
 
         def force_plot():
             self.switch_document()
@@ -191,6 +197,12 @@ class MainWindow(QMainWindow):
         setting = MainWindow.SETTING_PLOT_MARKERS
         enabled = QSettings().value(setting, defaultValue=True, type=bool)
         action.setChecked(enabled)
+
+        action = self.add_marker_action
+        action.setShortcut('Ctrl+M')
+        action.setIcon(QIcon(':/icons/marker_add.png'))
+        action.setStatusTip('Add New Marker...')
+        action.triggered.connect(lambda checked: self.add_marker_triggered(default_value=0))
 
         action = self.plot_ssa_proksch2015_action
         action.setShortcut('Alt+A,P')
@@ -260,25 +272,30 @@ class MainWindow(QMainWindow):
         menu.addAction(self.show_log_action)
 
         menu = menubar.addMenu('&Profile')
-        menu.addAction(self.autodetect_action)
+        menu.addAction(self.detect_surface_action)
+        menu.addAction(self.detect_ground_action)
+        menu.addAction(self.add_marker_action)
 
         toolbar = self.addToolBar('Exit')
         toolbar.addAction(self.quit_action)
         toolbar.addAction(self.settings_action)
         toolbar.addSeparator()
         toolbar.addAction(self.open_action)
-        toolbar.addAction(self.save_action)
-        toolbar.addAction(self.saveall_action)
         toolbar.addAction(self.drop_action)
+        toolbar.addAction(self.save_action)
         toolbar.addAction(self.export_action)
         toolbar.addSeparator()
-        toolbar.addAction(self.autodetect_action)
+        toolbar.addAction(self.detect_surface_action)
+        toolbar.addAction(self.detect_ground_action)
+        toolbar.addAction(self.add_marker_action)
+        toolbar.addSeparator()
         toolbar.addAction(self.previous_action)
         toolbar.addWidget(self.profile_combobox)
         toolbar.addAction(self.next_action)
         toolbar.addSeparator()
         toolbar.addAction(self.map_action)
         toolbar.addAction(self.kml_action)
+        toolbar.addAction(self.saveall_action)
 
     def closeEvent(self, event):
         log.info('Saving settings of MainWindow')
@@ -376,9 +393,13 @@ class MainWindow(QMainWindow):
         # of method ``switch_profile``. The work is done there.
         self.profile_combobox.setCurrentIndex(i)
 
-    def _autodetect_triggered(self):
+    def _detect_ground_triggered(self):
         doc = self.current_document
         doc.profile.detect_ground()
+        self.switch_document()
+
+    def _detect_surface_triggered(self):
+        doc = self.current_document
         doc.profile.detect_surface()
         self.switch_document()
 
@@ -435,7 +456,7 @@ class MainWindow(QMainWindow):
         self.save_action.setEnabled(at_least_one)
         self.saveall_action.setEnabled(at_least_one)
         self.export_action.setEnabled(at_least_one)
-        self.autodetect_action.setEnabled(at_least_one)
+        self.detect_ground_action.setEnabled(at_least_one)
 
         self.stacked_widget.setCurrentIndex(1 if at_least_one else 0)
 
@@ -445,20 +466,22 @@ class MainWindow(QMainWindow):
 
     # This method is called by PlotCanvas and Sidebar when a marker is set to
     # a new value. This method then causes the required update of visualization
-    def set_marker(self, label, value_func):
-        value = value_func()
-        profile = self.current_document.profile
-        log.info('Setting marker {} of profile {} to {}'.format(repr(label), profile.name, value))
-        profile.set_marker(label, value)
+    def set_marker(self, label, value):
+        p = self.current_document.profile
+        value = value
+        if value is not None:
+            value = float(value)
+        log.info('Setting marker {} of profile {} to {}'.format(repr(label), p.name, value))
+        p.set_marker(label, value)
 
-        self.switch_document()
+        self.sidebar.set_marker(label, value)
+        self.plotcanvas.set_document(self.current_document)
+        self.plotcanvas.draw()
 
-    def new_marker(self, value_func):
-        value = value_func()
-        name, value = self.new_marker_dialog.getNewMarker(value)
+    def add_marker_triggered(self, default_value=0):
+        name, value = self.marker_dialog.getMarker(default_value=default_value)
         if name and value:
-            profile = self.current_document.profile
-            profile.set_marker(name, value)
+            self.set_marker(name, value)
 
 
 # The NoDocWidget is visible when no document is open. It's just a label
@@ -508,14 +531,14 @@ class NotificationDialog(QDialog):
         self.exec()
 
 
-class NewMarkerDialog(QDialog):
+class MarkerDialog(QDialog):
     def __init__(self, parent, *args):
-        super(NewMarkerDialog, self).__init__(parent, *args)
+        super(MarkerDialog, self).__init__(parent, *args)
         self.mainwin = parent
         self.setWindowTitle('Add Marker')
 
-        self.name_lineedit = QLineEdit()
-        self.name_lineedit.setMinimumWidth(200)
+        self.label_editline = QLineEdit()
+        self.label_editline.setMinimumWidth(200)
         self.value_lineedit = QLineEdit()
         self.value_lineedit.setMinimumWidth(200)
         self.validator = QDoubleValidator()
@@ -525,20 +548,20 @@ class NewMarkerDialog(QDialog):
 
         def check():
             ok_button = self.button_box.button(QDialogButtonBox.Ok)
-            name = self.name_lineedit.text()
+            name = self.label_editline.text()
             existing_markers = [k for k, v in self.mainwin.current_document.profile.markers]
             valid_name = bool(name) and (name not in existing_markers)
             valid_value = self.validator.validate(self.value_lineedit.text(), 0)[0] == QValidator.Acceptable
             ok_button.setEnabled(valid_name and valid_value)
 
+        self.label_editline.textChanged.connect(check)
         self.value_lineedit.textChanged.connect(check)
-        self.name_lineedit.textChanged.connect(check)
 
         self.button_box.rejected.connect(self.reject)
         self.button_box.accepted.connect(self.accept)
 
         form_layout = QFormLayout()
-        form_layout.addRow('Name:', self.name_lineedit)
+        form_layout.addRow('Label:', self.label_editline)
         form_layout.addRow('Value:', self.value_lineedit)
 
         main_layout = QVBoxLayout()
@@ -546,12 +569,14 @@ class NewMarkerDialog(QDialog):
         main_layout.addWidget(self.button_box)
         self.setLayout(main_layout)
 
-    def getNewMarker(self, default_value):
+    def getMarker(self, default_value, default_label='label'):
         self.value_lineedit.setText(str(default_value))
-        self.name_lineedit.setFocus()
+        self.label_editline.setText(default_label)
+        self.label_editline.setFocus()
+        self.label_editline.selectAll()
         result = self.exec()
         if result == QDialog.Accepted:
-            name = self.name_lineedit.text()
+            name = self.label_editline.text()
             value = float(self.value_lineedit.text())
             return name, value
         return None, None

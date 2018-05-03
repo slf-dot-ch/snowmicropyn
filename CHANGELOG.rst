@@ -2,7 +2,7 @@ snowmicropyn Changelog
 ======================
 
 Version 0.1.0a1
-----------------
+---------------
 
 NOT YET RELEASED
 

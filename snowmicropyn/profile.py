@@ -117,8 +117,8 @@ class Profile(object):
         self._overload = self.pnt_header_value(Pnt.Header.SENSOR_OVERLOAD)
         self._speed = self.pnt_header_value(Pnt.Header.SAMPLES_SPEED)
 
-        self._smp_firmware = self.pnt_header_value(Pnt.Header.FIRMWARE)
-        self._smp_serial = self.pnt_header_value(Pnt.Header.SMP_SERIAL)
+        self._smp_serial = str(self.pnt_header_value(Pnt.Header.SMP_SERIAL))
+        self._smp_firmware = str(self.pnt_header_value(Pnt.Header.FIRMWARE))
         self._smp_length = self.pnt_header_value(Pnt.Header.SMP_LENGTH)
         self._smp_tipdiameter = self.pnt_header_value(Pnt.Header.TIP_DIAMETER)
 
@@ -295,7 +295,7 @@ class Profile(object):
 
     @property
     def markers(self):
-        """ Returns a list of all markers. The lists contains tuples of name
+        """ Returns a list of all markers. The lists contains tuples of label
         and value and its type is ``(str, float)``.
         """
         markers = self._ini.items('markers')
@@ -304,44 +304,47 @@ class Profile(object):
 
     # configparser._UNSET as default value for fallback is required to enable
     # None as a valid value to pass
-    def marker(self, name, fallback=configparser._UNSET):
+    def marker(self, label, fallback=configparser._UNSET):
         """ Returns the value of a marker as a ``float``. In case a
         fallback value is provided and no marker is present, the fallback value
         is returned. It's recommended to pass a ``float`` fallback value.
         ``None`` is a valid fallback value.
 
-        :param name: Name of the marker requested.
+        :param label: Name of the marker requested.
         :param fallback: Fallback value returned in case no marker exists for
                the provided name.
         """
         try:
             # Always return floats
-            return self._ini.getfloat('markers', name, fallback=fallback)
+            return self._ini.getfloat('markers', label, fallback=fallback)
         except configparser.NoOptionError:
-            raise KeyError('No marker named {} available'.format(name))
+            raise KeyError('No marker named {} available'.format(label))
 
-    def set_marker(self, name, value):
-        """ Sets a marker value.
+    def set_marker(self, label, value):
+        """ Sets a marker.
 
-        The provided value is converted into a ``float``. Raises
+        When passing ``None``as value, the marker is removed. Otherwise, the
+        provided value is converted into a ``float``. The method raises
         :exc:`ValueError` in case this fails.
 
-        :param name: Name of the marker.
+        :param label: Name of the marker.
         :param value: Value for the marker. Passing a ``float`` is recommended.
         """
-        # Make sure value is a float, ValueError is raised otherwise,
-        # None is ok too
-        value = float(value)
-        self._ini.set('markers', name, str(value))
+        if value is None:
+            try:
+                float(self._ini.remove_option('markers', label))
+            except configparser.NoOptionError:
+                raise KeyError('No marker named {} available'.format(label))
+        else:
+            value = float(value)
+            self._ini.set('markers', label, str(value))
 
-    def remove_marker(self, name):
+    def remove_marker(self, label):
         """ Remove a marker.
 
-        Raises :exc:`KeyError` in case no such marker is present.
-
-        :param name: Name (``str``) of the marker to remove.
+        Equivalent to set_marker(label, None).
         """
-        return float(self._ini.remove_option('markers', name))
+        return self.set_marker(label, None)
 
     @property
     def surface(self):

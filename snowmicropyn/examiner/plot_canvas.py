@@ -23,17 +23,20 @@ class PlotCanvas(FigureCanvas):
 
         self.mpl_connect('button_press_event', self.mouse_button_pressed)
 
+        def set_surface(checked):
+            main_window.set_marker('surface', self.clicked_distance())
         set_surface_action = QAction('Set Surface to here', self)
-        slot = partial(main_window.set_marker, 'surface', self.clicked_distance)
-        set_surface_action.triggered.connect(slot)
+        set_surface_action.triggered.connect(set_surface)
 
+        def set_ground(checked):
+            main_window.set_marker('ground', self.clicked_distance())
         set_ground_action = QAction('Set Ground to here', self)
-        slot = partial(main_window.set_marker, 'ground', self.clicked_distance)
-        set_ground_action.triggered.connect(slot)
+        set_ground_action.triggered.connect(set_ground)
 
-        new_marker_action = QAction("New...", self)
-        slot = partial(main_window.new_marker, self.clicked_distance)
-        new_marker_action.triggered.connect(slot)
+        def add_marker(checked):
+            main_window.add_marker_triggered(default_value=self.clicked_distance())
+        add_marker_action = QAction("Add Marker...", self)
+        add_marker_action.triggered.connect(add_marker)
 
         set_drift_start_action = QAction('Set Drift Start to here', self)
         set_drift_end_action = QAction('Set Drift End to here', self)
@@ -42,7 +45,7 @@ class PlotCanvas(FigureCanvas):
         menu = QMenu()
         menu.addAction(set_surface_action)
         menu.addAction(set_ground_action)
-        menu.addAction(new_marker_action)
+        menu.addAction(add_marker_action)
         menu.addSeparator()
         menu.addAction(set_drift_start_action)
         menu.addAction(set_drift_end_action)
