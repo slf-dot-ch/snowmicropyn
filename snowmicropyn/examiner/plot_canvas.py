@@ -90,19 +90,15 @@ class PlotCanvas(FigureCanvas):
                     continue
 
                 axes.axvline(value, color=MARKERS_COLOR)
-                axes.text(x=value, y=0, s=label,
-                          rotation=90,
-                          verticalalignment='top',
-                          color=MARKERS_COLOR)
+                axes.annotate(label, xy=(value, 1), xycoords=('data', 'axes fraction'),
+                              rotation=90, verticalalignment='top', color=MARKERS_COLOR)
 
         if plot_surface:
             try:
                 surface = doc.profile.surface
                 axes.axvline(surface, color=SURFACE_COLOR)
-                axes.text(x=surface, y=0, s='surface',
-                          rotation=90,
-                          verticalalignment='top',
-                          color=SURFACE_COLOR)
+                axes.annotate('surface', xy=(surface, 1), xycoords=('data', 'axes fraction'),
+                              rotation=90, verticalalignment='top', color=SURFACE_COLOR)
             except KeyError:
                 pass
 
@@ -110,10 +106,8 @@ class PlotCanvas(FigureCanvas):
             try:
                 ground = doc.profile.ground
                 axes.axvline(ground, color=GROUND_COLOR)
-                axes.text(x=ground, y=0, s='ground',
-                          rotation=90,
-                          verticalalignment='top',
-                          color=GROUND_COLOR)
+                axes.annotate('ground', xy=(ground, 1), xycoords=('data', 'axes fraction'),
+                              rotation=90, verticalalignment='top', color=GROUND_COLOR)
             except KeyError:
                 pass
 
