@@ -34,7 +34,7 @@ class PlotCanvas(FigureCanvas):
         set_ground_action.triggered.connect(set_ground)
 
         def add_marker(checked):
-            main_window.add_marker_triggered(default_value=self.clicked_distance())
+            main_window.add_marker(default_value=self.clicked_distance())
         add_marker_action = QAction("Add Marker...", self)
         add_marker_action.triggered.connect(add_marker)
 

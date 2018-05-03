@@ -11,7 +11,7 @@ import snowmicropyn.examiner.icons
 log = logging.getLogger(__name__)
 
 
-class DetailsWidget(QTreeWidget):
+class SidebarWidget(QTreeWidget):
 
     def __init__(self, main_win, *args, **kwargs):
         self.main_window = main_win

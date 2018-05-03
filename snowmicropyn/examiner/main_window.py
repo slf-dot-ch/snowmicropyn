@@ -11,7 +11,7 @@ from snowmicropyn import Profile
 from snowmicropyn.examiner.document import Document
 from snowmicropyn.examiner.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.examiner.map_window import MapWindow
-from snowmicropyn.examiner.details_view import DetailsWidget
+from snowmicropyn.examiner.sidebar import SidebarWidget
 from snowmicropyn.examiner.plot_canvas import PlotCanvas
 import snowmicropyn.examiner.kml
 
@@ -50,7 +50,7 @@ class MainWindow(QMainWindow):
         self.plotcanvas.toolbar = NavigationToolbar(self.plotcanvas, self)
         self.addToolBar(Qt.BottomToolBarArea, self.plotcanvas.toolbar)
 
-        self.sidebar = DetailsWidget(self)
+        self.sidebar = SidebarWidget(self)
 
         splitter = QSplitter()
         splitter.addWidget(self.plotcanvas)
@@ -202,7 +202,7 @@ class MainWindow(QMainWindow):
         action.setShortcut('Ctrl+M')
         action.setIcon(QIcon(':/icons/marker_add.png'))
         action.setStatusTip('Add New Marker...')
-        action.triggered.connect(lambda checked: self.add_marker_triggered(default_value=0))
+        action.triggered.connect(lambda checked: self.add_marker(default_value=0))
 
         action = self.plot_ssa_proksch2015_action
         action.setShortcut('Alt+A,P')
@@ -478,7 +478,7 @@ class MainWindow(QMainWindow):
         self.plotcanvas.set_document(self.current_document)
         self.plotcanvas.draw()
 
-    def add_marker_triggered(self, default_value=0):
+    def add_marker(self, default_value=0):
         name, value = self.marker_dialog.getMarker(default_value=default_value)
         if name and value:
             self.set_marker(name, value)
