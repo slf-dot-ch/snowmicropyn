@@ -86,6 +86,9 @@ class PlotCanvas(FigureCanvas):
 
         if plot_markers:
             for label, value in doc.profile.markers:
+                if label in ['surface', 'ground']:
+                    continue
+
                 axes.axvline(value, color=MARKERS_COLOR)
                 axes.text(x=value, y=0, s=label,
                           rotation=90,
