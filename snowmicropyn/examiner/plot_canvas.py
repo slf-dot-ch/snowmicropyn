@@ -1,5 +1,6 @@
 import logging
-from functools import partial
+import math
+from pandas import np as np
 
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QAction, QMenu
@@ -23,35 +24,36 @@ class PlotCanvas(FigureCanvas):
 
         self.mpl_connect('button_press_event', self.mouse_button_pressed)
 
-        def set_surface(checked):
-            main_window.set_marker('surface', self.clicked_distance())
+        def set_marker(name):
+            main_window.set_marker(name, self.clicked_distance())
 
-        set_surface_action = QAction('Set Surface to here', self)
-        set_surface_action.triggered.connect(set_surface)
-
-        def set_ground(checked):
-            main_window.set_marker('ground', self.clicked_distance())
-
-        set_ground_action = QAction('Set Ground to here', self)
-        set_ground_action.triggered.connect(set_ground)
-
-        def add_marker(checked):
+        def add_marker():
             main_window.add_marker(default_value=self.clicked_distance())
 
-        add_marker_action = QAction("Add Marker...", self)
-        add_marker_action.triggered.connect(add_marker)
+        set_surface_action = QAction('Set Surface to here', self)
+        set_surface_action.triggered.connect(lambda checked: set_marker('surface'))
 
-        set_drift_start_action = QAction('Set Drift Start to here', self)
+        set_ground_action = QAction('Set Ground to here', self)
+        set_ground_action.triggered.connect(lambda checked: set_marker('ground'))
+
+        add_marker_action = QAction("Add Marker...", self)
+        add_marker_action.triggered.connect(lambda checked: add_marker())
+
+        set_drift_begin_action = QAction('Set Drift Begin to here', self)
+        set_drift_begin_action.triggered.connect(lambda checked: set_marker('drift_begin'))
+
         set_drift_end_action = QAction('Set Drift End to here', self)
+        set_drift_end_action.triggered.connect(lambda checked: set_marker('drift_end'))
 
         # Context Menu, shown on right click in canvas
         menu = QMenu()
         menu.addAction(set_surface_action)
         menu.addAction(set_ground_action)
-        menu.addAction(add_marker_action)
         menu.addSeparator()
-        menu.addAction(set_drift_start_action)
+        menu.addAction(set_drift_begin_action)
         menu.addAction(set_drift_end_action)
+        menu.addSeparator()
+        menu.addAction(add_marker_action)
 
         self.context_menu = menu
 
@@ -63,7 +65,7 @@ class PlotCanvas(FigureCanvas):
         if doc is None:
             return
 
-        axes = self.figure.add_axes([0.1, 0.1, 0.7, 0.8])
+        axes = self.figure.add_axes([0.1, 0.1, 0.7, 0.85])
 
         FORCE_COLOR = 'C0'
         SSA_COLOR = 'C1'
@@ -71,14 +73,16 @@ class PlotCanvas(FigureCanvas):
         SURFACE_COLOR = 'C3'
         GROUND_COLOR = 'C4'
         MARKERS_COLOR = 'C5'
+        DRIFT_COLOR = 'C6'
 
-        axes.set_title(doc.profile.pnt_filename, y=1.04)
+        #axes.set_title(doc.profile.pnt_filename, y=1.04)
         axes.xaxis.set_label_text('Distance [mm]')
 
         plot_markers = self.main_window.plot_markers_action.isChecked()
         plot_surface = self.main_window.plot_surface_action.isChecked()
         plot_ground = self.main_window.plot_ground_action.isChecked()
         plot_smpsignal = self.main_window.plot_smpsignal_action.isChecked()
+        plot_drift = self.main_window.plot_drift_action.isChecked()
         plot_ssa_proksch2015 = self.main_window.plot_ssa_proksch2015_action.isChecked()
         plot_density_proksch2015 = self.main_window.plot_density_proksch2015_action.isChecked()
 
@@ -115,6 +119,23 @@ class PlotCanvas(FigureCanvas):
             axes.yaxis.set_label_text('Force [N]')
             axes.plot(doc.profile.samples.distance, doc.profile.samples.force, FORCE_COLOR)
             axes.yaxis.label.set_color(FORCE_COLOR)
+
+        if plot_drift:
+            axes.plot(doc._fit_x, doc._fit_y, DRIFT_COLOR)
+
+            x = doc._fit_x.iloc[-1]
+            y = doc._fit_y.iloc[-1]
+
+            dx = doc._fit_x.iloc[-1] - doc._fit_x.iloc[0]
+            dy = doc._fit_y.iloc[-1] - doc._fit_y.iloc[0]
+            angle = math.atan(dy/dx) * (180/math.pi)
+
+            loc = np.array((x, y))
+
+            trans_angle = self.figure.gca().transData.transform_angles(np.array((angle,)), loc.reshape((1, 2)))[0]
+
+            axes.text(x, y, 'drift', color=DRIFT_COLOR,
+                      rotation=trans_angle, rotation_mode='anchor', verticalalignment='top', horizontalalignment='right')
 
         if plot_ssa_proksch2015 and doc.ssa_density_df is not None:
             ssa = axes.twinx()

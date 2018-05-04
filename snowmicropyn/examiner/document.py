@@ -3,6 +3,11 @@ class Document:
     def __init__(self, profile):
         self._profile = profile
         self._ssa_density_df = profile.model_ssa()
+        self._drift = None
+        self._offset = None
+        self._noise = None
+        self._fit_x = None
+        self._fit_y = None
 
     @property
     def profile(self):

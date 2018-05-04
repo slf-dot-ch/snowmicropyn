@@ -10,6 +10,7 @@ log = logging.getLogger(__name__)
 
 
 class SidebarWidget(QTreeWidget):
+    TEXT_COLUMN = 4
 
     def __init__(self, main_win, *args, **kwargs):
         self.main_window = main_win
@@ -45,18 +46,17 @@ class SidebarWidget(QTreeWidget):
         # recording items
 
         self.name_item = QTreeWidgetItem((None, None, 'Name', None, ''))
-        self.pnt_filename_item = QTreeWidgetItem((None, None, 'Pnt File', None, ''))
         self.timestamp_item = QTreeWidgetItem((None, None, 'Timestamp', None, ''))
+        self.pnt_filename_item = QTreeWidgetItem((None, None, 'Pnt File', None, ''))
         self.coordinates_item = QTreeWidgetItem((None, None, 'Coordinates', None, ''))
         self.samples_count_item = QTreeWidgetItem((None, None, 'Sample Count', None, ''))
         self.spatial_res_item = QTreeWidgetItem((None, None, 'Spatial Resolution', None, ''))
         self.overload_item = QTreeWidgetItem((None, None, 'Overload Force', None, ''))
         self.speed_item = QTreeWidgetItem((None, None, 'Speed', None, ''))
 
-        self.recording_item.addChild(self.timestamp_item)
         self.recording_item.addChild(self.name_item)
-        self.recording_item.addChild(self.pnt_filename_item)
         self.recording_item.addChild(self.timestamp_item)
+        self.recording_item.addChild(self.pnt_filename_item)
         self.recording_item.addChild(self.coordinates_item)
         self.recording_item.addChild(self.samples_count_item)
         self.recording_item.addChild(self.spatial_res_item)
@@ -77,6 +77,19 @@ class SidebarWidget(QTreeWidget):
         self.smp_item.addChild(self.smp_tipdiameter_item)
         self.smp_item.addChild(self.smp_amp_item)
 
+        # drift items
+        self.drift_begin_item = QTreeWidgetItem((None, None, 'Begin', None, ''))
+        self.drift_end_item = QTreeWidgetItem((None, None, 'End', None, ''))
+        self.drift_value_item = QTreeWidgetItem((None, None, 'Drift', None, ''))
+        self.offset_value_item = QTreeWidgetItem((None, None, 'Offset', None, ''))
+        self.noise_value_item = QTreeWidgetItem((None, None, 'Noise', None, ''))
+
+        self.drift_item.addChild(self.drift_begin_item)
+        self.drift_item.addChild(self.drift_end_item)
+        self.drift_item.addChild(self.drift_value_item)
+        self.drift_item.addChild(self.offset_value_item)
+        self.drift_item.addChild(self.noise_value_item)
+
         # Tight up the columns
         self.expandAll()
         self.setColumnWidth(0, 0)
@@ -90,27 +103,26 @@ class SidebarWidget(QTreeWidget):
 
         p = doc.profile
 
-        TEXT_COLUMN = 4
-        self.name_item.setText(TEXT_COLUMN, p.name)
-        self.pnt_filename_item.setText(TEXT_COLUMN, p.pnt_filename)
-        self.timestamp_item.setText(TEXT_COLUMN, str(p.timestamp))
+        self.name_item.setText(self.TEXT_COLUMN, p.name)
+        self.pnt_filename_item.setText(self.TEXT_COLUMN, p.pnt_filename)
+        self.timestamp_item.setText(self.TEXT_COLUMN, str(p.timestamp))
         coords = '{:.6f}, {:.6f}'.format(*p.coordinates) if p.coordinates else 'None'
-        self.coordinates_item.setText(TEXT_COLUMN, coords)
-        self.samples_count_item.setText(TEXT_COLUMN, str(p.samples.shape[0]))
+        self.coordinates_item.setText(self.TEXT_COLUMN, coords)
+        self.samples_count_item.setText(self.TEXT_COLUMN, str(p.samples.shape[0]))
         spatial_res = '{:.3f} µm'.format(p.spatial_resolution * 1000)
-        self.spatial_res_item.setText(TEXT_COLUMN, spatial_res)
+        self.spatial_res_item.setText(self.TEXT_COLUMN, spatial_res)
         overload = '{:.1f} N'.format(p.overload)
-        self.overload_item.setText(TEXT_COLUMN, overload)
+        self.overload_item.setText(self.TEXT_COLUMN, overload)
         speed = '{:.1f} mm/s'.format(p.speed)
-        self.speed_item.setText(TEXT_COLUMN, speed)
+        self.speed_item.setText(self.TEXT_COLUMN, speed)
 
-        self.smp_serial_item.setText(TEXT_COLUMN, p.smp_serial)
-        self.smp_firmware_item.setText(TEXT_COLUMN, p.smp_firmware)
+        self.smp_serial_item.setText(self.TEXT_COLUMN, p.smp_serial)
+        self.smp_firmware_item.setText(self.TEXT_COLUMN, p.smp_firmware)
         length = '{} mm'.format(p.smp_length)
-        self.smp_length_item.setText(TEXT_COLUMN, length)
+        self.smp_length_item.setText(self.TEXT_COLUMN, length)
         tipdiameter = '{:.1f} mm'.format(p.smp_tipdiameter/1000)
-        self.smp_tipdiameter_item.setText(TEXT_COLUMN, tipdiameter)
-        self.smp_amp_item.setText(TEXT_COLUMN, p.amplifier_serial)
+        self.smp_tipdiameter_item.setText(self.TEXT_COLUMN, tipdiameter)
+        self.smp_amp_item.setText(self.TEXT_COLUMN, p.amplifier_serial)
 
         # Drop all existing markers
         for label, item in self.marker_items.items():
@@ -147,13 +159,21 @@ class SidebarWidget(QTreeWidget):
 
             self.marker_items[label] = item
             self.markers_item.addChild(item)
+
         item = self.marker_items[label]
         item.lineedit.setText(value)
+
+    def set_drift(self, begin_label, end_label, drift, offset, noise):
+        self.drift_begin_item.setText(self.TEXT_COLUMN, begin_label)
+        self.drift_end_item.setText(self.TEXT_COLUMN, end_label)
+        self.drift_value_item.setText(self.TEXT_COLUMN, str(drift))
+        self.noise_value_item.setText(self.TEXT_COLUMN, str(noise))
+        self.offset_value_item.setText(self.TEXT_COLUMN, str(offset))
 
 
 class MarkerTreeItem(QTreeWidgetItem):
 
-    def __init__(self, parent, name):
+    def __init__(self, parent, name, deletable=True):
         super(MarkerTreeItem, self).__init__(parent)
 
         self.delete_button = QPushButton()
@@ -165,7 +185,8 @@ class MarkerTreeItem(QTreeWidgetItem):
         self.lineedit = QLineEdit(self.treeWidget())
         self.lineedit.setValidator(QDoubleValidator())
 
-        self.treeWidget().setItemWidget(self, 1, self.delete_button)
+        if deletable:
+            self.treeWidget().setItemWidget(self, 1, self.delete_button)
         self.setText(2, name)
         if name in ['surface', 'ground']:
             self.treeWidget().setItemWidget(self, 3, self.detect_button)

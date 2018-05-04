@@ -10,6 +10,7 @@ from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationTo
 import snowmicropyn.examiner.icons
 import snowmicropyn.examiner.kml
 from snowmicropyn import Profile
+import snowmicropyn.tools
 from snowmicropyn.examiner.document import Document
 from snowmicropyn.examiner.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.examiner.map_window import MapWindow
@@ -29,6 +30,8 @@ class MainWindow(QMainWindow):
     SETTING_PLOT_SURFACE = 'MainFrame/plot/surface'
     SETTING_PLOT_GROUND = 'MainFrame/plot/ground'
     SETTING_PLOT_MARKERS = 'MainFrame/plot/markers'
+    SETTING_PLOT_DRIFT = 'MainFrame/plot/drift'
+    SETTING_PLOT_DRIFTMARKERS = 'MainFrame/plot/drift_markers'
     SETTING_PLOT_SSA_PROKSCH2015 = 'MainFrame/plot/ssa_proksch2015'
     SETTING_PLOT_DENSITY_PROKSCH2015 = 'MainFrame/plot/density_proksch2015'
 
@@ -79,10 +82,12 @@ class MainWindow(QMainWindow):
         self.plot_surface_action = QAction('Plot Surface', self)
         self.plot_ground_action = QAction('Plot Ground', self)
         self.plot_markers_action = QAction('Plot other Markers', self)
+        self.plot_drift_action = QAction('Plot Drift', self)
+        self.plot_driftmarkers_action = QAction('Plot Drift Markers', self)
         self.plot_ssa_proksch2015_action = QAction('Proksch 2015', self)
         self.plot_density_proksch2015_action = QAction('Proksch 2015', self)
-        self.detect_surface_action = QAction('Detect Surface', self)
-        self.detect_ground_action = QAction('Detect Ground', self)
+        self.detect_surface_action = QAction('Auto Detect Surface', self)
+        self.detect_ground_action = QAction('Auto Detect Ground', self)
         self.add_marker_action = QAction('New Marker', self)
         self.map_action = QAction('Show Map', self)
         self.kml_action = QAction('Export to KML', self)
@@ -211,6 +216,24 @@ class MainWindow(QMainWindow):
         enabled = QSettings().value(setting, defaultValue=True, type=bool)
         action.setChecked(enabled)
 
+        action = self.plot_drift_action
+        action.setShortcut('Alt+R')
+        action.setStatusTip('Plot Drift')
+        action.setCheckable(True)
+        action.triggered.connect(force_plot)
+        setting = MainWindow.SETTING_PLOT_DRIFT
+        enabled = QSettings().value(setting, defaultValue=False, type=bool)
+        action.setChecked(enabled)
+
+        action = self.plot_driftmarkers_action
+        action.setShortcut('Alt+I')
+        action.setStatusTip('Plot Drift Markers')
+        action.setCheckable(True)
+        action.triggered.connect(force_plot)
+        setting = MainWindow.SETTING_PLOT_DRIFTMARKERS
+        enabled = QSettings().value(setting, defaultValue=False, type=bool)
+        action.setChecked(enabled)
+
         action = self.add_marker_action
         action.setShortcut('Ctrl+M')
         action.setIcon(QIcon(':/icons/marker_add.png'))
@@ -223,7 +246,7 @@ class MainWindow(QMainWindow):
         action.setCheckable(True)
         action.triggered.connect(force_plot)
         setting = MainWindow.SETTING_PLOT_SSA_PROKSCH2015
-        enabled = QSettings().value(setting, defaultValue=True, type=bool)
+        enabled = QSettings().value(setting, defaultValue=False, type=bool)
         action.setChecked(enabled)
 
         action = self.plot_density_proksch2015_action
@@ -232,7 +255,7 @@ class MainWindow(QMainWindow):
         action.setCheckable(True)
         action.triggered.connect(force_plot)
         setting = MainWindow.SETTING_PLOT_DENSITY_PROKSCH2015
-        enabled = QSettings().value(setting, defaultValue=True, type=bool)
+        enabled = QSettings().value(setting, defaultValue=False, type=bool)
         action.setChecked(enabled)
 
         action = self.map_action
@@ -280,6 +303,9 @@ class MainWindow(QMainWindow):
         menu.addAction(self.plot_ground_action)
         menu.addAction(self.plot_markers_action)
         menu.addSeparator()
+        menu.addAction(self.plot_drift_action)
+        menu.addAction(self.plot_driftmarkers_action)
+        menu.addSeparator()
         menu.addAction(self.next_action)
         menu.addAction(self.previous_action)
         menu.addSeparator()
@@ -319,6 +345,8 @@ class MainWindow(QMainWindow):
         QSettings().setValue(MainWindow.SETTING_PLOT_SURFACE, self.plot_surface_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_GROUND, self.plot_ground_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_MARKERS, self.plot_markers_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_PLOT_DRIFT, self.plot_drift_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_PLOT_DRIFTMARKERS, self.plot_driftmarkers_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_SSA_PROKSCH2015, self.plot_ssa_proksch2015_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_PROKSCH2015, self.plot_density_proksch2015_action.isChecked())
 
@@ -480,6 +508,10 @@ class MainWindow(QMainWindow):
         self.stacked_widget.setCurrentIndex(1 if at_least_one else 0)
 
         self.sidebar.set_document(doc)
+
+        if doc is not None:
+            self.calc_drift()
+
         self.plotcanvas.set_document(doc)
         self.plotcanvas.draw()
 
@@ -494,6 +526,10 @@ class MainWindow(QMainWindow):
         p.set_marker(label, value)
 
         self.sidebar.set_marker(label, value)
+
+        if label in ('surface', 'drift_begin', 'drift_end'):
+            self.calc_drift()
+
         self.plotcanvas.set_document(self.current_document)
         self.plotcanvas.draw()
 
@@ -501,6 +537,45 @@ class MainWindow(QMainWindow):
         name, value = self.marker_dialog.getMarker(default_value=default_value)
         if name is not None:
             self.set_marker(name, value)
+
+    def calc_drift(self):
+        p = self.current_document.profile
+
+        try:
+            begin = p.marker('drift_begin')
+            begin_label = 'Marker drift_begin'
+        except KeyError:
+            # Skip the first few values of profile fo drift calculation
+            begin = p.samples.distance.iloc[10]
+            begin_label = 'Begin of Profile'
+
+        try:
+            end = p.marker('drift_end')
+            end_label = 'Marker drift_end'
+        except KeyError:
+            try:
+                end = p.marker('surface')
+                end_label = 'Marker surface'
+            except KeyError:
+                end = p.samples.distance.iloc[-1]
+                end_label = 'End of Profile'
+
+        log.debug('Calculating drift from {} to {}'.format(begin, end))
+
+        # Flip begin and end to make sure begin is always smaller then end
+        if end < begin:
+            begin, end = end, begin
+
+        drift_range = p.samples[p.samples.distance.between(begin, end)]
+
+        x_fit, y_fit, drift, offset, noise = snowmicropyn.tools.lin_fit(drift_range.distance, drift_range.force)
+        self.current_document._fit_x = x_fit
+        self.current_document._fit_y = y_fit
+        self.current_document._dirft = drift
+        self.current_document._offset = offset
+        self.current_document._noise = noise
+
+        self.sidebar.set_drift(begin_label, end_label, drift, offset, noise)
 
 
 # The NoDocWidget is visible when no document is open. It's just a label
