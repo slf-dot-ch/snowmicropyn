@@ -97,14 +97,19 @@ class SidebarWidget(QTreeWidget):
         coords = '{:.6f}, {:.6f}'.format(*p.coordinates) if p.coordinates else 'None'
         self.coordinates_item.setText(TEXT_COLUMN, coords)
         self.samples_count_item.setText(TEXT_COLUMN, str(p.samples.shape[0]))
-        self.spatial_res_item.setText(TEXT_COLUMN, str(p.spatial_resolution))
-        self.overload_item.setText(TEXT_COLUMN, str(p.overload))
-        self.speed_item.setText(TEXT_COLUMN, str(p.speed))
+        spatial_res = '{:.3f} µm'.format(p.spatial_resolution * 1000)
+        self.spatial_res_item.setText(TEXT_COLUMN, spatial_res)
+        overload = '{:.1f} N'.format(p.overload)
+        self.overload_item.setText(TEXT_COLUMN, overload)
+        speed = '{:.1f} mm/s'.format(p.speed)
+        self.speed_item.setText(TEXT_COLUMN, speed)
 
         self.smp_serial_item.setText(TEXT_COLUMN, p.smp_serial)
         self.smp_firmware_item.setText(TEXT_COLUMN, p.smp_firmware)
-        self.smp_length_item.setText(TEXT_COLUMN, str(p.smp_length))
-        self.smp_tipdiameter_item.setText(TEXT_COLUMN, str(p.smp_tipdiameter))
+        length = '{} mm'.format(p.smp_length)
+        self.smp_length_item.setText(TEXT_COLUMN, length)
+        tipdiameter = '{:.1f} mm'.format(p.smp_tipdiameter/1000)
+        self.smp_tipdiameter_item.setText(TEXT_COLUMN, tipdiameter)
         self.smp_amp_item.setText(TEXT_COLUMN, p.amplifier_serial)
 
         # Drop all existing markers
