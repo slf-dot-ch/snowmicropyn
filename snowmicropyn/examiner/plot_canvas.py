@@ -83,19 +83,35 @@ class PlotCanvas(FigureCanvas):
         plot_ground = self.main_window.plot_ground_action.isChecked()
         plot_smpsignal = self.main_window.plot_smpsignal_action.isChecked()
         plot_drift = self.main_window.plot_drift_action.isChecked()
+        plot_driftmarkers = self.main_window.plot_driftmarkers_action.isChecked()
+
         plot_ssa_proksch2015 = self.main_window.plot_ssa_proksch2015_action.isChecked()
         plot_density_proksch2015 = self.main_window.plot_density_proksch2015_action.isChecked()
 
-        middle = doc.profile.max_force()
-
         if plot_markers:
             for label, value in doc.profile.markers:
-                if label in ['surface', 'ground']:
+                if label in ['surface', 'ground', 'drift_begin', 'drift_end']:
                     continue
 
                 axes.axvline(value, color=MARKERS_COLOR)
                 axes.annotate(label, xy=(value, 1), xycoords=('data', 'axes fraction'),
                               rotation=90, verticalalignment='top', color=MARKERS_COLOR)
+
+        if plot_driftmarkers:
+            try:
+                drift_begin = doc.profile.marker('drift_begin')
+                axes.axvline(drift_begin, color=DRIFT_COLOR)
+                axes.annotate('drift_begin', xy=(drift_begin, 1), xycoords=('data', 'axes fraction'),
+                              rotation=90, verticalalignment='top', color=DRIFT_COLOR)
+            except KeyError:
+                pass
+            try:
+                drift_begin = doc.profile.marker('drift_end')
+                axes.axvline(drift_begin, color=DRIFT_COLOR)
+                axes.annotate('drift_end', xy=(drift_begin, 1), xycoords=('data', 'axes fraction'),
+                              rotation=90, verticalalignment='top', color=DRIFT_COLOR)
+            except KeyError:
+                pass
 
         if plot_surface:
             try:
