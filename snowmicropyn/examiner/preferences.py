@@ -209,10 +209,8 @@ class PreferencesDialog(Qt.QDialog):
         self.setMinimumWidth(500)
 
     def init_ui(self):
-        derivations_box = Qt.QGroupBox('Derivations')
         layout = Qt.QFormLayout()
         layout.setHorizontalSpacing(20)
-        derivations_box.setLayout(layout)
 
         content_layout = Qt.QHBoxLayout()
         content_layout.addWidget(self.windows_size_lineedit)
@@ -224,11 +222,12 @@ class PreferencesDialog(Qt.QDialog):
         content_layout.addWidget(Qt.QLabel('%'))
         layout.addRow('Overlap Factor', content_layout)
 
-        axes_box = Qt.QGroupBox('Plot Axes')
+        derivations_box = Qt.QGroupBox('Derivations')
+        derivations_box.setLayout(layout)
+
         layout = Qt.QFormLayout()
         layout.setVerticalSpacing(0)
         layout.setHorizontalSpacing(20)
-        axes_box.setLayout(layout)
 
         setting = self.distance_setting
         layout.addRow('Distance Axis', setting.upper_layout)
@@ -248,6 +247,9 @@ class PreferencesDialog(Qt.QDialog):
         setting = self.ssa_setting
         layout.addRow('SSA Axis', setting.upper_layout)
         layout.addRow(None, setting.lower_layout)
+
+        axes_box = Qt.QGroupBox('Plot Axes')
+        axes_box.setLayout(layout)
 
         layout = Qt.QVBoxLayout()
         layout.addWidget(derivations_box)

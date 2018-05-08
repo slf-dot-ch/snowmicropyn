@@ -32,7 +32,6 @@ class MainWindow(QMainWindow):
     SETTING_PLOT_GROUND = 'MainFrame/plot/ground'
     SETTING_PLOT_MARKERS = 'MainFrame/plot/markers'
     SETTING_PLOT_DRIFT = 'MainFrame/plot/drift'
-    SETTING_PLOT_DRIFTMARKERS = 'MainFrame/plot/drift_markers'
     SETTING_PLOT_SSA_PROKSCH2015 = 'MainFrame/plot/ssa_proksch2015'
     SETTING_PLOT_DENSITY_PROKSCH2015 = 'MainFrame/plot/density_proksch2015'
 
@@ -86,7 +85,6 @@ class MainWindow(QMainWindow):
         self.plot_ground_action = QAction('Plot Ground', self)
         self.plot_markers_action = QAction('Plot other Markers', self)
         self.plot_drift_action = QAction('Plot Drift', self)
-        self.plot_driftmarkers_action = QAction('Plot Drift Markers', self)
         self.plot_ssa_proksch2015_action = QAction('Proksch 2015', self)
         self.plot_density_proksch2015_action = QAction('Proksch 2015', self)
         self.detect_surface_action = QAction('Auto Detect Surface', self)
@@ -229,15 +227,6 @@ class MainWindow(QMainWindow):
         enabled = QSettings().value(setting, defaultValue=False, type=bool)
         action.setChecked(enabled)
 
-        action = self.plot_driftmarkers_action
-        action.setShortcut('Alt+I')
-        action.setStatusTip('Plot Drift Markers')
-        action.setCheckable(True)
-        action.triggered.connect(force_plot)
-        setting = MainWindow.SETTING_PLOT_DRIFTMARKERS
-        enabled = QSettings().value(setting, defaultValue=False, type=bool)
-        action.setChecked(enabled)
-
         action = self.add_marker_action
         action.setShortcut('Ctrl+M')
         action.setIcon(QIcon(':/icons/marker_add.png'))
@@ -305,10 +294,10 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addAction(self.plot_surface_action)
         menu.addAction(self.plot_ground_action)
+        menu.addSeparator()
         menu.addAction(self.plot_markers_action)
         menu.addSeparator()
         menu.addAction(self.plot_drift_action)
-        menu.addAction(self.plot_driftmarkers_action)
         menu.addSeparator()
         menu.addAction(self.next_action)
         menu.addAction(self.previous_action)
@@ -350,7 +339,6 @@ class MainWindow(QMainWindow):
         QSettings().setValue(MainWindow.SETTING_PLOT_GROUND, self.plot_ground_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_MARKERS, self.plot_markers_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_DRIFT, self.plot_drift_action.isChecked())
-        QSettings().setValue(MainWindow.SETTING_PLOT_DRIFTMARKERS, self.plot_driftmarkers_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_SSA_PROKSCH2015, self.plot_ssa_proksch2015_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_PROKSCH2015, self.plot_density_proksch2015_action.isChecked())
         QSettings().sync()

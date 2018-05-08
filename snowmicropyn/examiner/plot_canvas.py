@@ -87,7 +87,6 @@ class PlotCanvas(FigureCanvas):
         plot_ground = self.main_window.plot_ground_action.isChecked()
         plot_smpsignal = self.main_window.plot_smpsignal_action.isChecked()
         plot_drift = self.main_window.plot_drift_action.isChecked()
-        plot_driftmarkers = self.main_window.plot_driftmarkers_action.isChecked()
 
         plot_ssa_proksch2015 = self.main_window.plot_ssa_proksch2015_action.isChecked()
         plot_density_proksch2015 = self.main_window.plot_density_proksch2015_action.isChecked()
@@ -101,7 +100,7 @@ class PlotCanvas(FigureCanvas):
                 axes.annotate(label, xy=(value, 1), xycoords=('data', 'axes fraction'),
                               rotation=90, verticalalignment='top', color=MARKERS_COLOR)
 
-        if plot_driftmarkers:
+        if plot_drift:
             try:
                 drift_begin = doc.profile.marker('drift_begin')
                 axes.axvline(drift_begin, color=DRIFT_COLOR)
