@@ -94,15 +94,19 @@ class Preferences:
         Qt.QSettings().setValue(PREFS_WINDOWSSIZE, self.window_size)
         Qt.QSettings().setValue(PREFS_OVERLAP, self.overlap)
 
+        Qt.QSettings().setValue(PREFS_DISTANCE_AXIS_FIX, self.distance_axis_fix)
         Qt.QSettings().setValue(PREFS_DISTANCE_AXIS_FROM, self.distance_axis_from)
         Qt.QSettings().setValue(PREFS_DISTANCE_AXIS_TO, self.distance_axis_to)
 
+        Qt.QSettings().setValue(PREFS_FORCE_AXIS_FIX, self.force_axis_fix)
         Qt.QSettings().setValue(PREFS_FORCE_AXIS_FROM, self.force_axis_from)
         Qt.QSettings().setValue(PREFS_FORCE_AXIS_TO, self.force_axis_to)
 
+        Qt.QSettings().setValue(PREFS_DENSITY_AXIS_FIX, self.density_axis_fix)
         Qt.QSettings().setValue(PREFS_DENSITY_AXIS_FROM, self.density_axis_from)
         Qt.QSettings().setValue(PREFS_DENSITY_AXIS_TO, self.density_axis_to)
 
+        Qt.QSettings().setValue(PREFS_SSA_AXIS_FIX, self.ssa_axis_fix)
         Qt.QSettings().setValue(PREFS_SSA_AXIS_FROM, self.ssa_axis_from)
         Qt.QSettings().setValue(PREFS_SSA_AXIS_TO, self.ssa_axis_to)
 
@@ -110,14 +114,14 @@ class Preferences:
 
 
 class AxisSettings(Qt.QWidget):
-    def __init__(self, unit=None):
-        super(AxisSettings, self).__init__()
+    def __init__(self, unit=None, parent=None):
+        super(AxisSettings, self).__init__(parent)
 
-        self._auto_radiobutton = Qt.QRadioButton('Automatic')
-        self._fix_radiobutton = Qt.QRadioButton('Fixed')
-        self._auto_radiobutton.clicked.connect(lambda checked: self._enable_fix(False))
-        self._fix_radiobutton.clicked.connect(lambda checked: self._enable_fix(True))
-
+        self._auto_radiobutton = Qt.QRadioButton('Automatic', self)
+        self._fix_radiobutton = Qt.QRadioButton('Fixed', self)
+        self._button_group = Qt.QButtonGroup()
+        self._button_group.addButton(self._auto_radiobutton)
+        self._button_group.addButton(self._fix_radiobutton)
         self.upper_layout = Qt.QHBoxLayout()
         self.upper_layout.addWidget(self._auto_radiobutton)
 
@@ -142,10 +146,6 @@ class AxisSettings(Qt.QWidget):
         if self._unit_label:
             self.lower_layout.addWidget(self._unit_label)
 
-        self._button_group = Qt.QButtonGroup()
-        self._button_group.addButton(self._auto_radiobutton)
-        self._button_group.addButton(self._fix_radiobutton)
-
     def set_values(self, fix, from_value, to_value):
         self._from_lineedit.setText(str(from_value))
         self._to_lineedit.setText(str(to_value))
@@ -153,13 +153,6 @@ class AxisSettings(Qt.QWidget):
             self._fix_radiobutton.click()
         else:
             self._auto_radiobutton.click()
-
-    def _enable_fix(self, enable):
-        self._from_lineedit.setEnabled(enable)
-        self._to_label.setEnabled(enable)
-        self._to_lineedit.setEnabled(enable)
-        if self._unit_label:
-            self._unit_label.setEnabled(enable)
 
     @property
     def fix_enabled(self):
@@ -190,9 +183,6 @@ class PreferencesDialog(Qt.QDialog):
         self.overlap_factor_lineedit.setValidator(Qt.QDoubleValidator())
         self.overlap_factor_lineedit.setAlignment(Qt.Qt.AlignRight)
 
-        self.apply_button = Qt.QPushButton('&Apply')
-        self.apply_button = Qt.QPushButton('&Defaults')
-
         buttons = Qt.QDialogButtonBox.RestoreDefaults | Qt.QDialogButtonBox.Ok | Qt.QDialogButtonBox.Cancel
         self.button_box = Qt.QDialogButtonBox(buttons)
 
@@ -205,8 +195,9 @@ class PreferencesDialog(Qt.QDialog):
         self.density_setting = AxisSettings('kg/m<sup>3</sup>')
         self.ssa_setting = AxisSettings('m<sup>2</sup>/m<sup>3</sup>')
 
-        self.init_ui()
         self.setMinimumWidth(500)
+        self.init_ui()
+
 
     def init_ui(self):
         layout = Qt.QFormLayout()
@@ -231,22 +222,22 @@ class PreferencesDialog(Qt.QDialog):
 
         setting = self.distance_setting
         layout.addRow('Distance Axis', setting.upper_layout)
-        layout.addRow(None, setting.lower_layout)
+        layout.addRow('', setting.lower_layout)
         setting.lower_layout.setContentsMargins(0, 0, 0, _GAP)
 
         setting = self.force_setting
         layout.addRow('Force Axis', setting.upper_layout)
-        layout.addRow(None, setting.lower_layout)
+        layout.addRow('', setting.lower_layout)
         setting.lower_layout.setContentsMargins(0, 0, 0, _GAP)
 
         setting = self.density_setting
         layout.addRow('Density Axis', setting.upper_layout)
-        layout.addRow(None, setting.lower_layout)
+        layout.addRow('', setting.lower_layout)
         setting.lower_layout.setContentsMargins(0, 0, 0, _GAP)
 
         setting = self.ssa_setting
         layout.addRow('SSA Axis', setting.upper_layout)
-        layout.addRow(None, setting.lower_layout)
+        layout.addRow('', setting.lower_layout)
 
         axes_box = Qt.QGroupBox('Plot Axes')
         axes_box.setLayout(layout)

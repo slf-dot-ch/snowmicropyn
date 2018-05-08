@@ -281,6 +281,8 @@ class MainWindow(QMainWindow):
         menu.addAction(self.export_action)
         menu.addSeparator()
         menu.addAction(self.drop_action)
+        menu.addSeparator()
+        menu.addAction(self.preferences_action)
 
         menu = menubar.addMenu('&View')
         menu.addAction(self.plot_smpsignal_action)
