@@ -16,6 +16,7 @@ from snowmicropyn.examiner.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.examiner.map_window import MapWindow
 from snowmicropyn.examiner.plot_canvas import PlotCanvas
 from snowmicropyn.examiner.sidebar import SidebarWidget
+from snowmicropyn.examiner.preferences import Preferences, PreferencesDialog
 
 # This import statement is important, no icons appear in case it's missing!
 import snowmicropyn.examiner.icons
@@ -45,8 +46,10 @@ class MainWindow(QMainWindow):
         self.map_window = MapWindow()
         self.notify_dialog = NotificationDialog()
         self.marker_dialog = MarkerDialog(self)
+        self.prefs_dialog = PreferencesDialog()
 
         self.documents = []
+        self.preferences = Preferences.load()
 
         homedir = expanduser('~')
         self._last_directory = QSettings().value(self.SETTING_LAST_DIRECTORY, defaultValue=homedir)
@@ -70,7 +73,7 @@ class MainWindow(QMainWindow):
 
         self.about_action = QAction('About', self)
         self.quit_action = QAction('Quit', self)
-        self.settings_action = QAction('Settings', self)
+        self.preferences_action = QAction('Preferences', self)
         self.open_action = QAction('&Open', self)
         self.save_action = QAction('&Save', self)
         self.saveall_action = QAction('Save &All', self)
@@ -118,10 +121,11 @@ class MainWindow(QMainWindow):
         # the application itself
         action.triggered.connect(self.close)
 
-        action = self.settings_action
+        action = self.preferences_action
         action.setIcon(QIcon(':/icons/settings.png'))
         action.setShortcut('Ctrl+;')
-        action.setStatusTip('Settings')
+        action.setStatusTip('Preferences')
+        action.triggered.connect(self._preferences_triggered)
 
         action = self.open_action
         action.setIcon(QIcon(':/icons/open.png'))
@@ -318,7 +322,7 @@ class MainWindow(QMainWindow):
 
         toolbar = self.addToolBar('Exit')
         toolbar.addAction(self.quit_action)
-        toolbar.addAction(self.settings_action)
+        toolbar.addAction(self.preferences_action)
         toolbar.addSeparator()
         toolbar.addAction(self.open_action)
         toolbar.addAction(self.drop_action)
@@ -349,7 +353,7 @@ class MainWindow(QMainWindow):
         QSettings().setValue(MainWindow.SETTING_PLOT_DRIFTMARKERS, self.plot_driftmarkers_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_SSA_PROKSCH2015, self.plot_ssa_proksch2015_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_PROKSCH2015, self.plot_density_proksch2015_action.isChecked())
-
+        QSettings().sync()
         # This is the main window. In case it's closed, we close all
         # other windows too which results in quitting the application
         QApplication.instance().closeAllWindows()
@@ -486,6 +490,12 @@ class MainWindow(QMainWindow):
         f = join(dirname(profile.pnt_filename),'snowmicropyn_profiles.kml')
         snowmicropyn.examiner.kml.export2kml(f, self.documents)
         self.notify_dialog.notifyFilesWritten(f)
+
+    def _preferences_triggered(self):
+        modified = self.prefs_dialog.modifyPreferences(self.preferences)
+        if modified:
+            self.preferences.save()
+            self.switch_document()
 
     def switch_document(self):
         doc = self.current_document

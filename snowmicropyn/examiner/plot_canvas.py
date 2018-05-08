@@ -66,6 +66,7 @@ class PlotCanvas(FigureCanvas):
             return
 
         axes = self.figure.add_axes([0.1, 0.1, 0.7, 0.85])
+        axes.xaxis.set_label_text('Distance [mm]')
 
         FORCE_COLOR = 'C0'
         SSA_COLOR = 'C1'
@@ -75,8 +76,11 @@ class PlotCanvas(FigureCanvas):
         MARKERS_COLOR = 'C5'
         DRIFT_COLOR = 'C6'
 
-        #axes.set_title(doc.profile.pnt_filename, y=1.04)
-        axes.xaxis.set_label_text('Distance [mm]')
+        prefs = self.main_window.preferences
+        distance_axis_limits = (prefs.distance_axis_from, prefs.distance_axis_to) if prefs.distance_axis_fix else None
+        force_axis_limits = (prefs.force_axis_from, prefs.force_axis_to) if prefs.force_axis_fix else None
+        density_axis_limits = (prefs.density_axis_from, prefs.density_axis_to) if prefs.density_axis_fix else None
+        ssa_axis_limits = (prefs.ssa_axis_from, prefs.ssa_axis_to) if prefs.ssa_axis_fix else None
 
         plot_markers = self.main_window.plot_markers_action.isChecked()
         plot_surface = self.main_window.plot_surface_action.isChecked()
@@ -135,6 +139,10 @@ class PlotCanvas(FigureCanvas):
             axes.yaxis.set_label_text('Force [N]')
             axes.plot(doc.profile.samples.distance, doc.profile.samples.force, FORCE_COLOR)
             axes.yaxis.label.set_color(FORCE_COLOR)
+            if distance_axis_limits:
+                axes.set_xlim(*distance_axis_limits)
+            if force_axis_limits:
+                axes.set_ylim(*force_axis_limits)
 
         if plot_drift:
             axes.plot(doc._fit_x, doc._fit_y, DRIFT_COLOR)
@@ -158,12 +166,16 @@ class PlotCanvas(FigureCanvas):
             ssa.yaxis.label.set_text('SSA [$m^2/m^3$]')
             ssa.yaxis.label.set_color(SSA_COLOR)
             ssa.plot(doc.ssa_density_df.distance, doc.ssa_density_df.ssa, SSA_COLOR)
+            if ssa_axis_limits:
+                ssa.set_ylim(*ssa_axis_limits)
 
         if plot_density_proksch2015 and doc.ssa_density_df is not None:
             density = axes.twinx()
             density.yaxis.set_label_text('Density [$kg/m^3$]')
             density.yaxis.label.set_color(DENSITY_COLOR)
             density.plot(doc.ssa_density_df.distance, doc.ssa_density_df.density, DENSITY_COLOR)
+            if density_axis_limits:
+                density.set_ylim(*density_axis_limits)
             # Place y-axis outside in case ssa axis is also present
             if plot_ssa_proksch2015:
                 density.spines['right'].set_position(('outward', 60))
