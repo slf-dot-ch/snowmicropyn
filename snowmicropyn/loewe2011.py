@@ -10,7 +10,6 @@ Volume 70, January 2012.
 
 import math
 
-import scipy.signal
 import pandas as pd
 from pandas import np as np
 
@@ -23,30 +22,11 @@ SMP_CONE_AREA = (SMP_CONE_DIAMETER / 2.) ** 2 * math.pi  # [mm^2]
 
 
 def shotnoise_chunk(spatial_res, forces, cone_area=SMP_CONE_AREA):
-    """
-
-    :param spatial_res: Spatial resolution.
-    :param forces: Numpy array containing the force samples.
-    :param cone_area: Projected area of tip of SnowMicroPen.
-    :return:
-    """
-    # this version is taken from evalSMP and returns 5 parameters (instead of 4): lambda, f0, delta, L and median(F)
-    """Returns the parameters lambda, f0, delta, L of the (uniform
-
-    dz: spatial resolution
-    f_z: force array
-    a_cone: projected SMP tip area (mm^2)
-    """
-
     n = forces.size
 
     # Mean and variance of force signal
     k1 = np.mean(forces)
     k2 = np.var(forces)
-
-    # Detrend signal, note that the detrending is not foreseen in LvH but
-    # recommended by Martin Proksch
-    forces = scipy.signal.detrend(forces-k1, type='linear')
 
     # Covariance/Autocorrelation
     c_f = np.correlate(forces, forces, mode='full')  # eq. 8 in LvH 2012
