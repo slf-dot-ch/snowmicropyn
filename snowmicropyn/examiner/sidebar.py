@@ -104,7 +104,7 @@ class SidebarWidget(QTreeWidget):
         p = doc.profile
 
         self.name_item.setText(self.TEXT_COLUMN, p.name)
-        self.pnt_filename_item.setText(self.TEXT_COLUMN, p.pnt_filename)
+        self.pnt_filename_item.setText(self.TEXT_COLUMN, str(p.pnt_file))
         self.timestamp_item.setText(self.TEXT_COLUMN, str(p.timestamp))
         coords = '{:.6f}, {:.6f}'.format(*p.coordinates) if p.coordinates else 'None'
         self.coordinates_item.setText(self.TEXT_COLUMN, coords)

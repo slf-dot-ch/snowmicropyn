@@ -2,7 +2,7 @@ import configparser
 import csv
 import logging
 from datetime import datetime
-from os.path import exists, splitext, split, join
+import pathlib
 
 import pandas as pd
 import pytz
@@ -71,10 +71,10 @@ class Profile(object):
 
     """
 
-    def __init__(self, pnt_filename, name=None):
+    def __init__(self, pnt_file, name=None):
+        self._pnt_file = pathlib.Path(pnt_file)
         # Load pnt file, returns header (dict) and force samples
-        self._pnt_filename = pnt_filename
-        self._pnt_header, pnt_samples = Pnt.load(pnt_filename)
+        self._pnt_header, pnt_samples = Pnt.load(self._pnt_file)
 
         # Get clean WGS84 coordinates (use +/- instead of N/E)
         self._latitude = self.pnt_header_value(Pnt.Header.GPS_WGS84_LATITUDE)
@@ -138,10 +138,11 @@ class Profile(object):
         self._ini = configparser.ConfigParser()
 
         # Look out for corresponding ini file
-        self._ini_filename = splitext(self._pnt_filename)[0] + '.ini'
-        if exists(self._ini_filename):
-            log.info('Reading ini file {} for {}'.format(self._ini_filename, self))
-            self._ini.read(self._ini_filename)
+
+        self._ini_file = self._pnt_file.with_suffix('.ini')
+        if self._ini_file.exists():
+            log.info('Reading ini file {} for {}'.format(self._ini_file, self))
+            self._ini.read(self._ini_file)
 
         # Ensure a section called 'markers' does exist
         if not self._ini.has_section('markers'):
@@ -172,14 +173,17 @@ class Profile(object):
         return self._name
 
     @property
-    def pnt_filename(self):
-        """ Name of the pnt file this data was loaded from. """
-        return self._pnt_filename
+    def pnt_file(self):
+        """ ``pathlib.Path`` instance of the pnt file this data was loaded from. """
+        return self._pnt_file
 
     @property
-    def ini_filename(self):
-        """ Name of the ini file in which markers are saved. """
-        return self._ini_filename
+    def ini_file(self):
+        """ ``pathlib.Path`` instance of the ini file in which markers are saved.
+
+        This file may does not exist.
+        """
+        return self._ini_file
 
     @property
     def timestamp(self):
@@ -289,10 +293,6 @@ class Profile(object):
         """ Returns the samples. This is a pandas dataframe."""
         return self._samples
 
-    def default_filename(self, suffix, extension='.csv'):
-        head, tail = split(self._pnt_filename)
-        return join(head, self.name + '_' + suffix + extension)
-
     @property
     def markers(self):
         """ Returns a list of all markers. The lists contains tuples of label
@@ -378,39 +378,53 @@ class Profile(object):
         When no markers are set on the profile, the resulting file will be
         empty.
         """
-        with open(self._ini_filename, 'w') as f:
-            log.info('Saving ini info of {} to file {}'.format(self, self._ini_filename))
+        with open(self._ini_file, 'w') as f:
+            log.info('Saving ini info of {} to file {}'.format(self, self._ini_file))
             self._ini.write(f)
 
-    def export_samples(self, filename=None, precision=4, snowpack_only=False):
+    def export_samples(self, file=None, precision=4, snowpack_only=False):
         """ Export the samples of this profile into a CSV file.
 
-        :param filename: Name of CSV file.
+        :param file: `Path-like object<https://docs.python.org/3/glossary.html#term-path-like-object>`_.
         :param precision: Precision (number of digits after comma) of the
                values. Default value is 4.
         :param snowpack_only: In case set to true, only samples within the
                markers surface and ground are exported.
         """
+        if file:
+            file = pathlib.Path(file)
+        else:
+            file = self._pnt_file.with_name(self._pnt_file.name + '_samples').with_suffix('csv')
 
-        if not filename:
-            filename = splitext(self._pnt_filename)[0] + '_samples.csv'
-        log.info('Exporting samples of {} to {}'.format(self, filename))
+        log.info('Exporting samples of {} to {}'.format(self, file))
         samples = self.samples
         if snowpack_only:
             samples = self.samples_within_snowpack()
         fmt = '%.{}f'.format(precision)
-        with open(filename, 'w') as f:
+        with file.open('w') as f:
             # Write version and git hash as comment for tracking
             crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
             f.write(crumbs)
             samples.to_csv(f, header=True, index=False, float_format=fmt)
-        return filename
+        return file
 
-    def export_meta(self, filename=None, include_pnt_header=False):
-        if not filename:
-            filename = splitext(self._pnt_filename)[0] + '_meta.csv'
-        log.info('Exporting meta information of {} to {}'.format(self, filename))
-        with open(filename, 'w') as f:
+    def export_meta(self, file=None, include_pnt_header=False):
+        """ Export meta information of this profile into a CSV file.
+
+        When parameter file is not provided, the default name is used which is
+        same as the pnt file from which the profile was loaded with a suffix
+        `_meta` and the `csv` extension.
+
+        :param file: Path-like object.
+        :param include_pnt_header: When ``True``, raw pnt header fields are
+               included too.
+        """
+        if file:
+            file = pathlib.Path(file)
+        else:
+            file = self._pnt_file.with_name(self._pnt_file.name + '_meta').with_suffix('csv')
+        log.info('Exporting meta information of {} to {}'.format(self, file))
+        with file.open('w') as f:
             writer = csv.writer(f)
             # Write version and git hash as comment for tracking
             crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
@@ -419,7 +433,7 @@ class Profile(object):
             writer.writerow(['key', 'value'])
             # Export important properties of profile
             writer.writerow(('name', self.name))
-            writer.writerow(('pnt_file', self._pnt_filename))
+            writer.writerow(('pnt_file', self._pnt_file))
             writer.writerow(('gps.coords.lat', self._latitude))
             writer.writerow(('gps.coords.long', self._longitude))
             writer.writerow(('gps.numsats', self.gps_numsats))
@@ -433,7 +447,7 @@ class Profile(object):
             if include_pnt_header:
                 for header_id, (label, value, unit) in self._pnt_header.items():
                     writer.writerow(['pnt.' + header_id.name, str(value)])
-        return filename
+        return file
 
     def samples_within_distance(self, begin=None, end=None, relativize=False):
         """ Get samples within a certain distance, specified by parameters
@@ -499,9 +513,9 @@ class Profile(object):
     def model_shotnoise(self, save_to_file=False, filename_suffix='shotnoise'):
         sn = shotnoise(self.samples)
         if save_to_file:
-            fname = self.default_filename(suffix=filename_suffix)
-            log.info('Saving shot noise dataframe to {} to {}'.format(self, fname))
-            with open(fname, 'w') as f:
+            file = self._pnt_file.with_name(self._pnt_file.name + '_' + filename_suffix).with_suffix('csv')
+            log.info('Saving shot noise dataframe to {} to {}'.format(self, file))
+            with file.open('w') as f:
                 # Write version and git hash as comment for tracking
                 crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
                 f.write(crumbs)
@@ -511,9 +525,9 @@ class Profile(object):
     def model_ssa(self, save_to_file=False, filename_suffix='ssa'):
         ssa = model_ssa_and_density(self.samples)
         if save_to_file:
-            fname = self.default_filename(suffix=filename_suffix)
-            log.info('Saving ssa + density dataframe to {} to {}'.format(self, fname))
-            with open(fname, 'w') as f:
+            file = self._pnt_file.with_name(self._pnt_file.name + '_' + filename_suffix).with_suffix('csv')
+            log.info('Saving ssa + density dataframe to {} to {}'.format(self, file))
+            with file.open('w') as f:
                 # Write version and git hash as comment for tracking
                 crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
                 f.write(crumbs)

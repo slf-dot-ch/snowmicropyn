@@ -1,4 +1,5 @@
 import logging
+import pathlib
 import string
 import struct
 from collections import namedtuple
@@ -201,7 +202,7 @@ class Pnt:
     ]
 
     @staticmethod
-    def load(filename):
+    def load(file):
         """ Loads the raw data of a pnt file
 
         This is the low level method used by class :class:`snowmicropyn.Profile`
@@ -211,10 +212,11 @@ class Pnt:
         unit (``.unit``) and a actual value (``.value``). Each entry can be
         ``None``. Mostly this is the case for unit.
 
-        :param filename: Pnt file to load
+        :param file: Path-like object
         """
-        log.info('Reading pnt file {}'.format(filename))
-        with open(filename, 'rb') as f:
+        file = pathlib.Path(file)
+        log.info('Reading pnt file {}'.format(file))
+        with file.open('rb') as f:
             raw = f.read()
 
         header = {}
@@ -234,7 +236,7 @@ class Pnt:
 
             count = header[Pnt.Header.SAMPLES_COUNT_FORCE].value
             raw_samples = struct.unpack_from('>{}h'.format(count), raw, offset=512)
-            log.info('Read {} raw samples from file {}'.format(len(raw_samples), filename))
+            log.info('Read {} raw samples from file {}'.format(len(raw_samples), file))
         except struct.error as e:
             raise ValueError('Failed to load pnt file. Message: ' + str(e))
 

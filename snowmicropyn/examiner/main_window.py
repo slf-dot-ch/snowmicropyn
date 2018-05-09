@@ -360,7 +360,7 @@ class MainWindow(QMainWindow):
         # Save directory where we were to open at same place next time
         # for user's convenience
         if self.current_document:
-            self._last_directory = dirname(self.current_document.profile.pnt_filename)
+            self._last_directory = dirname(self.current_document.profile.pnt_file)
 
     def open_pnts(self, files):
         new_docs = []
@@ -379,13 +379,13 @@ class MainWindow(QMainWindow):
 
     def _save_triggered(self):
         self.current_document.profile.save()
-        f = self.current_document.profile.ini_filename
+        f = self.current_document.profile.ini_file
         self.notify_dialog.notifyFilesWritten([f])
 
     def _saveall_triggered(self):
         for doc in self.documents:
             doc.profile.save()
-        f = [doc.profile.ini_filename for doc in self.documents]
+        f = [doc.profile.ini_file for doc in self.documents]
         self.notify_dialog.notifyFilesWritten(f)
 
     def _export_triggered(self):
@@ -478,7 +478,7 @@ class MainWindow(QMainWindow):
 
     def _kml_triggered(self):
         profile = self.current_document.profile
-        f = join(dirname(profile.pnt_filename),'snowmicropyn_profiles.kml')
+        f = join(dirname(profile.pnt_file), 'snowmicropyn_profiles.kml')
         snowmicropyn.examiner.kml.export2kml(f, self.documents)
         self.notify_dialog.notifyFilesWritten(f)
 
