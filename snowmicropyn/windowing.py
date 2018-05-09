@@ -1,5 +1,8 @@
 from pandas import np as np
 
+DEFAULT_WINDOW = 2.5
+DEFAULT_WINDOW_OVERLAP = 1.2
+
 
 def chunkup(samples, window, overlap_factor):
     block_length = window * overlap_factor
@@ -21,33 +24,13 @@ def chunkup(samples, window, overlap_factor):
     return blocks
 
 
-DEFAULT_WINDOW = 2.5
-DEFAULT_WINDOW_OVERLAP = 1.2
-
-
-def agg_force_windows(samples, window, overlap, agg=np.median):
-    """
-    :param samples:
-    :param window: Window size in Millimeter. Default to 2.5 mm.
-    :param overlap: Overlap length in Millimeter. Default to 0.5 mm.
-    :param agg: Aggregation function, default is ```np.median``.
-    :return:
-    """
-
-    distance_arr = samples[:, 0]
-
-    # Calculate average step size
-    block_length = window * overlap
-    block_center = distance_arr[0]
-
-    blocks = []
-    while block_center < distance_arr[-1]:
-        block_begin = block_center - block_length / 2.
-        block_end = block_center + block_length / 2.
-        within_block = np.logical_and(distance_arr >= block_begin,
-                                      distance_arr < block_end)
-        d = block_center
-        f = agg(samples[within_block][:, 1])
-        blocks.append((d, f))
-        block_center = block_center + window
-    return np.array(blocks)
+def iterwindows(samples, window_length, overlap_factor):
+    block_length = window_length * float(overlap_factor)
+    half_block = block_length / 2
+    center = samples.distance.iloc[0]
+    while center < samples.distance.iloc[-1]:
+        begin = center - half_block
+        end = center + half_block
+        within = np.logical_and(samples.distance >= begin, samples.distance < end)
+        yield samples[within]
+        center += window_length
