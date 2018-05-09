@@ -627,7 +627,7 @@ class NotificationDialog(QDialog):
         multipe = len(files) > 1
         self.setWindowTitle('Notification')
         self.hint_label.setText('File{} written:'.format('s' if multipe else ''))
-        self.content_textedit.setText('\n'.join(files))
+        self.content_textedit.setText('\n'.join([str(f) for f in files]))
         self.exec()
 
 

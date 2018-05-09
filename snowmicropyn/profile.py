@@ -394,7 +394,7 @@ class Profile(object):
         if file:
             file = pathlib.Path(file)
         else:
-            file = self._pnt_file.with_name(self._pnt_file.name + '_samples').with_suffix('csv')
+            file = self._pnt_file.with_name(self._pnt_file.stem + '_samples').with_suffix('.csv')
 
         log.info('Exporting samples of {} to {}'.format(self, file))
         samples = self.samples
@@ -422,7 +422,7 @@ class Profile(object):
         if file:
             file = pathlib.Path(file)
         else:
-            file = self._pnt_file.with_name(self._pnt_file.name + '_meta').with_suffix('csv')
+            file = self._pnt_file.with_name(self._pnt_file.stem + '_meta').with_suffix('.csv')
         log.info('Exporting meta information of {} to {}'.format(self, file))
         with file.open('w') as f:
             writer = csv.writer(f)
@@ -513,7 +513,7 @@ class Profile(object):
     def model_shotnoise(self, save_to_file=False, filename_suffix='shotnoise'):
         sn = shotnoise(self.samples)
         if save_to_file:
-            file = self._pnt_file.with_name(self._pnt_file.name + '_' + filename_suffix).with_suffix('csv')
+            file = self._pnt_file.with_name(self._pnt_file.stem + '_' + filename_suffix).with_suffix('.csv')
             log.info('Saving shot noise dataframe to {} to {}'.format(self, file))
             with file.open('w') as f:
                 # Write version and git hash as comment for tracking
@@ -525,7 +525,7 @@ class Profile(object):
     def model_ssa(self, save_to_file=False, filename_suffix='ssa'):
         ssa = model_ssa_and_density(self.samples)
         if save_to_file:
-            file = self._pnt_file.with_name(self._pnt_file.name + '_' + filename_suffix).with_suffix('csv')
+            file = self._pnt_file.with_name(self._pnt_file.stem + '_' + filename_suffix).with_suffix('.csv')
             log.info('Saving ssa + density dataframe to {} to {}'.format(self, file))
             with file.open('w') as f:
                 # Write version and git hash as comment for tracking
