@@ -160,19 +160,19 @@ class PlotCanvas(FigureCanvas):
             axes.text(x, y, 'drift', color=DRIFT_COLOR,
                       rotation=trans_angle, rotation_mode='anchor', verticalalignment='top', horizontalalignment='right')
 
-        if plot_ssa_proksch2015 and doc.ssa_density_df is not None:
+        if plot_ssa_proksch2015 and doc.model_df is not None:
             ssa = axes.twinx()
             ssa.yaxis.label.set_text('SSA [$m^2/m^3$]')
             ssa.yaxis.label.set_color(SSA_COLOR)
-            ssa.plot(doc.ssa_density_df.distance, doc.ssa_density_df.ssa, SSA_COLOR)
+            ssa.plot(doc.model_df.distance, doc.model_df.ssa, SSA_COLOR)
             if ssa_axis_limits:
                 ssa.set_ylim(*ssa_axis_limits)
 
-        if plot_density_proksch2015 and doc.ssa_density_df is not None:
+        if plot_density_proksch2015 and doc.model_df is not None:
             density = axes.twinx()
             density.yaxis.set_label_text('Density [$kg/m^3$]')
             density.yaxis.label.set_color(DENSITY_COLOR)
-            density.plot(doc.ssa_density_df.distance, doc.ssa_density_df.density, DENSITY_COLOR)
+            density.plot(doc.model_df.distance, doc.model_df.density, DENSITY_COLOR)
             if density_axis_limits:
                 density.set_ylim(*density_axis_limits)
             # Place y-axis outside in case ssa axis is also present

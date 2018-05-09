@@ -1,8 +1,11 @@
+from snowmicropyn.proksch2015 import model_ssa_and_density
+
+
 class Document:
 
     def __init__(self, profile):
         self._profile = profile
-        self._ssa_density_df = profile.model_ssa()
+        self._model_df = None
         self._drift = None
         self._offset = None
         self._noise = None
@@ -13,14 +16,9 @@ class Document:
     def profile(self):
         return self._profile
 
-    @profile.setter
-    def profile(self, value):
-        self._profile = value
-
     @property
-    def ssa_density_df(self):
-        return self._ssa_density_df
+    def model_df(self):
+        return self._model_df
 
-    @ssa_density_df.setter
-    def ssa_density_df(self, value):
-        pass
+    def recalc_model(self, window_size, overlap_factor):
+        self._model_df = model_ssa_and_density(self._profile.samples, window_size, overlap_factor)

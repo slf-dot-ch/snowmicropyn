@@ -353,7 +353,6 @@ class MainWindow(QMainWindow):
         filtr = "pnt Files (*.pnt)"
         opts = QFileDialog.ReadOnly
         startdir = self._last_directory
-        # noinspection PyTypeChecker
         files, _ = QFileDialog.getOpenFileNames(self, cap, startdir, filtr, options=opts)
         if files:
             self.open_pnts(files)
@@ -368,12 +367,14 @@ class MainWindow(QMainWindow):
         for f in files:
             p = Profile.load(f)
             doc = Document(p)
+            doc.recalc_model(self.preferences.window_size, self.preferences.overlap / 100)
             new_docs.append(doc)
         self.documents.extend(new_docs)
         first_new_index = self.profile_combobox.count()
         self.profile_combobox.addItems([d.profile.name for d in new_docs])
 
-        # Set active to first of newly loaded profiles
+        # Set active to first of newly loaded profiles, this causes
+        # also a call of method switch_document triggered by the combobox.
         self.profile_combobox.setCurrentIndex(first_new_index)
 
     def _save_triggered(self):
@@ -485,6 +486,11 @@ class MainWindow(QMainWindow):
         modified = self.prefs_dialog.modifyPreferences(self.preferences)
         if modified:
             self.preferences.save()
+            # Recalculate derivations
+            for doc in self.documents:
+                ws = self.preferences.window_size
+                of = self.preferences.overlap / 100
+                doc.recalc_model(ws, of)
             self.switch_document()
 
     def switch_document(self):
