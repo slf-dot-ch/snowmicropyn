@@ -1,6 +1,9 @@
 import logging
 
-import PyQt5.Qt as Qt
+from PyQt5.QtCore import QSettings, Qt
+from PyQt5.QtGui import QDoubleValidator
+from PyQt5.QtWidgets import QWidget, QLineEdit, QRadioButton, QFormLayout, QHBoxLayout, \
+    QVBoxLayout, QButtonGroup, QLabel, QDialogButtonBox, QGroupBox, QDialog
 
 log = logging.getLogger(__name__)
 
@@ -68,7 +71,7 @@ class Preferences:
         log.info('Loading Preferences')
         instance = Preferences()
 
-        f = Qt.QSettings().value
+        f = QSettings().value
         instance.window_size = f(PREFS_WINDOWSSIZE, PREFS_WINDOWSSIZE_DEFAULT, float)
         instance.overlap = f(PREFS_OVERLAP, PREFS_OVERLAP_DEFAULT, float)
 
@@ -91,54 +94,54 @@ class Preferences:
 
     def save(self):
         log.info('Saving Preferences')
-        Qt.QSettings().setValue(PREFS_WINDOWSSIZE, self.window_size)
-        Qt.QSettings().setValue(PREFS_OVERLAP, self.overlap)
+        QSettings().setValue(PREFS_WINDOWSSIZE, self.window_size)
+        QSettings().setValue(PREFS_OVERLAP, self.overlap)
 
-        Qt.QSettings().setValue(PREFS_DISTANCE_AXIS_FIX, self.distance_axis_fix)
-        Qt.QSettings().setValue(PREFS_DISTANCE_AXIS_FROM, self.distance_axis_from)
-        Qt.QSettings().setValue(PREFS_DISTANCE_AXIS_TO, self.distance_axis_to)
+        QSettings().setValue(PREFS_DISTANCE_AXIS_FIX, self.distance_axis_fix)
+        QSettings().setValue(PREFS_DISTANCE_AXIS_FROM, self.distance_axis_from)
+        QSettings().setValue(PREFS_DISTANCE_AXIS_TO, self.distance_axis_to)
 
-        Qt.QSettings().setValue(PREFS_FORCE_AXIS_FIX, self.force_axis_fix)
-        Qt.QSettings().setValue(PREFS_FORCE_AXIS_FROM, self.force_axis_from)
-        Qt.QSettings().setValue(PREFS_FORCE_AXIS_TO, self.force_axis_to)
+        QSettings().setValue(PREFS_FORCE_AXIS_FIX, self.force_axis_fix)
+        QSettings().setValue(PREFS_FORCE_AXIS_FROM, self.force_axis_from)
+        QSettings().setValue(PREFS_FORCE_AXIS_TO, self.force_axis_to)
 
-        Qt.QSettings().setValue(PREFS_DENSITY_AXIS_FIX, self.density_axis_fix)
-        Qt.QSettings().setValue(PREFS_DENSITY_AXIS_FROM, self.density_axis_from)
-        Qt.QSettings().setValue(PREFS_DENSITY_AXIS_TO, self.density_axis_to)
+        QSettings().setValue(PREFS_DENSITY_AXIS_FIX, self.density_axis_fix)
+        QSettings().setValue(PREFS_DENSITY_AXIS_FROM, self.density_axis_from)
+        QSettings().setValue(PREFS_DENSITY_AXIS_TO, self.density_axis_to)
 
-        Qt.QSettings().setValue(PREFS_SSA_AXIS_FIX, self.ssa_axis_fix)
-        Qt.QSettings().setValue(PREFS_SSA_AXIS_FROM, self.ssa_axis_from)
-        Qt.QSettings().setValue(PREFS_SSA_AXIS_TO, self.ssa_axis_to)
+        QSettings().setValue(PREFS_SSA_AXIS_FIX, self.ssa_axis_fix)
+        QSettings().setValue(PREFS_SSA_AXIS_FROM, self.ssa_axis_from)
+        QSettings().setValue(PREFS_SSA_AXIS_TO, self.ssa_axis_to)
 
-        Qt.QSettings().sync()
+        QSettings().sync()
 
 
-class AxisSettings(Qt.QWidget):
+class AxisSettings(QWidget):
     def __init__(self, unit=None, parent=None):
         super(AxisSettings, self).__init__(parent)
 
-        self._auto_radiobutton = Qt.QRadioButton('Automatic', self)
-        self._fix_radiobutton = Qt.QRadioButton('Fixed', self)
-        self._button_group = Qt.QButtonGroup()
+        self._auto_radiobutton = QRadioButton('Automatic', self)
+        self._fix_radiobutton = QRadioButton('Fixed', self)
+        self._button_group = QButtonGroup()
         self._button_group.addButton(self._auto_radiobutton)
         self._button_group.addButton(self._fix_radiobutton)
-        self.upper_layout = Qt.QHBoxLayout()
+        self.upper_layout = QHBoxLayout()
         self.upper_layout.addWidget(self._auto_radiobutton)
 
-        self._from_lineedit = Qt.QLineEdit()
+        self._from_lineedit = QLineEdit()
         self._from_lineedit.setFixedWidth(_LINEEDIT_WIDTH)
-        self._from_lineedit.setValidator(Qt.QDoubleValidator())
-        self._from_lineedit.setAlignment(Qt.Qt.AlignRight)
+        self._from_lineedit.setValidator(QDoubleValidator())
+        self._from_lineedit.setAlignment(Qt.AlignRight)
 
-        self._to_label = Qt.QLabel('to')
-        self._to_lineedit = Qt.QLineEdit()
+        self._to_label = QLabel('to')
+        self._to_lineedit = QLineEdit()
         self._to_lineedit.setFixedWidth(_LINEEDIT_WIDTH)
-        self._to_lineedit.setValidator(Qt.QDoubleValidator())
-        self._to_lineedit.setAlignment(Qt.Qt.AlignRight)
+        self._to_lineedit.setValidator(QDoubleValidator())
+        self._to_lineedit.setAlignment(Qt.AlignRight)
 
-        self._unit_label = Qt.QLabel(unit) if unit else None
+        self._unit_label = QLabel(unit) if unit else None
 
-        self.lower_layout = Qt.QHBoxLayout()
+        self.lower_layout = QHBoxLayout()
         self.lower_layout.addWidget(self._fix_radiobutton)
         self.lower_layout.addWidget(self._from_lineedit)
         self.lower_layout.addWidget(self._to_label)
@@ -167,28 +170,29 @@ class AxisSettings(Qt.QWidget):
         return float(self._to_lineedit.text())
 
 
-class PreferencesDialog(Qt.QDialog):
+class PreferencesDialog(QDialog):
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle('Preferences')
 
-        self.windows_size_lineedit = Qt.QLineEdit()
+        self.windows_size_lineedit = QLineEdit()
         self.windows_size_lineedit.setFixedWidth(_LINEEDIT_WIDTH)
-        self.windows_size_lineedit.setValidator(Qt.QDoubleValidator())
-        self.windows_size_lineedit.setAlignment(Qt.Qt.AlignRight)
+        self.windows_size_lineedit.setValidator(QDoubleValidator())
+        self.windows_size_lineedit.setAlignment(Qt.AlignRight)
 
-        self.overlap_factor_lineedit = Qt.QLineEdit()
+        self.overlap_factor_lineedit = QLineEdit()
         self.overlap_factor_lineedit.setFixedWidth(_LINEEDIT_WIDTH)
-        self.overlap_factor_lineedit.setValidator(Qt.QDoubleValidator())
-        self.overlap_factor_lineedit.setAlignment(Qt.Qt.AlignRight)
+        self.overlap_factor_lineedit.setValidator(QDoubleValidator())
+        self.overlap_factor_lineedit.setAlignment(Qt.AlignRight)
 
-        buttons = Qt.QDialogButtonBox.RestoreDefaults | Qt.QDialogButtonBox.Ok | Qt.QDialogButtonBox.Cancel
-        self.button_box = Qt.QDialogButtonBox(buttons)
+        buttons = QDialogButtonBox.RestoreDefaults | QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        self.button_box = QDialogButtonBox(buttons)
 
         self.button_box.rejected.connect(self.reject)
         self.button_box.accepted.connect(self.accept)
-        self.button_box.button(Qt.QDialogButtonBox.RestoreDefaults).clicked.connect(self.restore_defaults)
+        self.button_box.button(QDialogButtonBox.RestoreDefaults).clicked.connect(
+            self.restore_defaults)
 
         self.distance_setting = AxisSettings('mm')
         self.force_setting = AxisSettings('N')
@@ -198,25 +202,24 @@ class PreferencesDialog(Qt.QDialog):
         self.setMinimumWidth(500)
         self.init_ui()
 
-
     def init_ui(self):
-        layout = Qt.QFormLayout()
+        layout = QFormLayout()
         layout.setHorizontalSpacing(20)
 
-        content_layout = Qt.QHBoxLayout()
+        content_layout = QHBoxLayout()
         content_layout.addWidget(self.windows_size_lineedit)
-        content_layout.addWidget(Qt.QLabel('mm'))
+        content_layout.addWidget(QLabel('mm'))
         layout.addRow('Window Size', content_layout)
 
-        content_layout = Qt.QHBoxLayout()
+        content_layout = QHBoxLayout()
         content_layout.addWidget(self.overlap_factor_lineedit)
-        content_layout.addWidget(Qt.QLabel('%'))
+        content_layout.addWidget(QLabel('%'))
         layout.addRow('Overlap Factor', content_layout)
 
-        derivations_box = Qt.QGroupBox('Derivations')
+        derivations_box = QGroupBox('Derivations')
         derivations_box.setLayout(layout)
 
-        layout = Qt.QFormLayout()
+        layout = QFormLayout()
         layout.setVerticalSpacing(0)
         layout.setHorizontalSpacing(20)
 
@@ -239,10 +242,10 @@ class PreferencesDialog(Qt.QDialog):
         layout.addRow('SSA Axis', setting.upper_layout)
         layout.addRow('', setting.lower_layout)
 
-        axes_box = Qt.QGroupBox('Plot Axes')
+        axes_box = QGroupBox('Plot Axes')
         axes_box.setLayout(layout)
 
-        layout = Qt.QVBoxLayout()
+        layout = QVBoxLayout()
         layout.addWidget(derivations_box)
         layout.addWidget(axes_box)
         layout.addWidget(self.button_box)
@@ -251,7 +254,7 @@ class PreferencesDialog(Qt.QDialog):
     def modifyPreferences(self, preferences):
         self._set_values(preferences)
         result = self.exec()
-        if result == Qt.QDialog.Accepted:
+        if result == QDialog.Accepted:
             preferences.window_size = float(self.windows_size_lineedit.text())
             preferences.overlap = float(self.overlap_factor_lineedit.text())
 
