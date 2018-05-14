@@ -11,7 +11,7 @@ def detect_ground(profile):
     """Automatic detection of ground in a profile.
 
     :param profile: An instance of :class:`snowmicropyn.Profile`.
-    :returns Distance where ground was detected.
+    :return Distance where ground was detected.
     """
     force = profile.samples.force
     distance = profile.samples.distance
