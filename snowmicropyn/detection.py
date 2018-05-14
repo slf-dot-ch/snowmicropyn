@@ -10,8 +10,9 @@ log = logging.getLogger(__name__)
 def detect_ground(profile):
     """Automatic detection of ground in a profile.
 
-    :param profile: An instance of :class:`snowmicropyn.Profile`.
-    :return Distance where ground was detected.
+    :param snowmicropyn.Profile profile: An instance of :class:`snowmicropyn.Profile`.
+    :return: Distance where ground was detected.
+    :rtype: float
     """
     force = profile.samples.force
     distance = profile.samples.distance
