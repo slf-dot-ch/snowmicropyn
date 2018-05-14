@@ -13,7 +13,6 @@ from snowmicropyn import Profile
 import snowmicropyn.tools
 from snowmicropyn.examiner.document import Document
 from snowmicropyn.examiner.globals import APP_NAME, VERSION, GITHASH
-from snowmicropyn.examiner.map_window import MapWindow
 from snowmicropyn.examiner.plot_canvas import PlotCanvas
 from snowmicropyn.examiner.sidebar import SidebarWidget
 from snowmicropyn.examiner.preferences import Preferences, PreferencesDialog
@@ -42,7 +41,6 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(APP_NAME)
 
         self.log_window = log_window
-        self.map_window = MapWindow()
         self.notify_dialog = NotificationDialog()
         self.marker_dialog = MarkerDialog(self)
         self.prefs_dialog = PreferencesDialog()
@@ -90,7 +88,6 @@ class MainWindow(QMainWindow):
         self.detect_surface_action = QAction('Auto Detect Surface', self)
         self.detect_ground_action = QAction('Auto Detect Ground', self)
         self.add_marker_action = QAction('New Marker', self)
-        self.map_action = QAction('Show Map', self)
         self.kml_action = QAction('Export to KML', self)
         self.show_log_action = QAction('Show Log', self)
 
@@ -251,12 +248,6 @@ class MainWindow(QMainWindow):
         enabled = QSettings().value(setting, defaultValue=False, type=bool)
         action.setChecked(enabled)
 
-        action = self.map_action
-        action.setIcon(QIcon(':/icons/map.png'))
-        action.setShortcut('Ctrl+M')
-        action.setStatusTip('Show Map')
-        action.triggered.connect(self._showmap_triggered)
-
         action = self.kml_action
         action.setIcon(QIcon(':/icons/kml.png'))
         action.setShortcut('Ctrl+K')
@@ -328,7 +319,6 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.profile_combobox)
         toolbar.addAction(self.next_action)
         toolbar.addSeparator()
-        toolbar.addAction(self.map_action)
         toolbar.addAction(self.kml_action)
         toolbar.addAction(self.saveall_action)
 
@@ -441,12 +431,6 @@ class MainWindow(QMainWindow):
         doc.profile.detect_surface()
         self.switch_document()
 
-    def _showmap_triggered(self):
-        self.map_window.set_documents(self.documents)
-        self.map_window.show()
-        self.map_window.activateWindow()
-        self.map_window.raise_()
-
     def _showlog_triggered(self):
         self.log_window.show()
         self.log_window.activateWindow()
@@ -508,7 +492,6 @@ class MainWindow(QMainWindow):
         self.detect_surface_action.setEnabled(at_least_one)
         self.detect_ground_action.setEnabled(at_least_one)
         self.add_marker_action.setEnabled(at_least_one)
-        self.map_action.setEnabled(at_least_one)
         self.kml_action.setEnabled(at_least_one)
 
         self.stacked_widget.setCurrentIndex(1 if at_least_one else 0)

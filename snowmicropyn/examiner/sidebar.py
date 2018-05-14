@@ -1,12 +1,27 @@
 import logging
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QDoubleValidator
-from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QLineEdit, QPushButton
+from PyQt5.QtGui import QIcon, QDoubleValidator, QPalette
+from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QLineEdit, QPushButton, QItemDelegate, \
+    QWidget, QLabel, QStyle
 
 import snowmicropyn.examiner.icons
 
 log = logging.getLogger(__name__)
+
+
+class TaskDelegate(QItemDelegate):
+
+    def drawDisplay(self, painter, option, rect, text):
+        label = QLabel(text)
+
+        if option.state & QStyle.State_Selected:
+            p = option.palette
+            p.setColor(QPalette.WindowText, p.color(QPalette.Active, QPalette.HighlightedText))
+
+            label.setPalette(p)
+
+        label.render(painter, rect.topLeft())
 
 
 class SidebarWidget(QTreeWidget):
@@ -97,6 +112,10 @@ class SidebarWidget(QTreeWidget):
         self.resizeColumnToContents(2)
         self.resizeColumnToContents(3)
 
+
+        #delegate = TaskDelegate()
+        #self.setItemDelegate(delegate)
+
     def set_document(self, doc):
         if doc is None:
             return
@@ -106,8 +125,17 @@ class SidebarWidget(QTreeWidget):
         self.name_item.setText(self.TEXT_COLUMN, p.name)
         self.pnt_filename_item.setText(self.TEXT_COLUMN, str(p.pnt_file))
         self.timestamp_item.setText(self.TEXT_COLUMN, str(p.timestamp))
-        coords = '{:.6f}, {:.6f}'.format(*p.coordinates) if p.coordinates else 'None'
-        self.coordinates_item.setText(self.TEXT_COLUMN, coords)
+
+        if p.coordinates:
+            lat, long = ['{:.6f}'.format(c) for c in p.coordinates]
+            url = '<a href="https://www.google.com/maps/search/?api=1&query={lat},{long}">{lat}, {long}</a>'.format(lat=lat, long=long)
+        else:
+            url = 'None'
+        url_label = QLabel(url)
+        url_label.setContentsMargins(5, 0, 0, 0)
+        url_label.setOpenExternalLinks(True)
+        self.setItemWidget(self.coordinates_item, 4, url_label)
+
         self.samples_count_item.setText(self.TEXT_COLUMN, str(p.samples.shape[0]))
         spatial_res = '{:.3f} µm'.format(p.spatial_resolution * 1000)
         self.spatial_res_item.setText(self.TEXT_COLUMN, spatial_res)
