@@ -1,10 +1,4 @@
-import collections
-
-from matplotlib import pyplot as plt
 from pandas import np as np
-
-pub_fields = ['title', 'authors', 'journal', 'url', 'pubdate']
-Publication = collections.namedtuple('Publication', pub_fields)
 
 
 def merge_profiles(profiles):
@@ -13,30 +7,6 @@ def merge_profiles(profiles):
     :return: A single
     """
     raise NotImplementedError('merge_profiles not implemented yet')
-
-
-def subtract_median(x, y, window=200):
-    """Subtract median of frame from original signal y"""
-    start = 0
-    end = len(y) - 1
-    y_out = []
-
-    while start <= end:
-        median = np.median(y[start:start + window])
-        y_out[start:start + window] = y[start:start + window] - median
-        start += window
-
-    x_out = x[:len(y_out)]
-    return x_out, y_out
-
-
-def rsme(x_ref, x_sub, norm=False):
-    """Root-mean-square error calculation """
-
-    result = ((x_ref - x_sub) ** 2).mean()
-    if norm:
-        result = result / np.max(x_ref) * 100
-    return result
 
 
 def downsample(x, n=2):
@@ -80,37 +50,3 @@ def lin_fit(x, y):
     std = np.std(y - y_fit)
 
     return x, y_fit, m, c, std
-
-
-def force_drops(x, y, max_dx=0.02, min_dy=0.05, dx_bins=0.02):
-    dy = -min_dy
-    start = 0
-    end = 1
-    down = []
-    i_max = len(y)
-
-    while end < i_max:
-
-        delta = y[start] - y[end]
-
-        if x[end] - x[start] > max_dx:
-            start += 1
-            end = start + 1
-            continue
-
-        elif delta > dy:
-            end += 1
-            continue
-
-        down.append(delta)
-
-        start = end
-        end = start + 1
-
-    down = np.abs(down)
-    bin_down = (max(down) - min(down)) / dx_bins
-
-    plt.hist(down, normed=True, stacked=False, bins=bin_down)
-    plt.show()
-
-    return down

@@ -7,9 +7,9 @@ Version 0.1.0a1
 NOT YET RELEASED
 
 Huge overhaul of snowmicropyn including:
-- Source code repository moved to GitHub.
 - Restructuring/Rewrite of code base.
 - Deployment as package on PyPI.
+- Source code repository moved to GitHub.
 - Documentation (using Sphinx), publishing on Read the Docs.
 - New UI called "snowmicropyn Examiner".
 

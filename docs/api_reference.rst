@@ -28,6 +28,12 @@ Its Core: The :class:`Profile` Class
 .. autoclass:: snowmicropyn.Profile
    :members:
 
+Auto detection of Ground & Surface
+----------------------------------
+
+.. automodule:: snowmicropyn.detection
+   :members:
+
 Shot Noise Model (Löwe, 2011)
 -----------------------------
 
