@@ -1,18 +1,18 @@
 import configparser
 import csv
 import logging
-from datetime import datetime
 import pathlib
+from datetime import datetime
 
 import pandas as pd
 import pytz
 from pandas import np as np
 
-from .detection import detect_ground, detect_surface
-from .loewe2011 import shotnoise
-from .proksch2015 import model_ssa_and_density
-from .pnt import Pnt
 from . import __version__, githash
+from . import detection
+from . import loewe2011
+from . import proksch2015
+from .pnt import Pnt
 
 log = logging.getLogger(__name__)
 
@@ -118,9 +118,9 @@ class Profile(object):
         self._speed = self.pnt_header_value(Pnt.Header.SAMPLES_SPEED)
 
         self._smp_serial = str(self.pnt_header_value(Pnt.Header.SMP_SERIAL))
-        self._smp_firmware = str(self.pnt_header_value(Pnt.Header.FIRMWARE))
+        self._smp_firmware = str(self.pnt_header_value(Pnt.Header.SMP_FIRMWARE))
         self._smp_length = self.pnt_header_value(Pnt.Header.SMP_LENGTH)
-        self._smp_tipdiameter = self.pnt_header_value(Pnt.Header.TIP_DIAMETER)
+        self._smp_tipdiameter = self.pnt_header_value(Pnt.Header.SMP_TIPDIAMETER)
 
         self._gps_pdop = self.pnt_header_value(Pnt.Header.GPS_PDOP)
         self._gps_numsats = self.pnt_header_value(Pnt.Header.GPS_NUMSATS)
@@ -268,8 +268,8 @@ class Profile(object):
     @property
     def coordinates(self):
         """ Returns WGS 84 coordinates (latitude, longitude) of this profile in
-        decimal format as a tuple of ``(float, float)`` or ``None`` when no
-        coordinates are available.
+        decimal format as a tuple (``(float, float)``) or ``None`` when
+        coordinates are not available.
 
         The coordinates are constructed by header fields of the pnt file. In
         case these header fields are empty or contain garbage, ``None`` is
@@ -295,8 +295,9 @@ class Profile(object):
 
     @property
     def markers(self):
-        """ Returns a list of all markers. The lists contains tuples of label
-        and value and its type is ``(str, float)``.
+        """ Returns a list of all markers.
+
+        The lists contains tuples with label and value (``(str, float)``).
         """
         markers = self._ini.items('markers')
         markers = [(k, self.marker(k)) for k, v in markers]
@@ -305,10 +306,10 @@ class Profile(object):
     # configparser._UNSET as default value for fallback is required to enable
     # None as a valid value to pass
     def marker(self, label, fallback=configparser._UNSET):
-        """ Returns the value of a marker as a ``float``. In case a
-        fallback value is provided and no marker is present, the fallback value
-        is returned. It's recommended to pass a ``float`` fallback value.
-        ``None`` is a valid fallback value.
+        """ Returns the value of a marker as a ``float``. In case a fallback
+        value is provided and no marker is present, the fallback value is
+        returned. It's recommended to pass a ``float`` fallback value. ``None``
+        is a valid fallback value.
 
         :param label: Name of the marker requested.
         :param fallback: Fallback value returned in case no marker exists for
@@ -361,13 +362,18 @@ class Profile(object):
         return self.samples.force.max()
 
     @staticmethod
-    def load(pnt_filename, name=None):
-        """ Loads a pnt file and its corresponding ini file too.
+    def load(pnt_file, name=None):
+        """ Loads a profile from a pnt file.
 
-        :param pnt_filename:
-        :param name: A
+        This static method loads a pnt file and also its ini file in case its
+        available. You can pass a name for the profile if you like. When omitted
+        (passing ``None``), the content of the pnt header field
+        (:const:`Pnt.Header.FILENAME`) is used.
+
+        :param pnt_file: A `Path-like object<https://docs.python.org/3/glossary.html#term-path-like-object>`_.
+        :param name: Name of the profile.
         """
-        return Profile(pnt_filename, name)
+        return Profile(pnt_file, name)
 
     def save(self):
         """ Save markers of this profile to a ini file.
@@ -385,7 +391,11 @@ class Profile(object):
     def export_samples(self, file=None, precision=4, snowpack_only=False):
         """ Export the samples of this profile into a CSV file.
 
-        :param file: `Path-like object<https://docs.python.org/3/glossary.html#term-path-like-object>`_.
+       When parameter ``file`` is not provided, the default name is used which
+        is same as the pnt file from which the profile was loaded with a suffix
+        `_samples` and the `csv` extension.
+
+        :param file: A `Path-like object<https://docs.python.org/3/glossary.html#term-path-like-object>`_.
         :param precision: Precision (number of digits after comma) of the
                values. Default value is 4.
         :param snowpack_only: In case set to true, only samples within the
@@ -411,11 +421,11 @@ class Profile(object):
     def export_meta(self, file=None, include_pnt_header=False):
         """ Export meta information of this profile into a CSV file.
 
-        When parameter file is not provided, the default name is used which is
-        same as the pnt file from which the profile was loaded with a suffix
+        When parameter ``file`` is not provided, the default name is used which
+        is same as the pnt file from which the profile was loaded with a suffix
         `_meta` and the `csv` extension.
 
-        :param file: Path-like object.
+        :param file: A `Path-like object<https://docs.python.org/3/glossary.html#term-path-like-object>`_.
         :param include_pnt_header: When ``True``, raw pnt header fields are
                included too.
         """
@@ -499,21 +509,22 @@ class Profile(object):
     def detect_surface(self):
         """ Convenience method to detect the surface. This also sets the marker
         called "surface". """
-        surface = detect_surface(self.samples.values)
+        surface = detection.detect_surface(self)
         self.set_marker('surface', surface)
         return surface
 
     def detect_ground(self):
         """ Convenience method to detect the ground. This also sets the marker
         called "surface". """
-        ground = detect_ground(self.samples.values, self.overload)
+        ground = detection.detect_ground(self)
         self.set_marker('ground', ground)
         return ground
 
     def model_shotnoise(self, save_to_file=False, filename_suffix='shotnoise'):
-        sn = shotnoise(self.samples)
+        sn = loewe2011.shotnoise(self.samples)
         if save_to_file:
-            file = self._pnt_file.with_name(self._pnt_file.stem + '_' + filename_suffix).with_suffix('.csv')
+            file = self._pnt_file.with_name(
+                self._pnt_file.stem + '_' + filename_suffix).with_suffix('.csv')
             log.info('Saving shot noise dataframe to {} to {}'.format(self, file))
             with file.open('w') as f:
                 # Write version and git hash as comment for tracking
@@ -523,9 +534,10 @@ class Profile(object):
         return sn
 
     def model_ssa(self, save_to_file=False, filename_suffix='ssa'):
-        ssa = model_ssa_and_density(self.samples)
+        ssa = proksch2015.model_ssa_and_density(self.samples)
         if save_to_file:
-            file = self._pnt_file.with_name(self._pnt_file.stem + '_' + filename_suffix).with_suffix('.csv')
+            file = self._pnt_file.with_name(
+                self._pnt_file.stem + '_' + filename_suffix).with_suffix('.csv')
             log.info('Saving ssa + density dataframe to {} to {}'.format(self, file))
             with file.open('w') as f:
                 # Write version and git hash as comment for tracking

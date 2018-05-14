@@ -30,7 +30,7 @@ class Pnt:
         """ Identifiers for pnt header entries """
 
         #: Version of firmware of SnowMicroPen used
-        FIRMWARE = 'smp.firmware'
+        SMP_FIRMWARE = 'smp.firmware'
         #: Number of samples
         SAMPLES_COUNT = 'samples.count'
         #: Spatial resolution of distance
@@ -122,7 +122,7 @@ class Pnt:
         #: Hand operation. **NOT IN USE**.
         SENSOR_HANDOP = 'sensor.handop'
         #: Diameter of SnowMicroPen's tip
-        TIP_DIAMETER = 'smp.diameter'
+        SMP_TIPDIAMETER = 'smp.diameter'
         #: Overload value
         SENSOR_OVERLOAD = 'sensor.overload'
         #: Sensor type value
@@ -144,7 +144,7 @@ class Pnt:
 
     _PNT_HEADER = [
         # Offset (from start of header), format for struct.unpack, id, unit
-        (0, '>h', Header.FIRMWARE, None),
+        (0, '>h', Header.SMP_FIRMWARE, None),
         (2, '>i', Header.SAMPLES_COUNT, None),
         (6, '>f', Header.SAMPLES_SPATIALRES, 'mm'),
         (10, '>f', Header.SAMPLES_CONVFACTOR_FORCE, 'N/mV'),
@@ -190,7 +190,7 @@ class Pnt:
         (370, '>h', Header.SENSOR_SENSITIVITIY, 'pC/N'),
         (372, '>h', Header.SENSOR_TEMPOFFSET, '°C'),
         (374, '>h', Header.SENSOR_HANDOP, None),
-        (376, '>l', Header.TIP_DIAMETER, 'µm'),
+        (376, '>l', Header.SMP_TIPDIAMETER, 'µm'),
         (380, '>h', Header.SENSOR_OVERLOAD, 'N'),
         (382, '>c', Header.SENSOR_TYPE, None),
         (383, '>c', Header.AMPLIFIER_TYPE, None),
@@ -228,7 +228,7 @@ class Pnt:
                     value = value[0]
                 if 's' in fmt or 'c' in fmt:
                     value = value.decode('utf-8', errors='ignore')
-                    # Drop non printable chars
+                    # Drop non-printable chars
                     value = ''.join([x if x in string.printable else '' for x in value])
                 log.debug('Read header entry {} = {}{}'.format(
                     pnt_id, repr(value), ' ' + unit if unit else '')

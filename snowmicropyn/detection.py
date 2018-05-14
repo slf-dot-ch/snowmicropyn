@@ -7,47 +7,58 @@ from .tools import downsample, smooth
 log = logging.getLogger(__name__)
 
 
-def detect_ground(samples, overload):
-    force_arr = samples[:, 0]
-    distance_arr = samples[:, 1]
+def detect_ground(profile):
+    """Automatic detection of ground in a profile.
 
-    ground = force_arr[-1]
+    :param profile: An instance of :class:`.profile.Profile`.
+    :returns Distance where ground was detected.
+    """
+    force = profile.samples.force
+    distance = profile.samples.distance
 
-    if np.max(distance_arr) >= overload:
-        i_ol = np.argmax(distance_arr)
-        i_threshold = np.where(force_arr >= force_arr[i_ol] - 20)[0][0]
-        f_mean = np.mean(distance_arr[0:i_threshold])
-        f_std = np.std(distance_arr[0:i_threshold])
-        threshold = f_mean + 5 * f_std
+    ground = distance.iloc[-1]
 
-        while distance_arr[i_ol] > threshold:
+    ol = profile.overload
+
+    if force.max() >= ol:
+        i_ol = force.argmax()
+        i_threshhold = np.where(distance.values >= distance.values[i_ol] - 20)[0][0]
+        f_mean = np.mean(force.iloc[0:i_threshhold])
+        f_std = np.std(force.iloc[0:i_threshhold])
+        threshhold = f_mean + 5 * f_std
+
+        while force.iloc[i_ol] > threshhold:
             i_ol -= 10
 
-        ground = force_arr[i_ol]
+        ground = distance.iloc[i_ol]
 
-    log.info('Detected ground at {:.3f} mm'.format(ground))
+    log.info('Detected ground at {:.3f} mm in profile {}'.format(ground, profile))
     return ground
 
 
-def detect_surface(samples):
-    max_value = np.amax(samples[:, 0])
+def detect_surface(profile):
+    """Automatic detection of surface (begin of snowpack) in a profile.
+
+    :param profile: An instance of :class:`.profile.Profile`.
+    """
 
     # Cut off ca. 1 mm
-    forces = samples[250:, 0]
-    distances = samples[250:, 1]
+    distance = profile.samples.distance.values[250:]
+    force = profile.samples.force.values[250:]
 
-    distances = downsample(distances, 20)
-    forces = downsample(forces, 20)
+    force = downsample(force, 20)
+    distance = downsample(distance, 20)
 
-    distances = smooth(distances, 242)
+    force = smooth(force, 242)
 
-    y_grad = np.gradient(distances)
+    y_grad = np.gradient(force)
     y_grad = downsample(y_grad, 3)
-    x_grad = downsample(forces, 3)
+    x_grad = downsample(distance, 3)
+
+    max_force = np.amax(force)
 
     try:
         for i in np.arange(100, x_grad.size):
-
             std = np.std(y_grad[:i - 1])
             mean = np.mean(y_grad[:i - 1])
             if y_grad[i] >= 5 * std + mean:
@@ -55,11 +66,11 @@ def detect_surface(samples):
                 break
 
         if i == x_grad.size - 1:
-            surface = max_value
+            surface = max_force
 
-        log.info('Detected surface at {:.3f} mm'.format(surface))
+        log.info('Detected surface at {:.3f} mm in profile {}'.format(surface, profile))
         return surface
 
     except ValueError:
         log.warning('Failed to detect surface')
-        return max_value
+        return max_force
