@@ -445,7 +445,7 @@ class Profile(object):
                 writer.writerow(('ini.marker.' + k, v))
             # Export pnt header entries
             if include_pnt_header:
-                for header_id, (label, value, unit) in self._pnt_header.items():
+                for header_id, (value, unit) in self._pnt_header.items():
                     writer.writerow(['pnt.' + header_id.name, str(value)])
         return file
 

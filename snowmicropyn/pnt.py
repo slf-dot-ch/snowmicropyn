@@ -7,7 +7,7 @@ from enum import Enum
 
 log = logging.getLogger(__name__)
 
-pnt_header_entry = namedtuple('pnt_header_field', ['label', 'value', 'unit'])
+pnt_header_entry = namedtuple('pnt_header_field', ['value', 'unit'])
 
 
 # noinspection PyClassHasNoInit
@@ -25,6 +25,7 @@ class Pnt:
 
     This may prints lines like ``2017`` and ``(40, 41, 42, 43, 42)``.
     """
+
     class Header(Enum):
         """ Identifiers for pnt header entries """
 
@@ -64,7 +65,7 @@ class Pnt:
         SAMPLES_SPEED = 'samples.speed'
         #: Loop size... **NOT IN USE**.
         LOOPSIZE = 'loopsize'
-        #: Waypoints... **NOT IN USE**.
+        #: Way points... **NOT IN USE**.
         WAYPOINTS = 'waypoints'
         #: cal start... **NOT IN USE**.
         CAL_START = 'cal.start'
@@ -84,13 +85,13 @@ class Pnt:
         GPS_WGS84_HEIGHT = 'gps.wgs84.height'
         #: Positional DOP, geometric dilution of precision
         GPS_PDOP = 'gps.pdop'
-        #: Part of WGS 84 coords: N for northern hemisphere, S for southern hemisphere
+        #: Part of WGS 84 coordinates: N for northern hemisphere, S for southern hemisphere
         GPS_WGS84_NORTH = 'gps.wgs84.north'
-        #: Part of WGS 84 coords: E eastern, W for western.
+        #: Part of WGS 84 coordinates: E eastern, W for western.
         GPS_WGS84_EAST = 'gps.wgs84.east'
         #: Number of satellites when location was determined. **NOT IN USE**.
         GPS_NUMSATS = 'gps.numsats'
-        #: GPS fixmode value
+        #: GPS fix mode value
         GPS_FIXMODE = 'gps.fixmode'
         #: GPS state
         GPS_STATE = 'gps.state'
@@ -108,7 +109,7 @@ class Pnt:
         RESERVED2 = 'reserved.2'
         #: Number of force samples
         SAMPLES_COUNT_FORCE = 'samples.force.count'
-        #: Number of termperature samples. **NOT IN USE**.
+        #: Number of temperature samples. **NOT IN USE**.
         SAMPLES_COUNT_TEMP = 'samples.temp.count'
         #: Sensor range
         SENSOR_RANGE = 'sensor.range'
@@ -142,63 +143,63 @@ class Pnt:
         RESERVED4 = 'reserved.4'
 
     _PNT_HEADER = [
-        # Offset (from start of header), format for struct.unpack, id, label, unit
-        (0, '>h', Header.FIRMWARE, 'Firmware Version', None),
-        (2, '>i', Header.SAMPLES_COUNT, 'Total of Samples', None),
-        (6, '>f', Header.SAMPLES_SPATIALRES, 'Distance', 'mm'),
-        (10, '>f', Header.SAMPLES_CONVFACTOR_FORCE, 'Conversion Factor Force', 'N/mV'),
-        (14, '>f', Header.SAMPLES_CONVFACTOR_PRESSURE, 'Conversion Factor Pressure ', 'N/bar'),
-        (18, '>h', Header.SAMPLES_OFFSET_FORCE, 'Offset', 'N'),
-        (20, '>h', Header.TIMESTAMP_YEAR, 'Year', None),
-        (22, '>h', Header.TIMESTAMP_MONTH, 'Month', None),
-        (24, '>h', Header.TIMESTAMP_DAY, 'Day', None),
-        (26, '>h', Header.TIMESTAMP_HOUR, 'Hour', None),
-        (28, '>h', Header.TIMESTAMP_MINUTE, 'Min', None),
-        (30, '>h', Header.TIMESTAMP_SECOND, 'Sec', None),
-        (32, '>d', Header.GPS_CH1903_X, 'Coordinate CH1903 X', 'deg'),
-        (40, '>d', Header.GPS_CH1903_Y, 'Coordinate CH1903 Y', 'deg'),
-        (48, '>d', Header.GPS_CH1903_Z, 'Coordinate CH1903 Z', 'm'),
-        (56, '>d', Header.BATTERY_VOLTAGE, 'Battery Voltage', 'V'),
-        (64, '>f', Header.SAMPLES_SPEED, 'Average Speed', 'mm/s'),
-        (68, '>l', Header.LOOPSIZE, 'Loop Size', None),
-        (72, '>10l', Header.WAYPOINTS, 'Waypoints', None),
-        (112, '>10h', Header.CAL_START, 'Calstart', None),
-        (132, '>10h', Header.CAL_END, 'Calend', None),
-        (152, '>h', Header.COMMENT_LENGTH, 'Comment Length', None),
-        (154, '102s', Header.COMMENT_CONTENT, 'Comment', None),
-        (256, '8s', Header.FILENAME, 'Filename', None),
-        (264, '>f', Header.GPS_WGS84_LATITUDE, 'Latitude', 'deg'),
-        (268, '>f', Header.GPS_WGS84_LONGITUDE, 'Longitude', 'deg'),
-        (272, '>f', Header.GPS_WGS84_HEIGHT, 'Height', 'cm'),
-        (276, '>f', Header.GPS_PDOP, 'GPS PDOP', None),
-        (280, '>c', Header.GPS_WGS84_NORTH, 'GPS North', None),
-        (281, '>c', Header.GPS_WGS84_EAST, 'GPS East', None),
-        (282, '>h', Header.GPS_NUMSATS, 'GPS N° Satellites', None),
-        (284, '>h', Header.GPS_FIXMODE, 'GPS Fix Mode', None),
-        (286, '>c', Header.GPS_STATE, 'GPS State', None),
-        (287, 'B', Header.RESERVED1, 'reserved 1', None),
-        (288, '>h', Header.LOCAL_X, 'Local X', 'deg'),
-        (290, '>h', Header.LOCAL_Y, 'Local Y', 'deg'),
-        (292, '>h', Header.LOCAL_Z, 'Local Z', 'm'),
-        (294, '>h', Header.LOCAL_THETA, 'Local Theta', 'deg'),
-        (296, '62B', Header.RESERVED2, 'Reserved 2', None),
-        (358, '>l', Header.SAMPLES_COUNT_FORCE, 'N° Force Samples', None),
-        (362, '>l', Header.SAMPLES_COUNT_TEMP, 'N° Temperature Samples', None),
-        (366, '>h', Header.SENSOR_RANGE, 'Sensor Range', 'pC'),
-        (368, '>h', Header.AMPLIFIER_RANGE, 'Amp Range', 'pC'),
-        (370, '>h', Header.SENSOR_SENSITIVITIY, 'Sensitivity', 'pC/N'),
-        (372, '>h', Header.SENSOR_TEMPOFFSET, 'Temp Offset', '°C'),
-        (374, '>h', Header.SENSOR_HANDOP, 'Hand Operation', None),
-        (376, '>l', Header.TIP_DIAMETER, 'Tip Diameter', 'µm'),
-        (380, '>h', Header.SENSOR_OVERLOAD, 'Overload', 'N'),
-        (382, '>c', Header.SENSOR_TYPE, 'Sensor Type', None),
-        (383, '>c', Header.AMPLIFIER_TYPE, 'Amplifier Type', None),
-        (384, '>h', Header.SMP_SERIAL, 'SMP Serial', None),
-        (386, '>h', Header.SMP_LENGTH, 'SMP Length', 'mm'),
-        (388, '4B', Header.RESERVED3, 'Reserved 3', None),
-        (392, '20s', Header.SENSOR_SERIAL, 'Sensor Serial', None),
-        (412, '20s', Header.AMPLIFIER_SERIAL, 'Amplifier Serial', None),
-        (432, '80B', Header.RESERVED4, 'Reserved 4 ', None),
+        # Offset (from start of header), format for struct.unpack, id, unit
+        (0, '>h', Header.FIRMWARE, None),
+        (2, '>i', Header.SAMPLES_COUNT, None),
+        (6, '>f', Header.SAMPLES_SPATIALRES, 'mm'),
+        (10, '>f', Header.SAMPLES_CONVFACTOR_FORCE, 'N/mV'),
+        (14, '>f', Header.SAMPLES_CONVFACTOR_PRESSURE, 'N/bar'),
+        (18, '>h', Header.SAMPLES_OFFSET_FORCE, 'N'),
+        (20, '>h', Header.TIMESTAMP_YEAR, None),
+        (22, '>h', Header.TIMESTAMP_MONTH, None),
+        (24, '>h', Header.TIMESTAMP_DAY, None),
+        (26, '>h', Header.TIMESTAMP_HOUR, None),
+        (28, '>h', Header.TIMESTAMP_MINUTE, None),
+        (30, '>h', Header.TIMESTAMP_SECOND, None),
+        (32, '>d', Header.GPS_CH1903_X, None),
+        (40, '>d', Header.GPS_CH1903_Y, None),
+        (48, '>d', Header.GPS_CH1903_Z, 'm'),
+        (56, '>d', Header.BATTERY_VOLTAGE, 'V'),
+        (64, '>f', Header.SAMPLES_SPEED, 'mm/s'),
+        (68, '>l', Header.LOOPSIZE, None),
+        (72, '>10l', Header.WAYPOINTS, None),
+        (112, '>10h', Header.CAL_START, None),
+        (132, '>10h', Header.CAL_END, None),
+        (152, '>h', Header.COMMENT_LENGTH, None),
+        (154, '102s', Header.COMMENT_CONTENT, None),
+        (256, '8s', Header.FILENAME, None),
+        (264, '>f', Header.GPS_WGS84_LATITUDE, 'deg'),
+        (268, '>f', Header.GPS_WGS84_LONGITUDE, 'deg'),
+        (272, '>f', Header.GPS_WGS84_HEIGHT, 'cm'),
+        (276, '>f', Header.GPS_PDOP, None),
+        (280, '>c', Header.GPS_WGS84_NORTH, None),
+        (281, '>c', Header.GPS_WGS84_EAST, None),
+        (282, '>h', Header.GPS_NUMSATS, None),
+        (284, '>h', Header.GPS_FIXMODE, None),
+        (286, '>c', Header.GPS_STATE, None),
+        (287, 'B', Header.RESERVED1, None),
+        (288, '>h', Header.LOCAL_X, 'deg'),
+        (290, '>h', Header.LOCAL_Y, 'deg'),
+        (292, '>h', Header.LOCAL_Z, 'm'),
+        (294, '>h', Header.LOCAL_THETA, 'deg'),
+        (296, '62B', Header.RESERVED2, None),
+        (358, '>l', Header.SAMPLES_COUNT_FORCE, None),
+        (362, '>l', Header.SAMPLES_COUNT_TEMP, None),
+        (366, '>h', Header.SENSOR_RANGE, 'pC'),
+        (368, '>h', Header.AMPLIFIER_RANGE, 'pC'),
+        (370, '>h', Header.SENSOR_SENSITIVITIY, 'pC/N'),
+        (372, '>h', Header.SENSOR_TEMPOFFSET, '°C'),
+        (374, '>h', Header.SENSOR_HANDOP, None),
+        (376, '>l', Header.TIP_DIAMETER, 'µm'),
+        (380, '>h', Header.SENSOR_OVERLOAD, 'N'),
+        (382, '>c', Header.SENSOR_TYPE, None),
+        (383, '>c', Header.AMPLIFIER_TYPE, None),
+        (384, '>h', Header.SMP_SERIAL, None),
+        (386, '>h', Header.SMP_LENGTH, 'mm'),
+        (388, '4B', Header.RESERVED3, None),
+        (392, '20s', Header.SENSOR_SERIAL, None),
+        (412, '20s', Header.AMPLIFIER_SERIAL, None),
+        (432, '80B', Header.RESERVED4, None),
     ]
 
     @staticmethod
@@ -221,7 +222,7 @@ class Pnt:
 
         header = {}
         try:
-            for offset, fmt, pnt_id, label, unit in Pnt._PNT_HEADER:
+            for offset, fmt, pnt_id, unit in Pnt._PNT_HEADER:
                 value = struct.unpack_from(fmt, raw, offset)
                 if len(value) == 1:
                     value = value[0]
@@ -232,7 +233,7 @@ class Pnt:
                 log.debug('Read header entry {} = {}{}'.format(
                     pnt_id, repr(value), ' ' + unit if unit else '')
                 )
-                header[pnt_id] = pnt_header_entry(label, value, unit)
+                header[pnt_id] = pnt_header_entry(value, unit)
 
             count = header[Pnt.Header.SAMPLES_COUNT_FORCE].value
             raw_samples = struct.unpack_from('>{}h'.format(count), raw, offset=512)
