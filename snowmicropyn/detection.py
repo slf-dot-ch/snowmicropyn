@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 def detect_ground(profile):
     """Automatic detection of ground in a profile.
 
-    :param profile: An instance of :class:`.profile.Profile`.
+    :param profile: An instance of :class:`snowmicropyn.Profile`.
     :returns Distance where ground was detected.
     """
     force = profile.samples.force
@@ -39,7 +39,7 @@ def detect_ground(profile):
 def detect_surface(profile):
     """Automatic detection of surface (begin of snowpack) in a profile.
 
-    :param profile: An instance of :class:`.profile.Profile`.
+    :param profile: An instance of :class:`snowmicropyn.Profile`.
     """
 
     # Cut off ca. 1 mm
