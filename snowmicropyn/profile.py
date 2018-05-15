@@ -129,10 +129,10 @@ class Profile(object):
         self._sensor_sensivity = self.pnt_header_value(Pnt.Header.SENSOR_SENSITIVITIY)
 
         # Create a pandas dataframe with distance and force
-        distances = np.arange(0, self._samples_count) * self._spatial_resolution
-        forces = np.asarray(pnt_samples) * self.pnt_header_value(
-            Pnt.Header.SAMPLES_CONVFACTOR_FORCE)
-        stacked = np.column_stack([distances, forces])
+        distance_arr = np.arange(0, self._samples_count) * self._spatial_resolution
+        factor = self.pnt_header_value(Pnt.Header.SAMPLES_CONVFACTOR_FORCE)
+        force_arr = np.asarray(pnt_samples) * factor
+        stacked = np.column_stack([distance_arr, force_arr])
         self._samples = pd.DataFrame(stacked, columns=('distance', 'force'))
 
         self._ini = configparser.ConfigParser()
@@ -343,7 +343,7 @@ class Profile(object):
     def remove_marker(self, label):
         """ Remove a marker.
 
-        Equivalent to set_marker(label, None).
+        Equivalent to ``set_marker(label, None)``.
         """
         return self.set_marker(label, None)
 

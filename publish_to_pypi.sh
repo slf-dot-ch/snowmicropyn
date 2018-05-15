@@ -47,14 +47,18 @@ HASHFILE=snowmicropyn/githash
 echo "Writing hash to file ${HASHFILE}"
 echo ${HASH} > ${HASHFILE}
 
-echo "Building pure python wheel..."
-python setup.py bdist_wheel
+echo "Building source distribution..."
+python3 setup.py sdist
 
-echo "Uploading to PyPI test index..."
+echo "Building pure python wheel..."
+python3 setup.py bdist_wheel
+
 if [ ${SYSTEM} == "LIVE" ]
 then
+    echo "Uploading to PyPI index..."
     twine upload dist/*
 else
+    echo "Uploading to PyPI test index..."
     twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 fi
 

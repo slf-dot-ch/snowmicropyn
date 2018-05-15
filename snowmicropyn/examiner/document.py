@@ -1,4 +1,4 @@
-from snowmicropyn.proksch2015 import model_ssa_and_density
+from snowmicropyn import proksch2015
 
 
 class Document:
@@ -21,4 +21,4 @@ class Document:
         return self._model_df
 
     def recalc_model(self, window_size, overlap_factor):
-        self._model_df = model_ssa_and_density(self._profile.samples, window_size, overlap_factor)
+        self._model_df = proksch2015.model_ssa_and_density(self._profile.samples, window_size, overlap_factor)

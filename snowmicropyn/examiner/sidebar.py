@@ -1,27 +1,10 @@
 import logging
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QDoubleValidator, QPalette
-from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QLineEdit, QPushButton, QItemDelegate, \
-    QWidget, QLabel, QStyle
-
-import snowmicropyn.examiner.icons
+from PyQt5.QtGui import QIcon, QDoubleValidator
+from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QLineEdit, QPushButton, QLabel
 
 log = logging.getLogger(__name__)
-
-
-class TaskDelegate(QItemDelegate):
-
-    def drawDisplay(self, painter, option, rect, text):
-        label = QLabel(text)
-
-        if option.state & QStyle.State_Selected:
-            p = option.palette
-            p.setColor(QPalette.WindowText, p.color(QPalette.Active, QPalette.HighlightedText))
-
-            label.setPalette(p)
-
-        label.render(painter, rect.topLeft())
 
 
 class SidebarWidget(QTreeWidget):
@@ -112,10 +95,6 @@ class SidebarWidget(QTreeWidget):
         self.resizeColumnToContents(2)
         self.resizeColumnToContents(3)
 
-
-        #delegate = TaskDelegate()
-        #self.setItemDelegate(delegate)
-
     def set_document(self, doc):
         if doc is None:
             return
@@ -128,7 +107,8 @@ class SidebarWidget(QTreeWidget):
 
         if p.coordinates:
             lat, long = ['{:.6f}'.format(c) for c in p.coordinates]
-            url = '<a href="https://www.google.com/maps/search/?api=1&query={lat},{long}">{lat}, {long}</a>'.format(lat=lat, long=long)
+            url = '<a href="https://www.google.com/maps/search/?api=1&query={lat},{long}">{lat}, {long}</a>'.format(
+                lat=lat, long=long)
         else:
             url = 'None'
         url_label = QLabel(url)
@@ -148,7 +128,7 @@ class SidebarWidget(QTreeWidget):
         self.smp_firmware_item.setText(self.TEXT_COLUMN, p.smp_firmware)
         length = '{} mm'.format(p.smp_length)
         self.smp_length_item.setText(self.TEXT_COLUMN, length)
-        tipdiameter = '{:.1f} mm'.format(p.smp_tipdiameter/1000)
+        tipdiameter = '{:.1f} mm'.format(p.smp_tipdiameter / 1000)
         self.smp_tipdiameter_item.setText(self.TEXT_COLUMN, tipdiameter)
         self.smp_amp_item.setText(self.TEXT_COLUMN, p.amplifier_serial)
 
@@ -230,13 +210,3 @@ class MarkerTreeItem(QTreeWidgetItem):
 
     def lineedit_focused(self):
         pass
-
-
-class LineEdit(QLineEdit):
-
-    def __init__(self, item):
-        super(LineEdit, self).__init__()
-        self.item = item
-
-    def focusInEvent(self, QFocusEvent):
-        self.item.lineedit_focused()

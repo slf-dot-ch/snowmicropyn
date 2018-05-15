@@ -28,7 +28,7 @@ Its Core: The :class:`Profile` Class
 .. autoclass:: snowmicropyn.Profile
    :members:
 
-Auto detection of Ground & Surface
+Auto Detection of Ground & Surface
 ----------------------------------
 
 .. automodule:: snowmicropyn.detection

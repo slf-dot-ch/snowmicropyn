@@ -10,6 +10,7 @@ Geophysical Research: Earth Surface
 Issue 2, February 2015.
 """
 
+from pandas import np as np
 import pandas as pd
 
 from snowmicropyn.loewe2011 import shotnoise
@@ -35,13 +36,13 @@ def density_ssa_chunk(median_force, element_size):
     a2 = 102.47
     a3 = -121.15
     a4 = -169.96
-    rho = a1 + a2 * pd.np.log(fm) + a3 * pd.np.log(fm) * l + a4 * l
+    rho = a1 + a2 * np.log(fm) + a3 * np.log(fm) * l + a4 * l
 
     # Equation 11 in publication
     c1 = 0.131
     c2 = 0.355
     c3 = 0.0291
-    lc = c1 + c2 * l + c3 * pd.np.log(fm)
+    lc = c1 + c2 * l + c3 * np.log(fm)
 
     # Equation 12 in publication
     ssa = 4 * (1 - (rho / rho_ice)) / lc

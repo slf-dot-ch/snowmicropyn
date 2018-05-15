@@ -2,10 +2,6 @@ from pandas import np as np
 
 
 def merge_profiles(profiles):
-    """
-    :param profiles:
-    :return: A single
-    """
     raise NotImplementedError('merge_profiles not implemented yet')
 
 

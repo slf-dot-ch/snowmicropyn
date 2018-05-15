@@ -8,20 +8,19 @@ log = logging.getLogger(__name__)
 
 
 def detect_ground(profile):
-    """Automatic detection of ground in a profile.
+    """Automatic detection of ground (end of snowpack).
 
-    :param snowmicropyn.Profile profile: An instance of :class:`snowmicropyn.Profile`.
+    :param snowmicropyn.Profile profile: The profile to detect ground in.
     :return: Distance where ground was detected.
     :rtype: float
     """
+
     force = profile.samples.force
     distance = profile.samples.distance
 
     ground = distance.iloc[-1]
 
-    ol = profile.overload
-
-    if force.max() >= ol:
+    if force.max() >= profile.overload:
         i_ol = force.argmax()
         i_threshhold = np.where(distance.values >= distance.values[i_ol] - 20)[0][0]
         f_mean = np.mean(force.iloc[0:i_threshhold])
@@ -38,9 +37,11 @@ def detect_ground(profile):
 
 
 def detect_surface(profile):
-    """Automatic detection of surface (begin of snowpack) in a profile.
+    """Automatic detection of surface (begin of snowpack).
 
-    :param profile: An instance of :class:`snowmicropyn.Profile`.
+    :param profile: The profile to detect surface in.
+    :return: Distance where surface was detected.
+    :rtype: float
     """
 
     # Cut off ca. 1 mm

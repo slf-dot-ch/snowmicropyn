@@ -7,18 +7,15 @@ from PyQt5.QtGui import QIcon, QDoubleValidator, QValidator
 from PyQt5.QtWidgets import *
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 
+import snowmicropyn
 import snowmicropyn.examiner.icons
 import snowmicropyn.examiner.kml
-from snowmicropyn import Profile
 import snowmicropyn.tools
 from snowmicropyn.examiner.document import Document
 from snowmicropyn.examiner.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.examiner.plot_canvas import PlotCanvas
-from snowmicropyn.examiner.sidebar import SidebarWidget
 from snowmicropyn.examiner.preferences import Preferences, PreferencesDialog
-
-# This import statement is important, no icons appear in case it's missing!
-import snowmicropyn.examiner.icons
+from snowmicropyn.examiner.sidebar import SidebarWidget
 
 log = logging.getLogger(__name__)
 
@@ -355,7 +352,7 @@ class MainWindow(QMainWindow):
     def open_pnts(self, files):
         new_docs = []
         for f in files:
-            p = Profile.load(f)
+            p = snowmicropyn.Profile.load(f)
             doc = Document(p)
             doc.recalc_model(self.preferences.window_size, self.preferences.overlap / 100)
             new_docs.append(doc)
@@ -405,7 +402,7 @@ class MainWindow(QMainWindow):
         log.debug('method next_profile called')
         i = self.profile_combobox.currentIndex() + 1
         size = self.profile_combobox.count()
-        if i > size-1:
+        if i > size - 1:
             i = 0
         # We just set a new index on the combobox, which causes a call
         # of method ``switch_profile``. The work is done there.
@@ -557,7 +554,8 @@ class MainWindow(QMainWindow):
 
         drift_range = p.samples[p.samples.distance.between(begin, end)]
 
-        x_fit, y_fit, drift, offset, noise = snowmicropyn.tools.lin_fit(drift_range.distance, drift_range.force)
+        x_fit, y_fit, drift, offset, noise = snowmicropyn.tools.lin_fit(drift_range.distance,
+                                                                        drift_range.force)
         self.current_document._fit_x = x_fit
         self.current_document._fit_y = y_fit
         self.current_document._dirft = drift
@@ -635,7 +633,8 @@ class MarkerDialog(QDialog):
             name = self.label_editline.text()
             existing_markers = [k for k, v in self.mainwin.current_document.profile.markers]
             valid_name = bool(name) and (name not in existing_markers)
-            valid_value = self.validator.validate(self.value_lineedit.text(), 0)[0] == QValidator.Acceptable
+            valid_value = self.validator.validate(self.value_lineedit.text(), 0)[
+                              0] == QValidator.Acceptable
             ok_button.setEnabled(valid_name and valid_value)
 
         self.label_editline.textChanged.connect(check)
