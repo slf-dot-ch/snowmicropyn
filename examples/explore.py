@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 print(snowmicropyn.__version__)
 print(snowmicropyn.githash())
 
-p = snowmicropyn.Profile.load('./some_directory/S31M0067.pnt')
+p = snowmicropyn.Profile.load('/Users/marcel/Dropbox/SMP/pnt_examples/S31M0064.pnt')
 
 print('Timestamp: {}'.format(p.timestamp))
 print('SMP Serial Number: {}'.format(p.smp_serial))

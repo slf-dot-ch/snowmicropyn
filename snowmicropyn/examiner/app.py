@@ -10,7 +10,7 @@ from snowmicropyn.examiner.log_window import LogWindow
 from snowmicropyn.examiner.main_window import MainWindow
 
 
-def main(args):
+def main():
     app = QApplication(sys.argv)
     app.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
@@ -29,7 +29,8 @@ def main(args):
     log.info('Launching {}, version {}, git hash: {}'.format(APP_NAME, VERSION, GITHASH))
 
     main_window = MainWindow(log_window)
-    for f in args:
+    files = sys.argv[1:]
+    for f in files:
         if os.path.isfile(f):
             log.info('Opening file {}'.format(f))
             main_window.open_pnts([f])
@@ -42,4 +43,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main()

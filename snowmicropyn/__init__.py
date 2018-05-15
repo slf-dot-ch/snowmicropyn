@@ -2,7 +2,7 @@ from os.path import dirname, abspath, join
 
 import logging
 
-__version__ = '0.1a1'
+__version__ = '0.1a2'
 
 
 def githash():
@@ -23,7 +23,6 @@ def githash():
 # Log version and its git hash when module is imported
 log = logging.getLogger(__name__)
 log.info('snowmicropyn Version {}, Git Hash {}'.format(__version__, githash()))
-
 
 from .profile import Profile
 from .pnt import Pnt
