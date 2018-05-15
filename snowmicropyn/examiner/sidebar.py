@@ -45,6 +45,7 @@ class SidebarWidget(QTreeWidget):
 
         self.name_item = QTreeWidgetItem((None, None, 'Name', None, ''))
         self.timestamp_item = QTreeWidgetItem((None, None, 'Timestamp', None, ''))
+        self.rec_length_item = QTreeWidgetItem((None, None, 'Length', None, ''))
         self.pnt_filename_item = QTreeWidgetItem((None, None, 'Pnt File', None, ''))
         self.coordinates_item = QTreeWidgetItem((None, None, 'Coordinates', None, ''))
         self.samples_count_item = QTreeWidgetItem((None, None, 'Sample Count', None, ''))
@@ -53,9 +54,10 @@ class SidebarWidget(QTreeWidget):
         self.speed_item = QTreeWidgetItem((None, None, 'Speed', None, ''))
 
         self.recording_item.addChild(self.name_item)
-        self.recording_item.addChild(self.timestamp_item)
         self.recording_item.addChild(self.pnt_filename_item)
+        self.recording_item.addChild(self.timestamp_item)
         self.recording_item.addChild(self.coordinates_item)
+        self.recording_item.addChild(self.rec_length_item)
         self.recording_item.addChild(self.samples_count_item)
         self.recording_item.addChild(self.spatial_res_item)
         self.recording_item.addChild(self.overload_item)
@@ -65,14 +67,18 @@ class SidebarWidget(QTreeWidget):
 
         self.smp_serial_item = QTreeWidgetItem((None, None, 'Serial Number', None, ''))
         self.smp_firmware_item = QTreeWidgetItem((None, None, 'Firmware Version', None, ''))
-        self.smp_length_item = QTreeWidgetItem((None, None, 'Length', None, ''))
+        self.smp_length_item = QTreeWidgetItem((None, None, 'Max. Recording Length', None, ''))
         self.smp_tipdiameter_item = QTreeWidgetItem((None, None, 'Tip Diameter', None, ''))
+        self.smp_sensor_serial_item = QTreeWidgetItem((None, None, 'Sensor Serial Number', None, ''))
+        self.smp_sensor_sensitivity_item = QTreeWidgetItem((None, None, 'Sensor Sensitivity', None, ''))
         self.smp_amp_item = QTreeWidgetItem((None, None, 'Amplifier Serial Number', None, ''))
 
         self.smp_item.addChild(self.smp_serial_item)
         self.smp_item.addChild(self.smp_firmware_item)
         self.smp_item.addChild(self.smp_length_item)
         self.smp_item.addChild(self.smp_tipdiameter_item)
+        self.smp_item.addChild(self.smp_sensor_serial_item)
+        self.smp_item.addChild(self.smp_sensor_sensitivity_item)
         self.smp_item.addChild(self.smp_amp_item)
 
         # drift items
@@ -104,6 +110,7 @@ class SidebarWidget(QTreeWidget):
         self.name_item.setText(self.TEXT_COLUMN, p.name)
         self.pnt_filename_item.setText(self.TEXT_COLUMN, str(p.pnt_file))
         self.timestamp_item.setText(self.TEXT_COLUMN, str(p.timestamp))
+        self.rec_length_item.setText(self.TEXT_COLUMN, '{:.0f} mm'.format(p.recording_length))
 
         if p.coordinates:
             lat, long = ['{:.6f}'.format(c) for c in p.coordinates]
@@ -116,7 +123,7 @@ class SidebarWidget(QTreeWidget):
         url_label.setOpenExternalLinks(True)
         self.setItemWidget(self.coordinates_item, 4, url_label)
 
-        self.samples_count_item.setText(self.TEXT_COLUMN, str(p.samples.shape[0]))
+        self.samples_count_item.setText(self.TEXT_COLUMN, '{:n}'.format(p.samples.shape[0]))
         spatial_res = '{:.3f} µm'.format(p.spatial_resolution * 1000)
         self.spatial_res_item.setText(self.TEXT_COLUMN, spatial_res)
         overload = '{:.1f} N'.format(p.overload)
@@ -130,6 +137,8 @@ class SidebarWidget(QTreeWidget):
         self.smp_length_item.setText(self.TEXT_COLUMN, length)
         tipdiameter = '{:.1f} mm'.format(p.smp_tipdiameter / 1000)
         self.smp_tipdiameter_item.setText(self.TEXT_COLUMN, tipdiameter)
+        self.smp_sensor_serial_item.setText(self.TEXT_COLUMN, p.sensor_serial)
+        self.smp_sensor_sensitivity_item.setText(self.TEXT_COLUMN, '{}  pC/N'.format(p.sensor_sensitivity))
         self.smp_amp_item.setText(self.TEXT_COLUMN, p.amplifier_serial)
 
         # Drop all existing markers
@@ -174,9 +183,9 @@ class SidebarWidget(QTreeWidget):
     def set_drift(self, begin_label, end_label, drift, offset, noise):
         self.drift_begin_item.setText(self.TEXT_COLUMN, begin_label)
         self.drift_end_item.setText(self.TEXT_COLUMN, end_label)
-        self.drift_value_item.setText(self.TEXT_COLUMN, str(drift))
-        self.noise_value_item.setText(self.TEXT_COLUMN, str(noise))
-        self.offset_value_item.setText(self.TEXT_COLUMN, str(offset))
+        self.drift_value_item.setText(self.TEXT_COLUMN, '{:.2g} mN/m'.format(drift * 1000))
+        self.offset_value_item.setText(self.TEXT_COLUMN, '{:.2f} mN'.format(offset * 1000))
+        self.noise_value_item.setText(self.TEXT_COLUMN, '{:.2f} mN'.format(noise * 1000))
 
 
 class MarkerTreeItem(QTreeWidgetItem):

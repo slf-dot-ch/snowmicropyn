@@ -230,15 +230,15 @@ class Pnt:
                     value = value.decode('utf-8', errors='ignore')
                     # Drop non-printable chars
                     value = ''.join([x if x in string.printable else '' for x in value])
-                log.debug('Read header entry {} = {}{}'.format(
-                    pnt_id, repr(value), ' ' + unit if unit else '')
-                )
+                unit_label = ' ' + unit if unit else ''
+                log.info('Read header entry {} = {}{}'.format(pnt_id, repr(value), unit_label))
                 header[pnt_id] = pnt_header_entry(value, unit)
 
             count = header[Pnt.Header.SAMPLES_COUNT_FORCE].value
             raw_samples = struct.unpack_from('>{}h'.format(count), raw, offset=512)
             log.info('Read {} raw samples from file {}'.format(len(raw_samples), file))
         except struct.error as e:
+            log.exception(e)
             raise ValueError('Failed to load pnt file. Message: ' + str(e))
 
         return header, raw_samples

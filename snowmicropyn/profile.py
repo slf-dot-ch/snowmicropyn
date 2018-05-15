@@ -121,11 +121,11 @@ class Profile(object):
         self._smp_firmware = str(self.pnt_header_value(Pnt.Header.SMP_FIRMWARE))
         self._smp_length = self.pnt_header_value(Pnt.Header.SMP_LENGTH)
         self._smp_tipdiameter = self.pnt_header_value(Pnt.Header.SMP_TIPDIAMETER)
-
         self._gps_pdop = self.pnt_header_value(Pnt.Header.GPS_PDOP)
         self._gps_numsats = self.pnt_header_value(Pnt.Header.GPS_NUMSATS)
         self._amplifier_range = self.pnt_header_value(Pnt.Header.AMPLIFIER_RANGE)
         self._amplifier_serial = self.pnt_header_value(Pnt.Header.AMPLIFIER_SERIAL)
+        self._sensor_serial = self.pnt_header_value(Pnt.Header.SENSOR_SERIAL)
         self._sensor_sensivity = self.pnt_header_value(Pnt.Header.SENSOR_SENSITIVITIY)
 
         # Create a pandas dataframe with distance and force
@@ -158,9 +158,7 @@ class Profile(object):
                 self._ini.remove_option('markers', k)
 
     def __str__(self):
-        first = self.samples.distance.iloc[0]
-        last = self.samples.distance.iloc[-1]
-        length = last - first
+        length = self.recording_length
         return 'Profile(name={}, {:.3f} mm, {} samples)'.format(repr(self.name), length, len(self))
 
     def __len__(self):
@@ -250,6 +248,20 @@ class Profile(object):
         was determined using GPS. Acts as an indicator of location's quality.
         """
         return self._gps_pdop
+
+    @property
+    def sensor_serial(self):
+        """ Returns the serial number of the force sensor of the SnowMicroPen
+        used.
+        """
+        return self._sensor_serial
+
+    @property
+    def sensor_sensitivity(self):
+        """ Returns the sensitivity of SnowMicroPen's force sensor. The unit of
+        this value is µC/N.
+        """
+        return self._sensor_sensivity
 
     @property
     def amplifier_serial(self):
@@ -348,6 +360,12 @@ class Profile(object):
         return self.set_marker(label, None)
 
     @property
+    def recording_length(self):
+        first = self.samples.distance.iloc[0]
+        last = self.samples.distance.iloc[-1]
+        return last - first
+
+    @property
     def surface(self):
         """ Convenience property to access value of 'surface' marker. """
         return self.marker('surface')
@@ -370,8 +388,10 @@ class Profile(object):
         (passing ``None``), the content of the pnt header field
         (:const:`Pnt.Header.FILENAME`) is used.
 
-        :param pnt_file: A `Path-like object<https://docs.python.org/3/glossary.html#term-path-like-object>`_.
+        :param pnt_file: A `path-like object`_.
         :param name: Name of the profile.
+
+        .. _path-like object: https://docs.python.org/3/glossary.html#term-path-like-object
         """
         return Profile(pnt_file, name)
 
@@ -391,15 +411,17 @@ class Profile(object):
     def export_samples(self, file=None, precision=4, snowpack_only=False):
         """ Export the samples of this profile into a CSV file.
 
-       When parameter ``file`` is not provided, the default name is used which
+        When parameter ``file`` is not provided, the default name is used which
         is same as the pnt file from which the profile was loaded with a suffix
         `_samples` and the `csv` extension.
 
-        :param file: A `Path-like object<https://docs.python.org/3/glossary.html#term-path-like-object>`_.
+        :param file: A `path-like object`_.
         :param precision: Precision (number of digits after comma) of the
                values. Default value is 4.
         :param snowpack_only: In case set to true, only samples within the
                markers surface and ground are exported.
+
+        .. _path-like object: https://docs.python.org/3/glossary.html#term-path-like-object
         """
         if file:
             file = pathlib.Path(file)

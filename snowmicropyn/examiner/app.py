@@ -21,7 +21,7 @@ def main():
 
     log_window = LogWindow()
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     logger.addHandler(log_window)
     logger.addHandler(logging.StreamHandler(stream=sys.stdout))
 
