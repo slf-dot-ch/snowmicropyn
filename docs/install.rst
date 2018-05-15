@@ -60,9 +60,18 @@ That's about it. We hope you managed to get *snowmicropyn* on your machine.
 
 .. tip:: A good place to start getting into Python is the `Python Guide`_.
 
+Upgrading
+=========
+
+In case you installed *snowmicropyn* before and like to upgrade to the latest
+version available, execute the following command:
+
+.. code-block:: console
+
+   pip install snowmicropyn --upgrade --no-cache-dir
 
 Uninstalling
-------------
+============
 
 Get rid of *snowmicropyn* is simple too:
 
