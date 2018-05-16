@@ -3,6 +3,21 @@
 Information for Developers of *snowmicropyn*
 ============================================
 
+Necessary Accounts
+------------------
+
+To **develop** on *snowmicropyn*, you need a Github_ account. In case you're got
+write access to the repository, you can push you changes directly. Otherwise
+you have to send a pull request.
+
+To **release** new versions of *snowmicropyn*, you need accounts on PyPI_ and
+`test PyPI`_. The project maintainer must grant your account the necessary
+rights so your user is able to deploy releases.
+
+To **release** updated **documentation**, you need an account on
+`Read the Docs`_. The project maintainer must grant your account the necessary
+rights so your user is able to deploy releases.
+
 Git Hash
 --------
 
@@ -116,6 +131,10 @@ Releasing a New Version of *snowmicropyn*
 
 #. Release new documentation on Read the Docs
 
-
+.. _Github: https://github.com/
+.. _PyPI: https://pypi.org/
+.. _test PyPI: https://test.pypi.org/
+.. _Read the Docs: https://readthedocs.org/
 .. _Cygwin: https://www.cygwin.com/
 .. _Gow: https://github.com/bmatzelle/gow/wiki
+
