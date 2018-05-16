@@ -4,8 +4,8 @@ API Reference
 Receive Version Number and Git Hash
 -----------------------------------
 
-To receive the version of *snowmicropyn* and the githash of *snowmicropyn* your
-using, do the following:
+To receive the version of *snowmicropyn* and the git hash of
+*snowmicropyn* you're using, do the following:
 
 .. code-block:: python
 

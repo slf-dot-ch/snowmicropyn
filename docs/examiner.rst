@@ -6,7 +6,7 @@ The :program:`Examiner`
 What is :program:`Examiner`?
 ----------------------------
 
-:program:`Examiner` is a desktop application to read, visualize and export file
+:program:`Examiner` is a desktop application to read, visualise and export file
 recorded by SnowMicroPen (pnt files). It uses the Qt Toolkit.
 
 Launch :program:`Examiner`
