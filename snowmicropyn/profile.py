@@ -404,7 +404,7 @@ class Profile(object):
         When no markers are set on the profile, the resulting file will be
         empty.
         """
-        with open(self._ini_file, 'w') as f:
+        with self._ini_file.open('w') as f:
             log.info('Saving ini info of {} to file {}'.format(self, self._ini_file))
             self._ini.write(f)
 
@@ -437,7 +437,12 @@ class Profile(object):
             # Write version and git hash as comment for tracking
             crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
             f.write(crumbs)
-            samples.to_csv(f, header=True, index=False, float_format=fmt)
+            with_units = {
+                'distance': 'distance [mm]',
+                'force': 'force [N]',
+            }
+            data = samples.rename(columns=with_units)
+            data.to_csv(f, header=True, index=False, float_format=fmt)
         return file
 
     def export_meta(self, file=None, include_pnt_header=False):
@@ -464,21 +469,30 @@ class Profile(object):
             # CSV header
             writer.writerow(['key', 'value'])
             # Export important properties of profile
-            writer.writerow(('name', self.name))
-            writer.writerow(('pnt_file', self._pnt_file))
-            writer.writerow(('gps.coords.lat', self._latitude))
-            writer.writerow(('gps.coords.long', self._longitude))
-            writer.writerow(('gps.numsats', self.gps_numsats))
-            writer.writerow(('gps.pdop', self.gps_pdop))
-            writer.writerow(('smp.serial', self.smp_serial))
-            writer.writerow(('smp.length', self.smp_length))
+            writer.writerow(('recording_name', self.name))
+            writer.writerow(('recording_pntfile', str(self.pnt_file)))
+            writer.writerow(('recording_timestamp', str(self.timestamp.isoformat())))
+            writer.writerow(('recording_latitude', self._latitude))
+            writer.writerow(('recording_longitude', self._longitude))
+            writer.writerow(('recording_length', self.recording_length))
+            writer.writerow(('recording_samplecount', len(self)))
+            writer.writerow(('recording_spatialresolution', self.spatial_resolution))
+            writer.writerow(('recording_overload', self.overload))
+            writer.writerow(('recording_speed', self.speed))
+            writer.writerow(('smp_serial', self.smp_serial))
+            writer.writerow(('smp_firmware', self.smp_firmware))
+            writer.writerow(('smp_maxlength', self.smp_length))
+            writer.writerow(('smp_tipdiameter', self.smp_tipdiameter))
+            writer.writerow(('smp_sensor_serial', self.sensor_serial))
+            writer.writerow(('smp_sensor_sensitivity', self.sensor_sensitivity))
+            writer.writerow(('smp_amplifier_serial', self.amplifier_serial))
             # Export markers
             for k, v in self.markers:
-                writer.writerow(('ini.marker.' + k, v))
+                writer.writerow(('marker_' + k, v))
             # Export pnt header entries
             if include_pnt_header:
                 for header_id, (value, unit) in self._pnt_header.items():
-                    writer.writerow(['pnt.' + header_id.name, str(value)])
+                    writer.writerow(['pnt_' + header_id.name, str(value)])
         return file
 
     def samples_within_distance(self, begin=None, end=None, relativize=False):
