@@ -7,7 +7,7 @@ Prerequisite: Python 3
 ----------------------
 
 snowmicropyn is written in the Python_ programming language. You need to have
-Python 3.4 (or later) installed on your machine to install *snowmicropyn*.
+Python 3.4 (or later) installed on your machine to run *snowmicropyn*.
 
 To check if your computer has Python installed, open a Terminal Window and type
 
@@ -42,7 +42,7 @@ the :command:`pip` command (which is part of Python), the installation of
    pip install snowmicropyn
 
 .. note:: When both, Python 2 and Python 3 is installed on your computer, you
-   may need to type :command:`pip3` instead of command :command:`pip`.
+   may need to type :command:`pip3` instead of :command:`pip`.
 
 This will install the latest version of *snowmicropyn* available on PyPI_ and
 its dependencies. In case you want to install a specific version of

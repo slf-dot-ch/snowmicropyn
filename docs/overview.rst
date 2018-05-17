@@ -4,12 +4,13 @@ Overview
 What's inside?
 --------------
 
-The *snowmicropyn* package consits of two entities:
+The *snowmicropyn* package contains two entities:
 
-- An :doc:`API <api_usersguide>` to automate reading, exporting and post processing pnt files using
-  the python language. You'll need some basic programming skills to use it.
-- :doc:`Examiner <examiner>`, a desktop application to read, export and post process
-  pnt files. The Examiner uses the API itself too.
+- An :doc:`API <api_usersguide>` to automate reading, exporting and post
+  processing pnt files using the python language. You'll need some basic
+  programming skills to use it.
+- :doc:`Examiner <examiner>`, a desktop application to read, export and post
+  process pnt files. The Examiner uses the API itself too.
 
 How do I get it?
 ----------------
@@ -21,15 +22,15 @@ Python:
 
    pip install snowmicropyn
 
-No clue what we're talking about? You find a more detailed describtion in
+No clue what we're talking about? You find a more detailed description in
 section :doc:`install`!
 
 *snowmicropyn*'s API
 --------------------
 
 The following snippet is a simple example how to read a pnt file, read some of
-it's meta information and export the samples (measured distance & force) into
-CSV format.
+it's meta information and export its samples (measured distance & force) into a
+CSV file.
 
 .. code-block:: python
 
@@ -39,14 +40,14 @@ CSV format.
 
    print(p.timestamp)  # Timestamp of recording
    print(p.smp_serial)  # Serial number of SnowMicroPen used
-   print(p.coordinates)  # WGS84 latitude and longitude
+   print(p.coordinates)  # WGS 84 (latitude, longitude)
 
    # Export samples into CSV format
-   # (By default, filename will be S31M0067_samples.csv)
+   # (By default, filename will be :file:`S31M0067_samples.csv)
    p.export_samples()
 
-You find more information about the API in the :doc:`api_usersguide`. For more
-details about the API's elements, checkout the :doc:`api_reference`.
+You find detailed information about the API in the :doc:`api_usersguide`. For
+more information about the API's elements, checkout the :doc:`api_reference`.
 
 Launch the :program:`Examiner`
 ------------------------------
@@ -54,3 +55,9 @@ Launch the :program:`Examiner`
 After installing *snowmicropyn* , open a Terminal Window and type
 :kbd:`examiner` and hit :kbd:`return` to start the
 :program:`Examiner`. Happy examining!
+
+If you want to launch the :program:`Examiner` manually, type:
+
+.. code-block:: console
+
+   python -m snowmicropyn.examiner.app

@@ -13,7 +13,7 @@ Each pnt file consists of a header with meta information followed by the actual
 data, the force samples.
 
 .. note:: The *snowmicropyn* package never ever writes into a pnt file. Good to
-         know your precious raw data is always save.
+   know your precious raw data is always save.
 
 Corresponding ini files
 ^^^^^^^^^^^^^^^^^^^^^^^

@@ -28,8 +28,12 @@ Its Core: The :class:`Profile` Class
 .. autoclass:: snowmicropyn.Profile
    :members:
 
-Auto Detection of Ground & Surface
+Auto-detection of Ground & Surface
 ----------------------------------
+
+*snowmicropyn* contains algorithms to detect begin and end of the snowpack
+automatically. This algorithms may fail, so you may check the values before
+you process your data any further.
 
 .. automodule:: snowmicropyn.detection
    :members:
