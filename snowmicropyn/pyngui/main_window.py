@@ -89,6 +89,7 @@ class MainWindow(QMainWindow):
         self.show_log_action = QAction('Show Log', self)
 
         self.profile_combobox = QComboBox(self)
+        self.profile_combobox.setSizeAdjustPolicy(QComboBox.AdjustToContents)
 
         self._init_ui()
         self.switch_document()

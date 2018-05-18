@@ -157,7 +157,7 @@ class SidebarWidget(QTreeWidget):
                 del self.marker_items[label]
             return
 
-        value = str(value)
+        value = '{:.3f}'.format(value)
         if label not in self.marker_items:
             item = MarkerTreeItem(self.markers_item, label)
 
