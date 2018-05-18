@@ -7,6 +7,7 @@ from datetime import datetime
 import pandas as pd
 import pytz
 from pandas import np as np
+from snowmicropyn import windowing
 
 from . import __version__, githash
 from . import detection
@@ -495,21 +496,35 @@ class Profile(object):
                     writer.writerow(['pnt_' + header_id.name, str(value)])
         return file
 
-    def export_derivments(self, file=None, window_size=2.5, overlap_factor=10):
+    def export_derivatives(self, file=None, window_size=windowing.DEFAULT_WINDOW, overlap_factor=windowing.DEFAULT_WINDOW_OVERLAP, precision=4):
         if file:
             file = pathlib.Path(file)
         else:
-            file = self._pnt_file.with_name(self._pnt_file.stem + '_meta').with_suffix('.csv')
+            file = self._pnt_file.with_name(self._pnt_file.stem + '_derivatives').with_suffix('.csv')
 
-        log.info('Calculating proksch2015 ssa + density')
-        ssa = proksch2015.model_ssa_and_density(self.samples, window_size, overlap_factor)
+        log.info('Calculating derivatives by Löwe 2011')
+        df_shotnoise = loewe2011.shotnoise(self.samples, window_size, overlap_factor)
+
+        log.info('Calculating derivatives by Proksch 2015')
+        proksch_data = proksch2015.calculate(df_shotnoise)
+
+        derivatives = df_shotnoise.merge(proksch_data)
+
         # Add units in label for export
         with_units = {
             'distance': 'distance [mm]',
-            'force': 'force [N]',
+            'force_median': 'force_median [N]',
+            'L2012_lambda': 'L2012_lambda [1/mm]',
+            'L2012_f0': 'L2012_f0 [N]',
+            'L2012_delta': 'L2012_delta [mm]',
+            'L2012_L': 'L2012_L [mm]',
+            'P2015_ssa': 'P2015_ssa [m^2/m^3]',
+            'P2015_density': 'P2015_density [kg/m^3]'
         }
-        data = ssa.rename(columns=with_units)
-        data.to_csv(file)
+        derivatives = derivatives.rename(columns=with_units)
+
+        fmt = '%.{}f'.format(precision)
+        derivatives.to_csv(file, header=True, index=False, float_format=fmt)
 
     def samples_within_distance(self, begin=None, end=None, relativize=False):
         """ Get samples within a certain distance, specified by parameters
@@ -547,6 +562,9 @@ class Profile(object):
             samples.distance = samples.distance - offset
 
         return samples.reset_index(drop=True)
+
+    def samples_within_markers(self, begin_marker=None, end_marker=None, relativize=True):
+        raise NotImplementedError()
 
     def samples_within_snowpack(self, relativize=True):
         """ Returns samples within the snowpack, meaning between the values of

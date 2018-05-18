@@ -28,13 +28,13 @@ def shotnoise_chunk(spatial_res, forces, cone_area=SMP_CONE_AREA):
     k1 = np.mean(forces)
     k2 = np.var(forces)
 
-    # Covariance/Autocorrelation
-    c_f = np.correlate(forces, forces, mode='full')  # eq. 8 in LvH 2012
+    # Covariance/Autocorrelation (Equation 8 in publication)
+    c_f = np.correlate(forces, forces, mode='full')
 
     # Equation 11 in publication
     delta = -(3. / 2) * c_f[n - 1] / (c_f[n] - c_f[n - 1]) * spatial_res
 
-    # Equations 12 in publication
+    # Equation 12 in publication
     lambda_ = (4. / 3) * (k1 ** 2) / k2 / delta  # Intensity
     f0 = (3. / 2) * k2 / k1
 
@@ -56,4 +56,4 @@ def shotnoise(samples, window=DEFAULT_WINDOW, overlap_factor=DEFAULT_WINDOW_OVER
         f_median = np.median(chunk.force)
         sn = shotnoise_chunk(spatial_res, chunk.force)
         result.append((center, f_median) + sn)
-    return pd.DataFrame(result, columns=['distance', 'f_median', 'lambda', 'f0', 'delta', 'L'])
+    return pd.DataFrame(result, columns=['distance', 'force_median', 'L2012_lambda', 'L2012_f0', 'L2012_delta', 'L2012_L'])

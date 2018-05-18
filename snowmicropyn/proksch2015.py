@@ -50,11 +50,19 @@ def density_ssa_chunk(median_force, element_size):
     return rho, ssa
 
 
+def calculate(shotnoise_data):
+    result = []
+    for index, row in shotnoise_data.iterrows():
+        density, ssa = density_ssa_chunk(row.force_median, row.L2012_L)
+        result.append((row.distance, density, ssa))
+    return pd.DataFrame(result, columns=['distance', 'P2015_density', 'P2015_ssa'])
+
+
 def model_ssa_and_density(samples, window=DEFAULT_WINDOW, overlap_factor=DEFAULT_WINDOW_OVERLAP):
     # Base: shot noise model
     sn = shotnoise(samples, window, overlap_factor)
     result = []
     for index, row in sn.iterrows():
-        density, ssa = density_ssa_chunk(row.f_median, row.L)
+        density, ssa = density_ssa_chunk(row.force_median, row.L2012_L)
         result.append((row.distance, density, ssa))
-    return pd.DataFrame(result, columns=['distance', 'density', 'ssa'])
+    return pd.DataFrame(result, columns=['distance', 'P2015_density', 'P2015_ssa'])
