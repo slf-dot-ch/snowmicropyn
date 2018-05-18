@@ -75,8 +75,8 @@ Some examples will help you to get an overview of *snowmicropyn*'s features.
 
 .. hint::
 
-    You find these and other examples in our collection of
-    :github_tree:`examples` on GitHub.
+   You find these and other examples in our collection of
+   :github_tree:`examples` on GitHub.
 
 Explore properties
 ^^^^^^^^^^^^^^^^^^
@@ -99,22 +99,40 @@ supports reading CSV files? Then this example is for you!
 After you executed this example, there will be a :file:`..._samples.csv` and a
 :file:`..._meta.csv` for each pnt file in the directory.
 
-Plot using matplotlib
-^^^^^^^^^^^^^^^^^^^^^
+Plotting
+^^^^^^^^
 
-In this example, we use the delicious matplotlib_ to explore the signal of our
-profile.
+In this example, we use the delicious matplotlib_ to explore the penetration
+signal of a profile.
 
 .. literalinclude::  ../examples/plot.py
 
 
-A window like to following should open:
+When this code is executed, a window like to following should open:
 
 .. figure:: images/screenshot_matplotlib.png
    :alt: Screenshot of matplotlib Window
 
-Expore using the tool buttons shown! You can even modify the axes and export the
-plot into an image file.
+Expore using the tool buttons below the plot! You can even modify the axes and
+export the plot into an image file.
+
+A Touch of Science
+^^^^^^^^^^^^^^^^^^
+
+Alright, let's do some science. In this example, we examine a profile recorded
+at our Testsite Weissfluhjoch. There's a crust and a depth hoar layer in this
+profile. By using command:`pyngui`, we already identified the layers for you by
+setting markers. Let's calculate the mean SSA within the crust and the weight
+that lies on the depth hoar layer.
+
+.. literalinclude::  ../examples/weaklayer.py
+
+This will print something like:
+
+.. code-block:: console
+
+   Mean SSA within crust: 5.5 m^2/m^3
+   Weight above hoar layer: 98 kg/m^2
 
 
 .. _matplotlib: https://www.matplotlib.org/
