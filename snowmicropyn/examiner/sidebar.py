@@ -183,7 +183,7 @@ class SidebarWidget(QTreeWidget):
     def set_drift(self, begin_label, end_label, drift, offset, noise):
         self.drift_begin_item.setText(self.TEXT_COLUMN, begin_label)
         self.drift_end_item.setText(self.TEXT_COLUMN, end_label)
-        self.drift_value_item.setText(self.TEXT_COLUMN, '{:.2g} mN/m'.format(drift * 1000))
+        self.drift_value_item.setText(self.TEXT_COLUMN, '{:.2g} mN/m'.format(drift * 1000 * 1000))
         self.offset_value_item.setText(self.TEXT_COLUMN, '{:.2f} mN'.format(offset * 1000))
         self.noise_value_item.setText(self.TEXT_COLUMN, '{:.2f} mN'.format(noise * 1000))
 
