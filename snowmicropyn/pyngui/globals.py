@@ -1,6 +1,6 @@
 import snowmicropyn
 
-APP_NAME = 'snowmicropyn Examiner'
+APP_NAME = 'snowmicropyn pyngui'
 ORG_NAME = 'SLF'
 ORG_DOMAIN = 'slf.ch'
 VERSION = snowmicropyn.__version__

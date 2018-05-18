@@ -58,15 +58,15 @@ setup(
         'Topic :: Scientific/Engineering :: Atmospheric Science'
     ],
 
-    packages=['snowmicropyn', 'snowmicropyn.examiner'],
+    packages=['snowmicropyn', 'snowmicropyn.pyngui'],
     package_data={
         'snowmicropyn': ['githash'],
-        'snowmicropyn.examiner': ['about.html'],
+        'snowmicropyn.pyngui': ['about.html'],
     },
     include_package_data=True,
     entry_points={
         'gui_scripts': [
-            'examiner = snowmicropyn.examiner.app:main'
+            'pyngui = snowmicropyn.pyngui.app:main'
         ]
     },
 

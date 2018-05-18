@@ -1,13 +1,13 @@
 import logging
 import sys
-import os.path
+import pathlib
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 
-from snowmicropyn.examiner.globals import *
-from snowmicropyn.examiner.log_window import LogWindow
-from snowmicropyn.examiner.main_window import MainWindow
+from snowmicropyn.pyngui.globals import *
+from snowmicropyn.pyngui.log_window import LogWindow
+from snowmicropyn.pyngui.main_window import MainWindow
 
 
 def main():
@@ -29,13 +29,11 @@ def main():
     log.info('Launching {}, version {}, git hash: {}'.format(APP_NAME, VERSION, GITHASH))
 
     main_window = MainWindow(log_window)
-    files = sys.argv[1:]
-    for f in files:
-        if os.path.isfile(f):
-            log.info('Opening file {}'.format(f))
-            main_window.open_pnts([f])
-        else:
-            log.warning('Ignoring argument {}'.format(f))
+    paths = [pathlib.Path(p) for p in sys.argv[1:]]
+    pnt_files = [p for p in paths if p.is_file() and p.suffix == '.pnt']
+    for f in pnt_files:
+        log.info('Opening file {}'.format(f))
+        main_window.open_pnts([f])
 
     main_window.show()
 

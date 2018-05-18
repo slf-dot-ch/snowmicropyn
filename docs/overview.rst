@@ -9,8 +9,8 @@ The *snowmicropyn* package contains two entities:
 - An :doc:`API <api_usersguide>` to automate reading, exporting and post
   processing pnt files using the python language. You'll need some basic
   programming skills to use it.
-- :doc:`Examiner <examiner>`, a desktop application to read, export and post
-  process pnt files. The Examiner uses the API itself too.
+- :doc:`pyngui`, a desktop application to read, export and post
+  process pnt files. :program:`pyngui` uses the API itself too.
 
 How do I get it?
 ----------------
@@ -49,15 +49,15 @@ CSV file.
 You find detailed information about the API in the :doc:`api_usersguide`. For
 more information about the API's elements, checkout the :doc:`api_reference`.
 
-Launch the :program:`Examiner`
-------------------------------
+Launch :program:`pyngui`
+------------------------
 
 After installing *snowmicropyn* , open a Terminal Window and type
-:kbd:`examiner` and hit :kbd:`return` to start the
-:program:`Examiner`. Happy examining!
+:kbd:`pyngui` and hit :kbd:`return` to start the
+:program:`pyngui`. Happy examining!
 
-If you want to launch the :program:`Examiner` manually, type:
+If you want to launch the :program:`pyngui` manually, type:
 
 .. code-block:: console
 
-   python -m snowmicropyn.examiner.app
+   python -m snowmicropyn.pyngui.app

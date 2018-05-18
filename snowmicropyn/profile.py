@@ -495,6 +495,22 @@ class Profile(object):
                     writer.writerow(['pnt_' + header_id.name, str(value)])
         return file
 
+    def export_derivments(self, file=None, window_size=2.5, overlap_factor=10):
+        if file:
+            file = pathlib.Path(file)
+        else:
+            file = self._pnt_file.with_name(self._pnt_file.stem + '_meta').with_suffix('.csv')
+
+        log.info('Calculating proksch2015 ssa + density')
+        ssa = proksch2015.model_ssa_and_density(self.samples, window_size, overlap_factor)
+        # Add units in label for export
+        with_units = {
+            'distance': 'distance [mm]',
+            'force': 'force [N]',
+        }
+        data = ssa.rename(columns=with_units)
+        data.to_csv(file)
+
     def samples_within_distance(self, begin=None, end=None, relativize=False):
         """ Get samples within a certain distance, specified by parameters
         ``begin`` and ``end``

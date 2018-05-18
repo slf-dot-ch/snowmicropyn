@@ -8,14 +8,14 @@ from PyQt5.QtWidgets import *
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 
 import snowmicropyn
-import snowmicropyn.examiner.icons
-import snowmicropyn.examiner.kml
+import snowmicropyn.pyngui.icons
+import snowmicropyn.pyngui.kml
 import snowmicropyn.tools
-from snowmicropyn.examiner.document import Document
-from snowmicropyn.examiner.globals import APP_NAME, VERSION, GITHASH
-from snowmicropyn.examiner.plot_canvas import PlotCanvas
-from snowmicropyn.examiner.preferences import Preferences, PreferencesDialog
-from snowmicropyn.examiner.sidebar import SidebarWidget
+from snowmicropyn.pyngui.document import Document
+from snowmicropyn.pyngui.globals import APP_NAME, VERSION, GITHASH
+from snowmicropyn.pyngui.plot_canvas import PlotCanvas
+from snowmicropyn.pyngui.preferences import Preferences, PreferencesDialog
+from snowmicropyn.pyngui.sidebar import SidebarWidget
 
 log = logging.getLogger(__name__)
 
@@ -460,7 +460,7 @@ class MainWindow(QMainWindow):
     def _kml_triggered(self):
         profile = self.current_document.profile
         f = join(dirname(profile.pnt_file), 'snowmicropyn_profiles.kml')
-        snowmicropyn.examiner.kml.export2kml(f, self.documents)
+        snowmicropyn.pyngui.kml.export2kml(f, self.documents)
         self.notify_dialog.notifyFilesWritten(f)
 
     def _preferences_triggered(self):

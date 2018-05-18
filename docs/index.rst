@@ -26,7 +26,7 @@ Table of Content
    install.rst
    api_usersguide.rst
    api_reference.rst
-   examiner.rst
+   pyngui.rst
    develop.rst
 
 Contributors
@@ -40,7 +40,7 @@ Contributors
 License
 -------
 
-The software and its documentation is released under GPL_.
+This software and its documentation are released under GPL_.
 
 Acknowledgements
 ----------------

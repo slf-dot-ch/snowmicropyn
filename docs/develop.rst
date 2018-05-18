@@ -36,7 +36,7 @@ When using *snowmicropyn*, the hash of a release can be retrieved by method
 Compiling Icons Into a Python File
 ----------------------------------
 
-The :program:`Examiner` application requires icons used in menus and toolbar
+The :program:`pyngui` application requires icons used in menus and toolbar
 buttons. They are stored in the folder :file:`resources`. For easy deployment,
 they are compiled into a python source file using the :command:`pyrcc5` tool,
 which comes with the Qt package. Execute the following command when you did do
@@ -44,7 +44,7 @@ changes in the resources folder:
 
 .. code-block:: console
 
-    pyrcc5 -o snowmicropyn/examiner/icons.py resources/icons.qrc
+    pyrcc5 -o snowmicropyn/pyngui/icons.py resources/icons.qrc
 
 This command generates an updated version of the file called :file:`icons.py`.
 Don't ever edit this file manually.
@@ -52,12 +52,12 @@ Don't ever edit this file manually.
 WTF, the icons are gone!
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-In case you're suddenly see no more icons when running :program:`Examiner`, it's
+In case you're suddenly see no more icons when running :program:`pyngui`, it's
 likely due to your IDE has optimized your imports and dropped the statement
 
 .. code-block:: python
 
-   import snowmicropyn.examiner.icons
+   import snowmicropyn.pyngui.icons
 
 as it seems to not have an effect. But it actually does. No icons without this
 import statement!

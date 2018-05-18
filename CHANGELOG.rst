@@ -11,7 +11,7 @@ Huge overhaul of snowmicropyn including:
 - Deployment as package on PyPI.
 - Source code repository moved to GitHub.
 - Documentation (using Sphinx), publishing on Read the Docs.
-- New UI called "snowmicropyn Examiner".
+- New UI called "snowmicropyn pyngui".
 
 Pre Overhaul Changelog
 ----------------------
