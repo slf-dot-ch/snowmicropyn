@@ -1,17 +1,17 @@
 snowmicropyn Changelog
 ======================
 
-Version 0.1.0a1
+Version 1.0.0a1
 ---------------
 
-NOT YET RELEASED
+2018-05-18
 
 Huge overhaul of snowmicropyn including:
 - Restructuring/Rewrite of code base.
-- Deployment as package on PyPI.
-- Source code repository moved to GitHub.
-- Documentation (using Sphinx), publishing on Read the Docs.
-- New UI called "snowmicropyn pyngui".
+- Deployment as package on PyPI_.
+- Source code repository moved to GitHub_.
+- Documentation (using Sphinx), publishing on `Read the Docs`_.
+- New UI called *pyngui*.
 
 Pre Overhaul Changelog
 ----------------------
@@ -332,3 +332,8 @@ Pre Overhaul Changelog
 2014-01-09
 
 - (P)released PyNTReader version 0.0.1 alpha
+
+
+.. _PyPI: https://pypi.org/project/snowmicropyn/
+.. _GitHub: https://github.com/slf-dot-ch/snowmicropyn
+.. _Read the Docs: http://snowmicropyn.readthedocs.io/
