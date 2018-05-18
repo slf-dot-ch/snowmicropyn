@@ -11,7 +11,7 @@ from snowmicropyn import windowing
 
 from . import __version__, githash
 from . import detection
-from . import loewe2011
+from . import loewe2012
 from . import proksch2015
 from .pnt import Pnt
 
@@ -503,7 +503,7 @@ class Profile(object):
             file = self._pnt_file.with_name(self._pnt_file.stem + '_derivatives').with_suffix('.csv')
 
         log.info('Calculating derivatives by Löwe 2011')
-        df_shotnoise = loewe2011.shotnoise(self.samples, window_size, overlap_factor)
+        df_shotnoise = loewe2012.shotnoise(self.samples, window_size, overlap_factor)
 
         log.info('Calculating derivatives by Proksch 2015')
         proksch_data = proksch2015.calculate(df_shotnoise)
@@ -591,7 +591,7 @@ class Profile(object):
         return ground
 
     def model_shotnoise(self, save_to_file=False, filename_suffix='shotnoise'):
-        sn = loewe2011.shotnoise(self.samples)
+        sn = loewe2012.shotnoise(self.samples)
         if save_to_file:
             file = self._pnt_file.with_name(
                 self._pnt_file.stem + '_' + filename_suffix).with_suffix('.csv')

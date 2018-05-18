@@ -13,7 +13,7 @@ Issue 2, February 2015.
 from pandas import np as np
 import pandas as pd
 
-from snowmicropyn.loewe2011 import shotnoise
+from snowmicropyn.loewe2012 import shotnoise
 from snowmicropyn.windowing import DEFAULT_WINDOW, DEFAULT_WINDOW_OVERLAP
 
 DENSITY_ICE = 917.
