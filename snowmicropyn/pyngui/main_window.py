@@ -175,7 +175,7 @@ class MainWindow(QMainWindow):
         action.triggered.connect(self._detect_ground_triggered)
 
         def force_plot():
-            self.switch_document()
+            self.update()
 
         action = self.plot_smpsignal_action
         action.setShortcut('Alt+P')
@@ -355,7 +355,7 @@ class MainWindow(QMainWindow):
         for f in files:
             p = snowmicropyn.Profile.load(f)
             doc = Document(p)
-            doc.recalc_model(self.preferences.window_size, self.preferences.overlap / 100)
+            doc.recalc_derivatives(self.preferences.window_size, self.preferences.overlap / 100)
             new_docs.append(doc)
         self.documents.extend(new_docs)
         first_new_index = self.profile_combobox.count()
@@ -387,9 +387,7 @@ class MainWindow(QMainWindow):
     @property
     def current_document(self):
         i = self.profile_combobox.currentIndex()
-        if i == -1:
-            return None
-        return self.documents[i]
+        return self.documents[i] if i != -1 else None
 
     def _drop_triggered(self):
         log.debug('method drop_profile called')
@@ -422,12 +420,14 @@ class MainWindow(QMainWindow):
     def _detect_ground_triggered(self):
         doc = self.current_document
         doc.profile.detect_ground()
-        self.switch_document()
+        self.set_marker('ground', doc.profile.ground)
+        self.update()
 
     def _detect_surface_triggered(self):
         doc = self.current_document
         doc.profile.detect_surface()
-        self.switch_document()
+        self.set_marker('surface', doc.profile.surface)
+        self.update()
 
     def _showlog_triggered(self):
         self.log_window.show()
@@ -472,8 +472,8 @@ class MainWindow(QMainWindow):
             for doc in self.documents:
                 ws = self.preferences.window_size
                 of = self.preferences.overlap / 100
-                doc.recalc_model(ws, of)
-            self.switch_document()
+                doc.recalc_derivatives(ws, of)
+            self.update()
 
     def switch_document(self):
         doc = self.current_document
@@ -506,18 +506,17 @@ class MainWindow(QMainWindow):
     # a new value. This method then causes the required update of visualization
     def set_marker(self, label, value):
         p = self.current_document.profile
-        value = value
         if value is not None:
             value = float(value)
         log.info('Setting marker {} of profile {} to {}'.format(repr(label), p.name, value))
         p.set_marker(label, value)
 
         self.sidebar.set_marker(label, value)
+        self.plotcanvas.set_marker(label, value)
 
         if label in ('surface', 'drift_begin', 'drift_end'):
             self.calc_drift()
 
-        self.plotcanvas.set_document(self.current_document)
         self.plotcanvas.draw()
 
     def add_marker(self, default_value=0):
@@ -565,8 +564,11 @@ class MainWindow(QMainWindow):
 
         self.sidebar.set_drift(begin_label, end_label, drift, offset, noise)
 
+    def update(self):
+        self.plotcanvas.draw()
 
-# The NoDocWidget is visible when no document is open. It's just a label
+
+# The NoDocWidget is visible when no document is open. It contains the SLF logo.
 class NoDocWidget(QWidget):
 
     def __init__(self, parent=None):

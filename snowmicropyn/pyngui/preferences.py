@@ -191,8 +191,7 @@ class PreferencesDialog(QDialog):
 
         self.button_box.rejected.connect(self.reject)
         self.button_box.accepted.connect(self.accept)
-        self.button_box.button(QDialogButtonBox.RestoreDefaults).clicked.connect(
-            self.restore_defaults)
+        self.button_box.button(QDialogButtonBox.RestoreDefaults).clicked.connect(self.restore_defaults)
 
         self.distance_setting = AxisSettings('mm')
         self.force_setting = AxisSettings('N')
@@ -216,7 +215,7 @@ class PreferencesDialog(QDialog):
         content_layout.addWidget(QLabel('%'))
         layout.addRow('Overlap Factor', content_layout)
 
-        derivations_box = QGroupBox('Derivations')
+        derivations_box = QGroupBox('Derivatives')
         derivations_box.setLayout(layout)
 
         layout = QFormLayout()
@@ -279,18 +278,10 @@ class PreferencesDialog(QDialog):
     def _set_values(self, prefs):
         self.windows_size_lineedit.setText(str(prefs.window_size))
         self.overlap_factor_lineedit.setText(str(prefs.overlap))
-        self.distance_setting.set_values(prefs.distance_axis_fix,
-                                         prefs.distance_axis_from,
-                                         prefs.distance_axis_to)
-        self.force_setting.set_values(prefs.force_axis_fix,
-                                      prefs.force_axis_from,
-                                      prefs.force_axis_to)
-        self.density_setting.set_values(prefs.density_axis_fix,
-                                        prefs.density_axis_from,
-                                        prefs.density_axis_to)
-        self.ssa_setting.set_values(prefs.ssa_axis_fix,
-                                    prefs.ssa_axis_from,
-                                    prefs.ssa_axis_to)
+        self.distance_setting.set_values(prefs.distance_axis_fix, prefs.distance_axis_from, prefs.distance_axis_to)
+        self.force_setting.set_values(prefs.force_axis_fix, prefs.force_axis_from, prefs.force_axis_to)
+        self.density_setting.set_values(prefs.density_axis_fix, prefs.density_axis_from, prefs.density_axis_to)
+        self.ssa_setting.set_values(prefs.ssa_axis_fix, prefs.ssa_axis_from, prefs.ssa_axis_to)
 
     def restore_defaults(self):
         defaults = Preferences()

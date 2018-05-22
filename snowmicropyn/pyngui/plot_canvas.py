@@ -22,6 +22,10 @@ class PlotCanvas(FigureCanvas):
         # is stored in this field.
         self._clicked_distance = None
 
+        self._markers = dict()
+        self._signals = dict()
+        self._drift = None  # Tuple (Signal, Text)
+
         self.mpl_connect('button_press_event', self.mouse_button_pressed)
 
         def set_marker(name):
@@ -60,21 +64,115 @@ class PlotCanvas(FigureCanvas):
     def clicked_distance(self):
         return self._clicked_distance
 
+    def color_for_marker(self, label):
+        if label == 'surface':
+            return 'C3'
+        if label == 'ground':
+            return 'C4'
+        return 'C5'
+
     def set_document(self, doc):
         self.figure.clear()
+        self._markers.clear()
+        self._signals.clear()
         if doc is None:
             return
 
         axes = self.figure.add_axes([0.1, 0.1, 0.7, 0.85])
         axes.xaxis.set_label_text('Distance [mm]')
+        axes.yaxis.set_visible(False)
 
         FORCE_COLOR = 'C0'
         SSA_COLOR = 'C1'
         DENSITY_COLOR = 'C2'
-        SURFACE_COLOR = 'C3'
-        GROUND_COLOR = 'C4'
-        MARKERS_COLOR = 'C5'
         DRIFT_COLOR = 'C6'
+
+        for label, value in doc.profile.markers:
+            self.set_marker(label, value)
+
+        # Drift signal and text
+
+        signal = axes.plot(doc._fit_x, doc._fit_y, DRIFT_COLOR)
+        x = doc._fit_x.iloc[-1]
+        y = doc._fit_y.iloc[-1]
+        dx = doc._fit_x.iloc[-1] - doc._fit_x.iloc[0]
+        dy = doc._fit_y.iloc[-1] - doc._fit_y.iloc[0]
+        angle = math.atan(dy/dx) * (180/math.pi)
+        loc = np.array((x, y))
+        trans_angle = self.figure.gca().transData.transform_angles(np.array((angle,)), loc.reshape((1, 2)))[0]
+        text = axes.text(x, y, 'drift', color=DRIFT_COLOR, rotation=trans_angle, rotation_mode='anchor', verticalalignment='top', horizontalalignment='right')
+        self._drift = signal, text
+
+        # Force signal
+        axes = axes.twinx()
+        axes.yaxis.set_label_text('Force [N]')
+        axes.yaxis.label.set_color(FORCE_COLOR)
+        signal = axes.plot(doc.profile.samples.distance, doc.profile.samples.force, FORCE_COLOR)
+        self._signals['smp'] = signal, axes
+
+        # SSA Proksch 2015
+        axes = axes.twinx()
+        axes.yaxis.label.set_text('SSA [$m^2/m^3$]')
+        axes.yaxis.label.set_color(SSA_COLOR)
+        signal = axes.plot(doc.derivatives.distance, doc.derivatives.P2015_ssa, SSA_COLOR)
+        self._signals['P2015_ssa'] = signal, axes
+
+        # Density Proksch 2015
+        axes = axes.twinx()
+        axes.yaxis.set_label_text('Density [$kg/m^3$]')
+        axes.yaxis.label.set_color(DENSITY_COLOR)
+        signal = axes.plot(doc.derivatives.distance, doc.derivatives.P2015_density, DENSITY_COLOR)
+        self._signals['P2015_density'] = signal, axes
+
+    def draw(self):
+        plot_smpsignal = self.main_window.plot_smpsignal_action.isChecked()
+        plot_surface = self.main_window.plot_surface_action.isChecked()
+        plot_ground = self.main_window.plot_ground_action.isChecked()
+        plot_markers = self.main_window.plot_markers_action.isChecked()
+        plot_drift = self.main_window.plot_drift_action.isChecked()
+
+        plot_ssa_proksch2015 = self.main_window.plot_ssa_proksch2015_action.isChecked()
+        plot_density_proksch2015 = self.main_window.plot_density_proksch2015_action.isChecked()
+
+        for k, (line, text) in self._markers.items():
+            visibility = plot_markers
+            if k == 'surface':
+                visibility = plot_surface
+            elif k == 'ground':
+                visibility = plot_ground
+            elif k.startswith('drift_'):
+                visibility = plot_drift
+            line.set_visible(visibility)
+            text.set_visible(visibility)
+
+        outward_pos = 0
+        for k, (plot, axes) in self._signals.items():
+            visibility = None
+            if k == 'smp':
+                visibility = plot_smpsignal
+                axes.yaxis.tick_left()
+                axes.yaxis.set_label_position('left')
+            if k == 'P2015_ssa':
+                visibility = plot_ssa_proksch2015
+                axes.yaxis.tick_right()
+                axes.yaxis.set_label_position('right')
+
+                # Place y-axis outside plot if axis on right is already in use
+                if visibility:
+                    axes.spines['right'].set_position(('outward', outward_pos))
+                    outward_pos += 60
+
+            if k == 'P2015_density':
+                visibility = plot_density_proksch2015
+                axes.yaxis.tick_right()
+                axes.yaxis.set_label_position('right')
+
+                # Place y-axis outside plot if axis on right is already in use
+                if visibility:
+                    axes.spines['right'].set_position(('outward', outward_pos))
+                    outward_pos += 60
+
+            axes.set_visible(visibility)
 
         prefs = self.main_window.preferences
         distance_axis_limits = (prefs.distance_axis_from, prefs.distance_axis_to) if prefs.distance_axis_fix else None
@@ -82,102 +180,31 @@ class PlotCanvas(FigureCanvas):
         density_axis_limits = (prefs.density_axis_from, prefs.density_axis_to) if prefs.density_axis_fix else None
         ssa_axis_limits = (prefs.ssa_axis_from, prefs.ssa_axis_to) if prefs.ssa_axis_fix else None
 
-        plot_markers = self.main_window.plot_markers_action.isChecked()
-        plot_surface = self.main_window.plot_surface_action.isChecked()
-        plot_ground = self.main_window.plot_ground_action.isChecked()
-        plot_smpsignal = self.main_window.plot_smpsignal_action.isChecked()
-        plot_drift = self.main_window.plot_drift_action.isChecked()
+        if distance_axis_limits:
+            self.figure.gca.set_xlim(*distance_axis_limits)
+        if force_axis_limits:
+            self.figure.gca.set_ylim(*force_axis_limits)
+        if ssa_axis_limits:
+            self.figure.gca.set_ylim(*ssa_axis_limits)
+        if density_axis_limits:
+            self.figure.gca.set_ylim(*density_axis_limits)
 
-        plot_ssa_proksch2015 = self.main_window.plot_ssa_proksch2015_action.isChecked()
-        plot_density_proksch2015 = self.main_window.plot_density_proksch2015_action.isChecked()
+        super(PlotCanvas, self).draw()
 
-        if plot_markers:
-            for label, value in doc.profile.markers:
-                if label in ['surface', 'ground', 'drift_begin', 'drift_end']:
-                    continue
+    def set_marker(self, label, value):
+        if label in self._markers:
+            line, text = self._markers.pop(label)
+            line.remove()
+            text.remove()
+        if value is not None:
+            axes = self.figure.gca()
+            color = self.color_for_marker(label)
+            line = axes.axvline(value, color=color)
+            text = axes.annotate(label, xy=(value, 1), xycoords=('data', 'axes fraction'), rotation=90, verticalalignment='top', color=color)
+            self._markers[label] = line, text
 
-                axes.axvline(value, color=MARKERS_COLOR)
-                axes.annotate(label, xy=(value, 1), xycoords=('data', 'axes fraction'),
-                              rotation=90, verticalalignment='top', color=MARKERS_COLOR)
-
-        if plot_drift:
-            try:
-                drift_begin = doc.profile.marker('drift_begin')
-                axes.axvline(drift_begin, color=DRIFT_COLOR)
-                axes.annotate('drift_begin', xy=(drift_begin, 1), xycoords=('data', 'axes fraction'),
-                              rotation=90, verticalalignment='top', color=DRIFT_COLOR)
-            except KeyError:
-                pass
-            try:
-                drift_begin = doc.profile.marker('drift_end')
-                axes.axvline(drift_begin, color=DRIFT_COLOR)
-                axes.annotate('drift_end', xy=(drift_begin, 1), xycoords=('data', 'axes fraction'),
-                              rotation=90, verticalalignment='top', color=DRIFT_COLOR)
-            except KeyError:
-                pass
-
-        if plot_surface:
-            try:
-                surface = doc.profile.surface
-                axes.axvline(surface, color=SURFACE_COLOR)
-                axes.annotate('surface', xy=(surface, 1), xycoords=('data', 'axes fraction'),
-                              rotation=90, verticalalignment='top', color=SURFACE_COLOR)
-            except KeyError:
-                pass
-
-        if plot_ground:
-            try:
-                ground = doc.profile.ground
-                axes.axvline(ground, color=GROUND_COLOR)
-                axes.annotate('ground', xy=(ground, 1), xycoords=('data', 'axes fraction'),
-                              rotation=90, verticalalignment='top', color=GROUND_COLOR)
-            except KeyError:
-                pass
-
-        if plot_smpsignal:
-            axes.yaxis.set_label_text('Force [N]')
-            axes.plot(doc.profile.samples.distance, doc.profile.samples.force, FORCE_COLOR)
-            axes.yaxis.label.set_color(FORCE_COLOR)
-            if distance_axis_limits:
-                axes.set_xlim(*distance_axis_limits)
-            if force_axis_limits:
-                axes.set_ylim(*force_axis_limits)
-
-        if plot_drift:
-            axes.plot(doc._fit_x, doc._fit_y, DRIFT_COLOR)
-
-            x = doc._fit_x.iloc[-1]
-            y = doc._fit_y.iloc[-1]
-
-            dx = doc._fit_x.iloc[-1] - doc._fit_x.iloc[0]
-            dy = doc._fit_y.iloc[-1] - doc._fit_y.iloc[0]
-            angle = math.atan(dy/dx) * (180/math.pi)
-
-            loc = np.array((x, y))
-
-            trans_angle = self.figure.gca().transData.transform_angles(np.array((angle,)), loc.reshape((1, 2)))[0]
-
-            axes.text(x, y, 'drift', color=DRIFT_COLOR,
-                      rotation=trans_angle, rotation_mode='anchor', verticalalignment='top', horizontalalignment='right')
-
-        if plot_ssa_proksch2015 and doc.model_df is not None:
-            ssa = axes.twinx()
-            ssa.yaxis.label.set_text('SSA [$m^2/m^3$]')
-            ssa.yaxis.label.set_color(SSA_COLOR)
-            ssa.plot(doc.model_df.distance, doc.model_df.ssa, SSA_COLOR)
-            if ssa_axis_limits:
-                ssa.set_ylim(*ssa_axis_limits)
-
-        if plot_density_proksch2015 and doc.model_df is not None:
-            density = axes.twinx()
-            density.yaxis.set_label_text('Density [$kg/m^3$]')
-            density.yaxis.label.set_color(DENSITY_COLOR)
-            density.plot(doc.model_df.distance, doc.model_df.density, DENSITY_COLOR)
-            if density_axis_limits:
-                density.set_ylim(*density_axis_limits)
-            # Place y-axis outside in case ssa axis is also present
-            if plot_ssa_proksch2015:
-                density.spines['right'].set_position(('outward', 60))
+    def add_signal(self, signal, color):
+        pass
 
     def mouse_button_pressed(self, event):
         log.debug('context click. x={}'.format(event))
