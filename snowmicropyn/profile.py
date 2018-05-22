@@ -590,29 +590,3 @@ class Profile(object):
         ground = detection.detect_ground(self)
         self.set_marker('ground', ground)
         return ground
-
-    def model_shotnoise(self, save_to_file=False, filename_suffix='shotnoise'):
-        sn = loewe2012.shotnoise(self.samples)
-        if save_to_file:
-            file = self._pnt_file.with_name(
-                self._pnt_file.stem + '_' + filename_suffix).with_suffix('.csv')
-            log.info('Saving shot noise dataframe to {} to {}'.format(self, file))
-            with file.open('w') as f:
-                # Write version and git hash as comment for tracking
-                crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
-                f.write(crumbs)
-                sn.to_csv(f, index=False)
-        return sn
-
-    def model_ssa(self, save_to_file=False, filename_suffix='ssa'):
-        ssa = proksch2015.model_ssa_and_density(self.samples)
-        if save_to_file:
-            file = self._pnt_file.with_name(
-                self._pnt_file.stem + '_' + filename_suffix).with_suffix('.csv')
-            log.info('Saving ssa + density dataframe to {} to {}'.format(self, file))
-            with file.open('w') as f:
-                # Write version and git hash as comment for tracking
-                crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
-                f.write(crumbs)
-                ssa.to_csv(f, index=False)
-        return ssa
