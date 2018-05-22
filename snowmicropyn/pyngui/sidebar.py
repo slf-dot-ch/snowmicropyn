@@ -48,7 +48,6 @@ class SidebarWidget(QTreeWidget):
         self.rec_length_item = QTreeWidgetItem((None, None, 'Length', None, ''))
         self.pnt_filename_item = QTreeWidgetItem((None, None, 'Pnt File', None, ''))
         self.coordinates_item = QTreeWidgetItem((None, None, 'Coordinates', None, ''))
-        self.samples_count_item = QTreeWidgetItem((None, None, 'Sample Count', None, ''))
         self.spatial_res_item = QTreeWidgetItem((None, None, 'Spatial Resolution', None, ''))
         self.overload_item = QTreeWidgetItem((None, None, 'Overload Force', None, ''))
         self.speed_item = QTreeWidgetItem((None, None, 'Speed', None, ''))
@@ -58,7 +57,6 @@ class SidebarWidget(QTreeWidget):
         self.recording_item.addChild(self.timestamp_item)
         self.recording_item.addChild(self.coordinates_item)
         self.recording_item.addChild(self.rec_length_item)
-        self.recording_item.addChild(self.samples_count_item)
         self.recording_item.addChild(self.spatial_res_item)
         self.recording_item.addChild(self.overload_item)
         self.recording_item.addChild(self.speed_item)
@@ -69,16 +67,16 @@ class SidebarWidget(QTreeWidget):
         self.smp_firmware_item = QTreeWidgetItem((None, None, 'Firmware Version', None, ''))
         self.smp_length_item = QTreeWidgetItem((None, None, 'Max. Recording Length', None, ''))
         self.smp_tipdiameter_item = QTreeWidgetItem((None, None, 'Tip Diameter', None, ''))
-        self.smp_sensor_serial_item = QTreeWidgetItem((None, None, 'Sensor Serial Number', None, ''))
         self.smp_sensor_sensitivity_item = QTreeWidgetItem((None, None, 'Sensor Sensitivity', None, ''))
+        self.smp_sensor_serial_item = QTreeWidgetItem((None, None, 'Sensor Serial Number', None, ''))
         self.smp_amp_item = QTreeWidgetItem((None, None, 'Amplifier Serial Number', None, ''))
 
         self.smp_item.addChild(self.smp_serial_item)
         self.smp_item.addChild(self.smp_firmware_item)
         self.smp_item.addChild(self.smp_length_item)
         self.smp_item.addChild(self.smp_tipdiameter_item)
-        self.smp_item.addChild(self.smp_sensor_serial_item)
         self.smp_item.addChild(self.smp_sensor_sensitivity_item)
+        self.smp_item.addChild(self.smp_sensor_serial_item)
         self.smp_item.addChild(self.smp_amp_item)
 
         # drift items
@@ -110,7 +108,7 @@ class SidebarWidget(QTreeWidget):
         self.name_item.setText(self.TEXT_COLUMN, p.name)
         self.pnt_filename_item.setText(self.TEXT_COLUMN, str(p.pnt_file))
         self.timestamp_item.setText(self.TEXT_COLUMN, str(p.timestamp))
-        self.rec_length_item.setText(self.TEXT_COLUMN, '{:.0f} mm'.format(p.recording_length))
+        self.rec_length_item.setText(self.TEXT_COLUMN, '{:.0f} mm ({:n} Samples)'.format(p.recording_length, len(p)))
 
         if p.coordinates:
             lat, long = ['{:.6f}'.format(c) for c in p.coordinates]
@@ -123,7 +121,6 @@ class SidebarWidget(QTreeWidget):
         url_label.setOpenExternalLinks(True)
         self.setItemWidget(self.coordinates_item, 4, url_label)
 
-        self.samples_count_item.setText(self.TEXT_COLUMN, '{:n}'.format(p.samples.shape[0]))
         spatial_res = '{:.3f} µm'.format(p.spatial_resolution * 1000)
         self.spatial_res_item.setText(self.TEXT_COLUMN, spatial_res)
         overload = '{:.1f} N'.format(p.overload)
