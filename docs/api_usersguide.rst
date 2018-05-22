@@ -22,7 +22,6 @@ However, when using functionality of this package, an additional storage to save
 other data is required. This storage is an :file:`ini` file, named like the pnt
 file (Example from section before: :file:`S13M0067.ini`).
 
-
 First steps
 -----------
 
@@ -75,8 +74,10 @@ Some examples will help you to get an overview of *snowmicropyn*'s features.
 
 .. hint::
 
-   You find these and other examples in our collection of
-   :github_tree:`examples` on GitHub.
+   To get the code mentioned in this guide, Download_ the source code of
+   *snowmicropyn*. You'll find the examples in the subfolder :folder:`examples`
+   and even some pnt files to play around with in the folder
+   :folder:`examples/profiles`.
 
 Explore properties
 ^^^^^^^^^^^^^^^^^^
@@ -90,7 +91,7 @@ get save in a ini file so we don't loose them.
 Batch exporting
 ^^^^^^^^^^^^^^^
 
-You're just back from back country where you recorded a series of profiles with
+You're just home from backcountry where you recorded a series of profiles with
 your SnowMicroPen and now want to read this data with your tool of choise which
 supports reading CSV files? Then this example is for you!
 
@@ -136,3 +137,4 @@ This will print something like:
 
 
 .. _matplotlib: https://www.matplotlib.org/
+.. _Download: https://github.com/slf-dot-ch/snowmicropyn/
