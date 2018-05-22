@@ -149,10 +149,11 @@ class Profile(object):
         if not self._ini.has_section('markers'):
             self._ini.add_section('markers')
 
-        # Check for invalid values in 'markers' section
+        # Check for invalid values (non floats) in 'markers' section
         for k, v in self._ini.items('markers'):
             try:
                 float(v)
+                log.info('Marker: {}={}'.format(k, v))
             except ValueError:
                 log.warning(
                     'Ignoring value {} for marker {}, not float value'.format(repr(v), repr(k)))
