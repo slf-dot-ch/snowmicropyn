@@ -13,8 +13,8 @@ Issue 2, February 2015.
 from pandas import np as np
 import pandas as pd
 
-from snowmicropyn.loewe2012 import calc
-from snowmicropyn.windowing import DEFAULT_WINDOW, DEFAULT_WINDOW_OVERLAP
+import snowmicropyn.loewe2012
+import snowmicropyn.windowing
 
 DENSITY_ICE = 917.
 
@@ -58,9 +58,9 @@ def calc_from_loewe2012(shotnoise_dataframe):
     return pd.DataFrame(result, columns=['distance', 'P2015_density', 'P2015_ssa'])
 
 
-def calc(samples, window=DEFAULT_WINDOW, overlap_factor=DEFAULT_WINDOW_OVERLAP):
+def calc(samples, window=snowmicropyn.windowing.DEFAULT_WINDOW, overlap_factor=snowmicropyn.windowing.DEFAULT_WINDOW_OVERLAP):
     # Base: shot noise model
-    sn = calc(samples, window, overlap_factor)
+    sn = snowmicropyn.loewe2012.calc(samples, window, overlap_factor)
     result = []
     for index, row in sn.iterrows():
         density, ssa = calc_step(row.force_median, row.L2012_L)
