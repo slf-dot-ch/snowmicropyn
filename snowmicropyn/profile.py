@@ -89,7 +89,7 @@ class Profile(object):
         if abs(self._latitude) > 90:
             log.warning('Latitude value {} invalid, replacing by None'.format(self._latitude))
             self._latitude = None
-        if abs(self._longitude) > 90:
+        if abs(self._longitude) > 180:
             log.warning('Longitude value {} invalid, replacing by None'.format(self._longitude))
             self._longitude = None
 
