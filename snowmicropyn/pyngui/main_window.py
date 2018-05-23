@@ -355,7 +355,7 @@ class MainWindow(QMainWindow):
         for f in files:
             p = snowmicropyn.Profile.load(f)
             doc = Document(p)
-            doc.recalc_derivatives(self.preferences.window_size, self.preferences.overlap / 100)
+            doc.recalc_derivatives(self.preferences.window_size, self.preferences.overlap)
             new_docs.append(doc)
         self.documents.extend(new_docs)
         first_new_index = self.profile_combobox.count()
@@ -473,7 +473,7 @@ class MainWindow(QMainWindow):
                 ws = self.preferences.window_size
                 of = self.preferences.overlap / 100
                 doc.recalc_derivatives(ws, of)
-            self.update()
+            self.switch_document()
 
     def switch_document(self):
         doc = self.current_document
@@ -516,6 +516,11 @@ class MainWindow(QMainWindow):
 
         if label in ('surface', 'drift_begin', 'drift_end'):
             self.calc_drift()
+
+        if label in ('surface', 'ground'):
+            self.current_document.recalc_derivatives(self.preferences.window_size, self.preferences.overlap)
+            self.switch_document()
+            return
 
         self.plotcanvas.draw()
 

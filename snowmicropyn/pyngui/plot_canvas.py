@@ -23,8 +23,8 @@ class PlotCanvas(FigureCanvas):
         self._clicked_distance = None
 
         self._markers = dict()
-        self._signals = dict()
-        self._drift = None  # Tuple (Signal, Text)
+        self._signals_axes = dict()
+        self._drift_axes = None
 
         self.mpl_connect('button_press_event', self.mouse_button_pressed)
 
@@ -69,18 +69,20 @@ class PlotCanvas(FigureCanvas):
             return 'C3'
         if label == 'ground':
             return 'C4'
+        if label.startswith('drift_'):
+            return 'C6'
         return 'C5'
 
     def set_document(self, doc):
         self.figure.clear()
         self._markers.clear()
-        self._signals.clear()
+        self._signals_axes.clear()
         if doc is None:
             return
 
-        axes = self.figure.add_axes([0.1, 0.1, 0.7, 0.85])
-        axes.xaxis.set_label_text('Distance [mm]')
-        axes.yaxis.set_visible(False)
+        main_axes = self.figure.add_axes([0.1, 0.1, 0.72, 0.85])
+        main_axes.xaxis.set_label_text('Distance [mm]')
+        main_axes.yaxis.set_visible(False)
 
         FORCE_COLOR = 'C0'
         SSA_COLOR = 'C1'
@@ -90,9 +92,18 @@ class PlotCanvas(FigureCanvas):
         for label, value in doc.profile.markers:
             self.set_marker(label, value)
 
-        # Drift signal and text
+        # Force signal
+        force_axes = main_axes.twinx()
+        force_axes.yaxis.set_label_text('Force [N]')
+        force_axes.yaxis.label.set_color(FORCE_COLOR)
+        force_axes.plot(doc.profile.samples.distance, doc.profile.samples.force, FORCE_COLOR)
+        self._signals_axes['smp'] = force_axes
 
-        signal = axes.plot(doc._fit_x, doc._fit_y, DRIFT_COLOR)
+        # Drift signal and text
+        axes = main_axes.twinx()
+        axes.set_axis_off()
+        axes.set_ylim(force_axes.get_ylim())
+        axes.plot(doc._fit_x, doc._fit_y, DRIFT_COLOR)
         x = doc._fit_x.iloc[-1]
         y = doc._fit_y.iloc[-1]
         dx = doc._fit_x.iloc[-1] - doc._fit_x.iloc[0]
@@ -100,29 +111,22 @@ class PlotCanvas(FigureCanvas):
         angle = math.atan(dy/dx) * (180/math.pi)
         loc = np.array((x, y))
         trans_angle = self.figure.gca().transData.transform_angles(np.array((angle,)), loc.reshape((1, 2)))[0]
-        text = axes.text(x, y, 'drift', color=DRIFT_COLOR, rotation=trans_angle, rotation_mode='anchor', verticalalignment='top', horizontalalignment='right')
-        self._drift = signal, text
-
-        # Force signal
-        axes = axes.twinx()
-        axes.yaxis.set_label_text('Force [N]')
-        axes.yaxis.label.set_color(FORCE_COLOR)
-        signal = axes.plot(doc.profile.samples.distance, doc.profile.samples.force, FORCE_COLOR)
-        self._signals['smp'] = signal, axes
+        axes.text(x, y, 'drift', color=DRIFT_COLOR, rotation=trans_angle, rotation_mode='anchor', verticalalignment='top', horizontalalignment='right')
+        self._drift_axes = axes
 
         # SSA Proksch 2015
-        axes = axes.twinx()
-        axes.yaxis.label.set_text('SSA [$m^2/m^3$]')
-        axes.yaxis.label.set_color(SSA_COLOR)
-        signal = axes.plot(doc.derivatives.distance, doc.derivatives.P2015_ssa, SSA_COLOR)
-        self._signals['P2015_ssa'] = signal, axes
+        ssa_axes = main_axes.twinx()
+        ssa_axes.yaxis.label.set_text('SSA [$m^2/m^3$]')
+        ssa_axes.yaxis.label.set_color(SSA_COLOR)
+        ssa_axes.plot(doc.derivatives.distance, doc.derivatives.P2015_ssa, SSA_COLOR)
+        self._signals_axes['P2015_ssa'] = ssa_axes
 
         # Density Proksch 2015
-        axes = axes.twinx()
-        axes.yaxis.set_label_text('Density [$kg/m^3$]')
-        axes.yaxis.label.set_color(DENSITY_COLOR)
-        signal = axes.plot(doc.derivatives.distance, doc.derivatives.P2015_density, DENSITY_COLOR)
-        self._signals['P2015_density'] = signal, axes
+        density_axes = main_axes.twinx()
+        density_axes.yaxis.set_label_text('Density [$kg/m^3$]')
+        density_axes.yaxis.label.set_color(DENSITY_COLOR)
+        density_axes.plot(doc.derivatives.distance, doc.derivatives.P2015_density, DENSITY_COLOR)
+        self._signals_axes['P2015_density'] = density_axes
 
     def draw(self):
         plot_smpsignal = self.main_window.plot_smpsignal_action.isChecked()
@@ -146,7 +150,7 @@ class PlotCanvas(FigureCanvas):
             text.set_visible(visibility)
 
         outward_pos = 0
-        for k, (plot, axes) in self._signals.items():
+        for k, axes in self._signals_axes.items():
             visibility = None
             if k == 'smp':
                 visibility = plot_smpsignal
@@ -173,6 +177,9 @@ class PlotCanvas(FigureCanvas):
                     outward_pos += 60
 
             axes.set_visible(visibility)
+
+        if self._drift_axes:
+            self._drift_axes.set_visible(plot_drift)
 
         prefs = self.main_window.preferences
         distance_axis_limits = (prefs.distance_axis_from, prefs.distance_axis_to) if prefs.distance_axis_fix else None
@@ -202,9 +209,6 @@ class PlotCanvas(FigureCanvas):
             line = axes.axvline(value, color=color)
             text = axes.annotate(label, xy=(value, 1), xycoords=('data', 'axes fraction'), rotation=90, verticalalignment='top', color=color)
             self._markers[label] = line, text
-
-    def add_signal(self, signal, color):
-        pass
 
     def mouse_button_pressed(self, event):
         log.debug('context click. x={}'.format(event))

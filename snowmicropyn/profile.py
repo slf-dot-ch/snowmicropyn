@@ -503,13 +503,13 @@ class Profile(object):
         else:
             file = self._pnt_file.with_name(self._pnt_file.stem + '_derivatives').with_suffix('.csv')
 
-        log.info('Calculating derivatives by Löwe 2011')
-        df_shotnoise = loewe2012.shotnoise(self.samples, window_size, overlap_factor)
+        log.info('Calculating derivatives by Löwe 2012')
+        loewe2012_df = loewe2012.calc(self.samples, window_size, overlap_factor)
 
         log.info('Calculating derivatives by Proksch 2015')
-        proksch_data = proksch2015.calculate(df_shotnoise)
+        proksch_data = proksch2015.calc_from_loewe2012(loewe2012_df)
 
-        derivatives = df_shotnoise.merge(proksch_data)
+        derivatives = loewe2012_df.merge(proksch_data)
 
         # Add units in label for export
         with_units = {

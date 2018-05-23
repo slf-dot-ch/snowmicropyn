@@ -1,11 +1,11 @@
 from pandas import np as np
 
 DEFAULT_WINDOW = 2.5
-DEFAULT_WINDOW_OVERLAP = 1.2
+DEFAULT_WINDOW_OVERLAP = 50
 
 
-def chunkup(samples, window, overlap_factor):
-    block_length = window * overlap_factor
+def chunkup(samples, window, overlap):
+    block_length = window * overlap / 100
 
     blocks = []
     center = samples.distance.iloc[0]

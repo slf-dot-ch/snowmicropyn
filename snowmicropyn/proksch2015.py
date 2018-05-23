@@ -13,13 +13,13 @@ Issue 2, February 2015.
 from pandas import np as np
 import pandas as pd
 
-from snowmicropyn.loewe2012 import shotnoise
+from snowmicropyn.loewe2012 import calc
 from snowmicropyn.windowing import DEFAULT_WINDOW, DEFAULT_WINDOW_OVERLAP
 
 DENSITY_ICE = 917.
 
 
-def density_ssa_chunk(median_force, element_size):
+def calc_step(median_force, element_size):
     """Calculation of density and ssa
 
     :param median_force: median of force
@@ -50,19 +50,19 @@ def density_ssa_chunk(median_force, element_size):
     return rho, ssa
 
 
-def calculate(shotnoise_data):
+def calc_from_loewe2012(shotnoise_dataframe):
     result = []
-    for index, row in shotnoise_data.iterrows():
-        density, ssa = density_ssa_chunk(row.force_median, row.L2012_L)
+    for index, row in shotnoise_dataframe.iterrows():
+        density, ssa = calc_step(row.force_median, row.L2012_L)
         result.append((row.distance, density, ssa))
     return pd.DataFrame(result, columns=['distance', 'P2015_density', 'P2015_ssa'])
 
 
-def model_ssa_and_density(samples, window=DEFAULT_WINDOW, overlap_factor=DEFAULT_WINDOW_OVERLAP):
+def calc(samples, window=DEFAULT_WINDOW, overlap_factor=DEFAULT_WINDOW_OVERLAP):
     # Base: shot noise model
-    sn = shotnoise(samples, window, overlap_factor)
+    sn = calc(samples, window, overlap_factor)
     result = []
     for index, row in sn.iterrows():
-        density, ssa = density_ssa_chunk(row.force_median, row.L2012_L)
+        density, ssa = calc_step(row.force_median, row.L2012_L)
         result.append((row.distance, density, ssa))
     return pd.DataFrame(result, columns=['distance', 'P2015_density', 'P2015_ssa'])

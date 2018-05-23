@@ -21,7 +21,7 @@ SMP_CONE_DIAMETER = 5  # [mm]
 SMP_CONE_AREA = (SMP_CONE_DIAMETER / 2.) ** 2 * math.pi  # [mm^2]
 
 
-def shotnoise_chunk(spatial_res, forces, cone_area=SMP_CONE_AREA):
+def calc_step(spatial_res, forces, cone_area=SMP_CONE_AREA):
     n = forces.size
 
     # Mean and variance of force signal
@@ -44,7 +44,7 @@ def shotnoise_chunk(spatial_res, forces, cone_area=SMP_CONE_AREA):
     return lambda_, f0, delta, L
 
 
-def shotnoise(samples, window=DEFAULT_WINDOW, overlap_factor=DEFAULT_WINDOW_OVERLAP):
+def calc(samples, window=DEFAULT_WINDOW, overlap_factor=DEFAULT_WINDOW_OVERLAP):
     # Calculate spatial resolution of the distance samples as median of all
     # step sizes.
     spatial_res = np.median(np.diff(samples.distance.values))
@@ -54,6 +54,6 @@ def shotnoise(samples, window=DEFAULT_WINDOW, overlap_factor=DEFAULT_WINDOW_OVER
     result = []
     for center, chunk in chunks:
         f_median = np.median(chunk.force)
-        sn = shotnoise_chunk(spatial_res, chunk.force)
+        sn = calc_step(spatial_res, chunk.force)
         result.append((center, f_median) + sn)
     return pd.DataFrame(result, columns=['distance', 'force_median', 'L2012_lambda', 'L2012_f0', 'L2012_delta', 'L2012_L'])
