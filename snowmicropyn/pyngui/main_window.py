@@ -16,6 +16,7 @@ from snowmicropyn.pyngui.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.pyngui.plot_canvas import PlotCanvas
 from snowmicropyn.pyngui.preferences import Preferences, PreferencesDialog
 from snowmicropyn.pyngui.sidebar import SidebarWidget
+from snowmicropyn.pyngui.superpos_canvas import SuperposCanvas
 
 log = logging.getLogger(__name__)
 
@@ -48,15 +49,20 @@ class MainWindow(QMainWindow):
         homedir = expanduser('~')
         self._last_directory = QSettings().value(self.SETTING_LAST_DIRECTORY, defaultValue=homedir)
 
-        self.plotcanvas = PlotCanvas(main_window=self)
+        self.plot_canvas = PlotCanvas(main_window=self)
+        self.superpos_canvas = SuperposCanvas(self)
 
-        self.plotcanvas.toolbar = NavigationToolbar(self.plotcanvas, self)
-        self.addToolBar(Qt.BottomToolBarArea, self.plotcanvas.toolbar)
+        self.plot_canvas.toolbar = NavigationToolbar(self.plot_canvas, self)
+        self.addToolBar(Qt.BottomToolBarArea, self.plot_canvas.toolbar)
 
         self.sidebar = SidebarWidget(self)
 
+        self.plot_stacked_widget = QStackedWidget(self)
+        self.plot_stacked_widget.addWidget(self.plot_canvas)
+        self.plot_stacked_widget.addWidget(self.superpos_canvas)
+
         splitter = QSplitter()
-        splitter.addWidget(self.plotcanvas)
+        splitter.addWidget(self.plot_stacked_widget)
         splitter.addWidget(self.sidebar)
 
         self.stacked_widget = QStackedWidget(self)
@@ -87,6 +93,7 @@ class MainWindow(QMainWindow):
         self.add_marker_action = QAction('New Marker', self)
         self.kml_action = QAction('Export to KML', self)
         self.show_log_action = QAction('Show Log', self)
+        self.superpos_action = QAction('Superposition', self)
 
         self.profile_combobox = QComboBox(self)
         self.profile_combobox.setSizeAdjustPolicy(QComboBox.AdjustToContents)
@@ -258,6 +265,12 @@ class MainWindow(QMainWindow):
         action.setStatusTip('Show Log Window')
         action.triggered.connect(self._showlog_triggered)
 
+        action = self.superpos_action
+        action.setIcon(QIcon(':/icons/superpos.png'))
+        action.setStatusTip('Show Superposition')
+        action.triggered.connect(self._show_superpos)
+        action.setCheckable(True)
+
         menubar = self.menuBar()
 
         menu = menubar.addMenu('&File')
@@ -319,6 +332,7 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
         toolbar.addAction(self.kml_action)
         toolbar.addAction(self.saveall_action)
+        toolbar.addAction(self.superpos_action)
 
     def closeEvent(self, event):
         log.info('Saving settings of MainWindow')
@@ -357,6 +371,7 @@ class MainWindow(QMainWindow):
             doc = Document(p)
             doc.recalc_derivatives(self.preferences.window_size, self.preferences.overlap)
             new_docs.append(doc)
+            self.superpos_canvas.add_doc(doc)
         self.documents.extend(new_docs)
         first_new_index = self.profile_combobox.count()
         self.profile_combobox.addItems([d.profile.name for d in new_docs])
@@ -390,7 +405,8 @@ class MainWindow(QMainWindow):
         return self.documents[i] if i != -1 else None
 
     def _drop_triggered(self):
-        log.debug('method drop_profile called')
+        doc = self.current_document
+        self.superpos_canvas.remove_doc(doc)
         i = self.profile_combobox.currentIndex()
         del self.documents[i]
         # We just remove the item from the combobox, which causes
@@ -499,8 +515,9 @@ class MainWindow(QMainWindow):
         if doc is not None:
             self.calc_drift()
 
-        self.plotcanvas.set_document(doc)
-        self.plotcanvas.draw()
+        self.plot_canvas.set_document(doc)
+        self.plot_canvas.draw()
+        self.superpos_canvas.set_active_doc(doc)
 
     # This method is called by PlotCanvas and Sidebar when a marker is set to
     # a new value. This method then causes the required update of visualization
@@ -512,7 +529,7 @@ class MainWindow(QMainWindow):
         p.set_marker(label, value)
 
         self.sidebar.set_marker(label, value)
-        self.plotcanvas.set_marker(label, value)
+        self.plot_canvas.set_marker(label, value)
 
         if label in ('surface', 'drift_begin', 'drift_end'):
             self.calc_drift()
@@ -522,7 +539,7 @@ class MainWindow(QMainWindow):
             self.switch_document()
             return
 
-        self.plotcanvas.draw()
+        self.plot_canvas.draw()
 
     def add_marker(self, default_value=0):
         name, value = self.marker_dialog.getMarker(default_value=default_value)
@@ -570,7 +587,11 @@ class MainWindow(QMainWindow):
         self.sidebar.set_drift(begin_label, end_label, drift, offset, noise)
 
     def update(self):
-        self.plotcanvas.draw()
+        self.plot_canvas.draw()
+
+    def _show_superpos(self, checked):
+        log.info('Show superposition view: {}'.format(checked))
+        self.plot_stacked_widget.setCurrentIndex(1 if checked else 0)
 
 
 # The NoDocWidget is visible when no document is open. It contains the SLF logo.

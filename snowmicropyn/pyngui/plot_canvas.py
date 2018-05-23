@@ -134,9 +134,14 @@ class PlotCanvas(FigureCanvas):
         plot_ground = self.main_window.plot_ground_action.isChecked()
         plot_markers = self.main_window.plot_markers_action.isChecked()
         plot_drift = self.main_window.plot_drift_action.isChecked()
-
         plot_ssa_proksch2015 = self.main_window.plot_ssa_proksch2015_action.isChecked()
         plot_density_proksch2015 = self.main_window.plot_density_proksch2015_action.isChecked()
+
+        prefs = self.main_window.preferences
+        distance_axis_limits = (prefs.distance_axis_from, prefs.distance_axis_to) if prefs.distance_axis_fix else None
+        force_axis_limits = (prefs.force_axis_from, prefs.force_axis_to) if prefs.force_axis_fix else None
+        density_axis_limits = (prefs.density_axis_from, prefs.density_axis_to) if prefs.density_axis_fix else None
+        ssa_axis_limits = (prefs.ssa_axis_from, prefs.ssa_axis_to) if prefs.ssa_axis_fix else None
 
         for k, (line, text) in self._markers.items():
             visibility = plot_markers
@@ -156,20 +161,30 @@ class PlotCanvas(FigureCanvas):
                 visibility = plot_smpsignal
                 axes.yaxis.tick_left()
                 axes.yaxis.set_label_position('left')
+                if distance_axis_limits:
+                    axes.set_xlim(*distance_axis_limits)
+                if force_axis_limits:
+                    axes.set_ylim(*force_axis_limits)
+
             if k == 'P2015_ssa':
                 visibility = plot_ssa_proksch2015
                 axes.yaxis.tick_right()
                 axes.yaxis.set_label_position('right')
+                if ssa_axis_limits:
+                    axes.set_ylim(*ssa_axis_limits)
 
                 # Place y-axis outside plot if axis on right is already in use
                 if visibility:
                     axes.spines['right'].set_position(('outward', outward_pos))
                     outward_pos += 60
 
+
             if k == 'P2015_density':
                 visibility = plot_density_proksch2015
                 axes.yaxis.tick_right()
                 axes.yaxis.set_label_position('right')
+                if density_axis_limits:
+                    axes.set_ylim(*density_axis_limits)
 
                 # Place y-axis outside plot if axis on right is already in use
                 if visibility:
@@ -180,21 +195,6 @@ class PlotCanvas(FigureCanvas):
 
         if self._drift_axes:
             self._drift_axes.set_visible(plot_drift)
-
-        prefs = self.main_window.preferences
-        distance_axis_limits = (prefs.distance_axis_from, prefs.distance_axis_to) if prefs.distance_axis_fix else None
-        force_axis_limits = (prefs.force_axis_from, prefs.force_axis_to) if prefs.force_axis_fix else None
-        density_axis_limits = (prefs.density_axis_from, prefs.density_axis_to) if prefs.density_axis_fix else None
-        ssa_axis_limits = (prefs.ssa_axis_from, prefs.ssa_axis_to) if prefs.ssa_axis_fix else None
-
-        if distance_axis_limits:
-            self.figure.gca.set_xlim(*distance_axis_limits)
-        if force_axis_limits:
-            self.figure.gca.set_ylim(*force_axis_limits)
-        if ssa_axis_limits:
-            self.figure.gca.set_ylim(*ssa_axis_limits)
-        if density_axis_limits:
-            self.figure.gca.set_ylim(*density_axis_limits)
 
         super(PlotCanvas, self).draw()
 
