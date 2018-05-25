@@ -22,7 +22,19 @@ SMP_CONE_AREA = (SMP_CONE_DIAMETER / 2.) ** 2 * math.pi  # [mm^2]
 
 
 def calc_step(spatial_res, forces, cone_area=SMP_CONE_AREA):
-    n = forces.size
+    """Calculate shot noise parameters for a segment of a profile.
+
+    This is the actual implementation of the algorithm described in the
+    publication and calculates the derived parameters for a single segment of
+    the profile.
+
+    :param spatial_res: Spatial resolution of profile.
+    :param forces: Iterable containing the force values.
+    :param cone_area: Projected area of cone (tip) of SnowMicroPen in square
+           millimeters.
+    :return: A tuple containing lambda, f0, delta and L.
+    """
+    n = len(forces)
 
     # Mean and variance of force signal
     k1 = np.mean(forces)
@@ -44,16 +56,26 @@ def calc_step(spatial_res, forces, cone_area=SMP_CONE_AREA):
     return lambda_, f0, delta, L
 
 
-def calc(samples, window=DEFAULT_WINDOW, overlap_factor=DEFAULT_WINDOW_OVERLAP):
+def calc(samples, window=DEFAULT_WINDOW, overlap=DEFAULT_WINDOW_OVERLAP):
+    """Calculation of shot noise model parameters.
+
+    :param samples: A pandas dataframe with columns called 'distance' and 'force'.
+    :param window: Size of moving window.
+    :param overlap: Overlap factor in percent.
+    :return: Pandas dataframe with the columns 'distance', 'force_median',
+             'L2012_lambda', 'L2012_f0', 'L2012_delta', 'L2012_L'.
+    """
+
     # Calculate spatial resolution of the distance samples as median of all
     # step sizes.
     spatial_res = np.median(np.diff(samples.distance.values))
 
     # Split dataframe into chunks
-    chunks = chunkup(samples, window, overlap_factor)
+    chunks = chunkup(samples, window, overlap)
     result = []
     for center, chunk in chunks:
         f_median = np.median(chunk.force)
         sn = calc_step(spatial_res, chunk.force)
         result.append((center, f_median) + sn)
-    return pd.DataFrame(result, columns=['distance', 'force_median', 'L2012_lambda', 'L2012_f0', 'L2012_delta', 'L2012_L'])
+    return pd.DataFrame(result, columns=['distance', 'force_median', 'L2012_lambda', 'L2012_f0',
+                                         'L2012_delta', 'L2012_L'])

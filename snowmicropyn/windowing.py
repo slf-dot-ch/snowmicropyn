@@ -5,32 +5,22 @@ DEFAULT_WINDOW_OVERLAP = 50
 
 
 def chunkup(samples, window, overlap):
-    block_length = window * overlap / 100
+    if 0 < overlap >= 100:
+        raise ValueError('overlap value {} invalid, must be a value between 0 and 100 [%]'.format(overlap))
 
-    blocks = []
+    step = window - (window * overlap / 100)
     center = samples.distance.iloc[0]
+    chunks = []
     while center < samples.distance.iloc[-1]:
         # Calculate where block begins and ends
-        begin = center - block_length / 2.
-        end = center + block_length / 2.
+        begin = center - window / 2.
+        end = center + window / 2.
 
         # Filter for samples with a block and add it to the list of
         # blocks along with its center (the blocks center distance)
-        within_block = np.logical_and(samples.distance >= begin, samples.distance < end)
-        block_samples = samples[within_block]
-        blocks.append((center, block_samples))
-
-        center = center + window
-    return blocks
-
-
-def iterwindows(samples, window_length, overlap_factor):
-    block_length = window_length * float(overlap_factor)
-    half_block = block_length / 2
-    center = samples.distance.iloc[0]
-    while center < samples.distance.iloc[-1]:
-        begin = center - half_block
-        end = center + half_block
         within = np.logical_and(samples.distance >= begin, samples.distance < end)
-        yield samples[within]
-        center += window_length
+        chunk_samples = samples[within]
+        chunks.append((center, chunk_samples))
+
+        center = center + step
+    return chunks

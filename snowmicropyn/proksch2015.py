@@ -20,23 +20,23 @@ DENSITY_ICE = 917.
 
 
 def calc_step(median_force, element_size):
-    """Calculation of density and ssa
+    """Calculation of density and ssa from median of force and element size.
 
-    :param median_force: median of force
-    :param element_size: element size
-    :return: Tuple containing density and ssa
+    This is the actual math described in the publication.
+
+    :param median_force: Median of force.
+    :param element_size: Element size.
+    :return: Tuple containing density and ssa value.
     """
-
     l = element_size
     fm = median_force
-    rho_ice = DENSITY_ICE
 
     # Equation 9 in publication
     a1 = 420.47
     a2 = 102.47
     a3 = -121.15
     a4 = -169.96
-    rho = a1 + a2 * np.log(fm) + a3 * np.log(fm) * l + a4 * l
+    density = a1 + a2 * np.log(fm) + a3 * np.log(fm) * l + a4 * l
 
     # Equation 11 in publication
     c1 = 0.131
@@ -45,12 +45,18 @@ def calc_step(median_force, element_size):
     lc = c1 + c2 * l + c3 * np.log(fm)
 
     # Equation 12 in publication
-    ssa = 4 * (1 - (rho / rho_ice)) / lc
+    ssa = 4 * (1 - (density / DENSITY_ICE)) / lc
 
-    return rho, ssa
+    return density, ssa
 
 
 def calc_from_loewe2012(shotnoise_dataframe):
+    """Calculate ssa and density from a pandas dataframe containing shot noise
+    model values.
+
+    :param shotnoise_dataframe: A pandas dataframe containing shot noise model values.
+    :return: A pandas dataframe with the columns 'distance', 'P2015_density' and 'P2015_ssa'.
+    """
     result = []
     for index, row in shotnoise_dataframe.iterrows():
         density, ssa = calc_step(row.force_median, row.L2012_L)
@@ -58,9 +64,16 @@ def calc_from_loewe2012(shotnoise_dataframe):
     return pd.DataFrame(result, columns=['distance', 'P2015_density', 'P2015_ssa'])
 
 
-def calc(samples, window=snowmicropyn.windowing.DEFAULT_WINDOW, overlap_factor=snowmicropyn.windowing.DEFAULT_WINDOW_OVERLAP):
-    # Base: shot noise model
-    sn = snowmicropyn.loewe2012.calc(samples, window, overlap_factor)
+def calc(samples, window=snowmicropyn.windowing.DEFAULT_WINDOW, overlap=snowmicropyn.windowing.DEFAULT_WINDOW_OVERLAP):
+    """Calculate ssa and density from a pandas dataframe containing the samples
+    of a SnowMicroPen recording.
+
+    :param samples: A pandas dataframe containing the columns 'distance' and 'force'.
+    :param window: Size of window in millimeters.
+    :param overlap: Overlap factor in percent.
+    :return: A pandas dataframe with the columns 'distance', 'P2015_density' and 'P2015_ssa'.
+    """
+    sn = snowmicropyn.loewe2012.calc(samples, window, overlap)
     result = []
     for index, row in sn.iterrows():
         density, ssa = calc_step(row.force_median, row.L2012_L)
