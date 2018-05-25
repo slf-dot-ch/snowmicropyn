@@ -52,8 +52,14 @@ class MainWindow(QMainWindow):
         self.plot_canvas = PlotCanvas(main_window=self)
         self.superpos_canvas = SuperposCanvas(self)
 
-        self.plot_canvas.toolbar = NavigationToolbar(self.plot_canvas, self)
-        self.addToolBar(Qt.BottomToolBarArea, self.plot_canvas.toolbar)
+        self.plot_toolbar = NavigationToolbar(self.plot_canvas, self)
+        self.plot_toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.superpos_toolbar = NavigationToolbar(self.superpos_canvas, self)
+        self.superpos_toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.superpos_toolbar.setVisible(False)
+
+        self.addToolBar(Qt.BottomToolBarArea, self.plot_toolbar)
+        self.addToolBar(Qt.BottomToolBarArea, self.superpos_toolbar)
 
         self.sidebar = SidebarWidget(self)
 
@@ -333,6 +339,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.kml_action)
         toolbar.addAction(self.saveall_action)
         toolbar.addAction(self.superpos_action)
+        toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
 
     def closeEvent(self, event):
         log.info('Saving settings of MainWindow')
@@ -493,6 +500,7 @@ class MainWindow(QMainWindow):
 
     def switch_document(self):
         doc = self.current_document
+        log.debug('Switching to document: {}'.format(doc.profile if doc else None))
 
         at_least_one = len(self.documents) > 0
         multiple = len(self.documents) >= 2
@@ -593,6 +601,8 @@ class MainWindow(QMainWindow):
         log.info('Show superposition view: {}'.format(checked))
         self.plot_stacked_widget.setCurrentIndex(1 if checked else 0)
 
+        self.superpos_toolbar.setVisible(checked)
+        self.plot_toolbar.setVisible(not checked)
 
 # The NoDocWidget is visible when no document is open. It contains the SLF logo.
 class NoDocWidget(QWidget):

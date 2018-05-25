@@ -51,3 +51,5 @@ class SuperposCanvas(FigureCanvas):
         for l in lines:
             l.remove()
         self.draw()
+        if doc is self.active_doc:
+            self.active_doc = None

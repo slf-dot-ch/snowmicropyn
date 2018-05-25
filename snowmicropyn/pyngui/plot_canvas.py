@@ -100,10 +100,10 @@ class PlotCanvas(FigureCanvas):
         self._signals_axes['smp'] = force_axes
 
         # Drift signal and text
-        axes = main_axes.twinx()
-        axes.set_axis_off()
-        axes.set_ylim(force_axes.get_ylim())
-        axes.plot(doc._fit_x, doc._fit_y, DRIFT_COLOR)
+        drift_axes = main_axes.twinx()
+        drift_axes.set_axis_off()
+        drift_axes.set_ylim(force_axes.get_ylim())
+        drift_axes.plot(doc._fit_x, doc._fit_y, DRIFT_COLOR)
         x = doc._fit_x.iloc[-1]
         y = doc._fit_y.iloc[-1]
         dx = doc._fit_x.iloc[-1] - doc._fit_x.iloc[0]
@@ -111,8 +111,8 @@ class PlotCanvas(FigureCanvas):
         angle = math.atan(dy/dx) * (180/math.pi)
         loc = np.array((x, y))
         trans_angle = self.figure.gca().transData.transform_angles(np.array((angle,)), loc.reshape((1, 2)))[0]
-        axes.text(x, y, 'drift', color=DRIFT_COLOR, rotation=trans_angle, rotation_mode='anchor', verticalalignment='top', horizontalalignment='right')
-        self._drift_axes = axes
+        drift_axes.text(x, y, 'drift', color=DRIFT_COLOR, rotation=trans_angle, rotation_mode='anchor', verticalalignment='top', horizontalalignment='right')
+        self._drift_axes = drift_axes
 
         # SSA Proksch 2015
         ssa_axes = main_axes.twinx()
@@ -177,7 +177,6 @@ class PlotCanvas(FigureCanvas):
                 if visibility:
                     axes.spines['right'].set_position(('outward', outward_pos))
                     outward_pos += 60
-
 
             if k == 'P2015_density':
                 visibility = plot_density_proksch2015
