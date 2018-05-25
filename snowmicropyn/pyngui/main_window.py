@@ -25,8 +25,7 @@ class MainWindow(QMainWindow):
     SETTING_LAST_DIRECTORY = 'MainFrame/last_directory'
     SETTING_GEOMETRY = 'MainFrame/geometry'
     SETTING_PLOT_SMPSIGNAL = 'MainFrame/plot/smpsignal'
-    SETTING_PLOT_SURFACE = 'MainFrame/plot/surface'
-    SETTING_PLOT_GROUND = 'MainFrame/plot/ground'
+    SETTING_PLOT_SURFACE_AND_GROUND = 'MainFrame/plot/surface+ground'
     SETTING_PLOT_MARKERS = 'MainFrame/plot/markers'
     SETTING_PLOT_DRIFT = 'MainFrame/plot/drift'
     SETTING_PLOT_SSA_PROKSCH2015 = 'MainFrame/plot/ssa_proksch2015'
@@ -88,8 +87,7 @@ class MainWindow(QMainWindow):
         self.next_action = QAction('Next Profile', self)
         self.previous_action = QAction('Previous Profile', self)
         self.plot_smpsignal_action = QAction('Plot SMP Signal', self)
-        self.plot_surface_action = QAction('Plot Surface', self)
-        self.plot_ground_action = QAction('Plot Ground', self)
+        self.plot_surface_and_ground_action = QAction('Plot Surface && Ground', self)
         self.plot_markers_action = QAction('Plot other Markers', self)
         self.plot_drift_action = QAction('Plot Drift', self)
         self.plot_ssa_proksch2015_action = QAction('Proksch 2015', self)
@@ -199,21 +197,12 @@ class MainWindow(QMainWindow):
         enabled = QSettings().value(setting, defaultValue=True, type=bool)
         action.setChecked(enabled)
 
-        action = self.plot_surface_action
-        action.setShortcut('Alt+S')
-        action.setStatusTip('Plot Surface')
-        action.setCheckable(True)
-        action.triggered.connect(force_plot)
-        setting = MainWindow.SETTING_PLOT_SURFACE
-        enabled = QSettings().value(setting, defaultValue=True, type=bool)
-        action.setChecked(enabled)
-
-        action = self.plot_ground_action
+        action = self.plot_surface_and_ground_action
         action.setShortcut('Alt+G')
-        action.setStatusTip('Plot Ground')
+        action.setStatusTip('Plot Surface + Ground')
         action.setCheckable(True)
         action.triggered.connect(force_plot)
-        setting = MainWindow.SETTING_PLOT_GROUND
+        setting = MainWindow.SETTING_PLOT_SURFACE_AND_GROUND
         enabled = QSettings().value(setting, defaultValue=True, type=bool)
         action.setChecked(enabled)
 
@@ -239,7 +228,7 @@ class MainWindow(QMainWindow):
         action.setShortcut('Ctrl+M')
         action.setIcon(QIcon(':/icons/marker_add.png'))
         action.setStatusTip('Add New Marker...')
-        action.triggered.connect(lambda checked: self.add_marker(default_value=0))
+        action.triggered.connect(lambda checked: self.new_marker(default_value=0))
 
         action = self.plot_ssa_proksch2015_action
         action.setShortcut('Alt+A,P')
@@ -302,8 +291,7 @@ class MainWindow(QMainWindow):
         density_menu.addAction(self.plot_density_proksch2015_action)
 
         menu.addSeparator()
-        menu.addAction(self.plot_surface_action)
-        menu.addAction(self.plot_ground_action)
+        menu.addAction(self.plot_surface_and_ground_action)
         menu.addSeparator()
         menu.addAction(self.plot_markers_action)
         menu.addSeparator()
@@ -346,8 +334,7 @@ class MainWindow(QMainWindow):
         QSettings().setValue(MainWindow.SETTING_GEOMETRY, self.geometry())
         QSettings().setValue(MainWindow.SETTING_LAST_DIRECTORY, self._last_directory)
         QSettings().setValue(MainWindow.SETTING_PLOT_SMPSIGNAL, self.plot_smpsignal_action.isChecked())
-        QSettings().setValue(MainWindow.SETTING_PLOT_SURFACE, self.plot_surface_action.isChecked())
-        QSettings().setValue(MainWindow.SETTING_PLOT_GROUND, self.plot_ground_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_PLOT_SURFACE_AND_GROUND, self.plot_surface_and_ground_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_MARKERS, self.plot_markers_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_DRIFT, self.plot_drift_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_SSA_PROKSCH2015, self.plot_ssa_proksch2015_action.isChecked())
@@ -459,9 +446,9 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def _about_triggered():
-        # Read the content of the file about.html which must be located
-        # in the same directory as this file, read its content and use
-        # string.Template to replace some content
+        # Read the content of the file about.html located in the same directory
+        # as this file, read its content and use string.Template to replace
+        # some content
         here = dirname(abspath(__file__))
         with open(join(here, 'about.html'), encoding='utf-8') as f:
             content = f.read()
@@ -549,7 +536,7 @@ class MainWindow(QMainWindow):
 
         self.plot_canvas.draw()
 
-    def add_marker(self, default_value=0):
+    def new_marker(self, default_value=0):
         name, value = self.marker_dialog.getMarker(default_value=default_value)
         if name is not None:
             self.set_marker(name, value)

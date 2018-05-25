@@ -8,8 +8,8 @@ log = logging.getLogger(__name__)
 
 class SuperposCanvas(FigureCanvas):
 
-    COLOR_ACTIVE = 'C1'
-    COLOR_INACTIVE = 'C2'
+    COLOR_ACTIVE = 'C3'
+    COLOR_INACTIVE = 'C0'
 
     def __init__(self, main_window):
         self.main_window = main_window
@@ -29,7 +29,7 @@ class SuperposCanvas(FigureCanvas):
         p = doc.profile
         lines = self.axes.plot(p.samples.distance, p.samples.force)
         self._lines[p.name] = lines
-        self.draw()
+        self.set_active_doc(doc)
 
     def set_active_doc(self, doc):
         if self.active_doc:
