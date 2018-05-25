@@ -7,8 +7,8 @@ from datetime import datetime
 import pandas as pd
 import pytz
 from pandas import np as np
-from snowmicropyn import windowing
 
+from . import windowing
 from . import __version__, githash
 from . import detection
 from . import loewe2012
@@ -74,7 +74,7 @@ class Profile(object):
 
     def __init__(self, pnt_file, name=None):
         self._pnt_file = pathlib.Path(pnt_file)
-        # Load pnt file, returns header (dict) and force samples
+        # Load pnt file, returns header (dict) and raw samples
         self._pnt_header, pnt_samples = Pnt.load(self._pnt_file)
 
         # Get clean WGS84 coordinates (use +/- instead of N/E)
