@@ -8,10 +8,13 @@ def chunkup(samples, window, overlap):
     if 0 < overlap >= 100:
         raise ValueError('overlap value {} invalid, must be a value between 0 and 100 [%]'.format(overlap))
 
+    first = samples.distance.iloc[0] if not samples.empty else 0
+    last = samples.distance.iloc[-1] if not samples.empty else 0
+
     step = window - (window * overlap / 100)
-    center = samples.distance.iloc[0]
+    center = first
     chunks = []
-    while center < samples.distance.iloc[-1]:
+    while center < last:
         # Calculate where block begins and ends
         begin = center - window / 2.
         end = center + window / 2.
