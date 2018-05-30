@@ -387,11 +387,14 @@ class MainWindow(QMainWindow):
 
     def _export_triggered(self):
         p = self.current_document.profile
+
+        window = self.preferences.window_size
+        overlap = self.preferences.overlap
+
         meta_file = p.export_meta(include_pnt_header=True)
         samples_file = p.export_samples()
-        p.model_shotnoise(save_to_file=True)
-        p.model_ssa(save_to_file=True)
-        self.notify_dialog.notifyFilesWritten([meta_file, samples_file])
+        derivatives_file = p.export_derivatives(window_size=window, overlap_factor=overlap)
+        self.notify_dialog.notifyFilesWritten([meta_file, samples_file, derivatives_file])
 
     @property
     def current_document(self):

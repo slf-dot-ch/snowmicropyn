@@ -212,6 +212,8 @@ class PlotCanvas(FigureCanvas):
             v = visibility['plot_' + k]
             for l in lines:
                 l.set_visible(v)
+            if k == 'drift' and self._drift_label:
+                self._drift_label.set_visible(v)
 
         for k, (line, text) in self._markers.items():
             v = visibility['marker_others']
