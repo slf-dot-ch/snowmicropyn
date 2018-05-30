@@ -1,6 +1,14 @@
 snowmicropyn Changelog
 ======================
 
+Version 1.0.0a2
+---------------
+
+- Add simple superposition view.
+- Fixed coordinates for longitudes > 90/-90. Thanks to Mike Brady!
+- Calculation & export of derivatives within markers surface and ground only (if set).
+- Many improvements under the hood.
+
 Version 1.0.0a1
 ---------------
 
