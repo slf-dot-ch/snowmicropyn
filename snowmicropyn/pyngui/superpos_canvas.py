@@ -8,8 +8,8 @@ log = logging.getLogger(__name__)
 
 class SuperposCanvas(FigureCanvas):
 
-    COLOR_ACTIVE = 'C3'
-    COLOR_INACTIVE = 'C0'
+    COLOR_ACTIVE = 'C0'
+    COLOR_INACTIVE = 'C7'
 
     def __init__(self, main_window):
         self.main_window = main_window
@@ -20,7 +20,7 @@ class SuperposCanvas(FigureCanvas):
 
         self.axes = self.figure.add_axes([0.1, 0.1, 0.85, 0.80])
         self.axes.set_title('Superposition')
-        self.axes.xaxis.set_label_text('Distance [mm]')
+        self.axes.xaxis.set_label_text('Snow Depth [mm]')
         self.axes.yaxis.set_label_text('Force [N]')
 
         self.active_doc = None
