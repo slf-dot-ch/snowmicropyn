@@ -473,7 +473,7 @@ class Profile(object):
             # Export important properties of profile
             writer.writerow(('recording_name', self.name))
             writer.writerow(('recording_pntfile', str(self.pnt_file)))
-            writer.writerow(('recording_timestamp', str(self.timestamp.isoformat())))
+            writer.writerow(('recording_timestamp', str(self.timestamp.isoformat() if self.timestamp else None)))
             writer.writerow(('recording_latitude', self._latitude))
             writer.writerow(('recording_longitude', self._longitude))
             writer.writerow(('recording_length', self.recording_length))
@@ -497,14 +497,18 @@ class Profile(object):
                     writer.writerow(['pnt_' + header_id.name, str(value)])
         return file
 
-    def export_derivatives(self, file=None, window_size=windowing.DEFAULT_WINDOW, overlap_factor=windowing.DEFAULT_WINDOW_OVERLAP, precision=4):
+    def export_derivatives(self, file=None, snowpack_only=True, window_size=windowing.DEFAULT_WINDOW, overlap_factor=windowing.DEFAULT_WINDOW_OVERLAP, precision=4):
         if file:
             file = pathlib.Path(file)
         else:
             file = self._pnt_file.with_name(self._pnt_file.stem + '_derivatives').with_suffix('.csv')
 
+        samples = self.samples
+        if snowpack_only:
+            samples = self.samples_within_snowpack()
+
         log.info('Calculating derivatives by Löwe 2012')
-        loewe2012_df = loewe2012.calc(self.samples, window_size, overlap_factor)
+        loewe2012_df = loewe2012.calc(samples, window_size, overlap_factor)
 
         log.info('Calculating derivatives by Proksch 2015')
         proksch_data = proksch2015.calc_from_loewe2012(loewe2012_df)
@@ -526,6 +530,7 @@ class Profile(object):
 
         fmt = '%.{}f'.format(precision)
         derivatives.to_csv(file, header=True, index=False, float_format=fmt)
+        return file
 
     def samples_within_distance(self, begin=None, end=None, relativize=False):
         """ Get samples within a certain distance, specified by parameters
@@ -564,18 +569,12 @@ class Profile(object):
 
         return samples.reset_index(drop=True)
 
-    def samples_within_markers(self, begin_marker=None, end_marker=None, relativize=True):
-        raise NotImplementedError()
-
     def samples_within_snowpack(self, relativize=True):
         """ Returns samples within the snowpack, meaning between the values of
         marker "surface" and "ground". """
-        try:
-            s = self.marker('surface')
-            g = self.marker('ground')
-            return self.samples_within_distance(s, g, relativize)
-        except KeyError as e:
-            raise KeyError('Required marker missing in {}. Error: {}'.format(self, str(e)))
+        s = self.marker('surface', fallback=self.samples.distance.iloc[0])
+        g = self.marker('ground', fallback=self.samples.distance.iloc[-1])
+        return self.samples_within_distance(s, g, relativize)
 
     def detect_surface(self):
         """ Convenience method to detect the surface. This also sets the marker
