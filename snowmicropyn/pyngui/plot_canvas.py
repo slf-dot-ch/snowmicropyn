@@ -39,6 +39,9 @@ class PlotCanvas(FigureCanvas):
 
     COLORS = defaultdict(lambda: 'C0', COLORS)
 
+    LABEL_FONT_SIZE = 14
+    TICKS_FONT_SIZE = 12
+
     def __init__(self, main_window):
         self.main_window = main_window
         self.figure = Figure()
@@ -50,44 +53,6 @@ class PlotCanvas(FigureCanvas):
         self._clicked_distance = None
 
         self._axes = dict()
-
-        LABEL_FONT_SIZE = 14
-        TICKS_FONT_SIZE = 12
-
-        name = 'force'
-        self._force_axes = self.figure.add_axes([0.1, 0.1, 0.72, 0.85])
-        self._force_axes.xaxis.set_label_text('Snow Depth [mm]')
-        self._force_axes.xaxis.label.set_size(LABEL_FONT_SIZE)
-        self._force_axes.xaxis.set_tick_params(labelsize=TICKS_FONT_SIZE)
-        self._force_axes.yaxis.label.set_text('Force [N]')
-        self._force_axes.yaxis.label.set_color(self.COLORS['label_' + name])
-        self._force_axes.yaxis.label.set_size(LABEL_FONT_SIZE)
-        self._force_axes.yaxis.set_tick_params(labelsize=TICKS_FONT_SIZE)
-
-        self._axes[name] = self._force_axes
-
-        name = 'ssa'
-        self._ssa_axes = self._force_axes.twinx()
-        self._ssa_axes.yaxis.label.set_text('SSA [$m^2/m^3$]')
-        self._ssa_axes.yaxis.label.set_color(self.COLORS['label_' + name])
-        self._ssa_axes.yaxis.tick_right()
-        self._ssa_axes.yaxis.set_label_position('right')
-        self._ssa_axes.yaxis.label.set_size(LABEL_FONT_SIZE)
-        self._ssa_axes.yaxis.set_tick_params(labelsize=TICKS_FONT_SIZE)
-
-        self._axes[name] = self._ssa_axes
-
-        name = 'density'
-        self._density_axes = self._force_axes.twinx()
-        self._density_axes.yaxis.label.set_text('Density [$kg/m^3$]')
-        self._density_axes.yaxis.label.set_color(self.COLORS['label_' + name])
-        self._density_axes.yaxis.tick_right()
-        self._density_axes.yaxis.set_label_position('right')
-        self._density_axes.yaxis.label.set_size(LABEL_FONT_SIZE)
-        self._density_axes.yaxis.set_tick_params(labelsize=TICKS_FONT_SIZE)
-
-        self._axes[name] = self._density_axes
-
         self._plots = dict()
         self._markers = dict()  # Contains tuples: line, text
         self._drift_label = None
@@ -131,18 +96,44 @@ class PlotCanvas(FigureCanvas):
         return self._clicked_distance
 
     def set_document(self, doc):
-        # Get rid of all existing markers and plots
-        for line, text in self._markers.values():
-            line.remove()
-            text.remove()
-        for lines in self._plots.values():
-            for l in lines:
-                l.remove()
-        self._plots = dict()
-        self._markers = dict()
-        if self._drift_label:
-            self._drift_label.remove()
-            self._drift_label = None
+        self.figure.clear()
+
+        self._axes.clear()
+        self._plots.clear()
+        self._markers.clear()
+        self._drift_label = None
+
+        name = 'force'
+        axes = self.figure.add_axes([0.1, 0.1, 0.72, 0.85])
+        axes.xaxis.set_label_text('Snow Depth [mm]')
+        axes.xaxis.label.set_size(self.LABEL_FONT_SIZE)
+        axes.xaxis.set_tick_params(labelsize=self.TICKS_FONT_SIZE)
+        axes.yaxis.label.set_text('Force [N]')
+        axes.yaxis.label.set_color(self.COLORS['label_' + name])
+        axes.yaxis.label.set_size(self.LABEL_FONT_SIZE)
+        axes.yaxis.set_tick_params(labelsize=self.TICKS_FONT_SIZE)
+        self._axes[name] = axes
+
+        name = 'ssa'
+        axes = self._axes['force'].twinx()
+        axes.yaxis.label.set_text('SSA [$m^2/m^3$]')
+        axes.yaxis.label.set_color(self.COLORS['label_' + name])
+        axes.yaxis.tick_right()
+        axes.yaxis.set_label_position('right')
+        axes.yaxis.label.set_size(self.LABEL_FONT_SIZE)
+        axes.yaxis.set_tick_params(labelsize=self.TICKS_FONT_SIZE)
+        self._axes[name] = axes
+
+        name = 'density'
+        axes = self._axes['force'].twinx()
+        axes.yaxis.label.set_text('Density [$kg/m^3$]')
+        axes.yaxis.label.set_color(self.COLORS['label_' + name])
+        axes.yaxis.tick_right()
+        axes.yaxis.set_label_position('right')
+        axes.yaxis.label.set_size(self.LABEL_FONT_SIZE)
+        axes.yaxis.set_tick_params(labelsize=self.TICKS_FONT_SIZE)
+        self._axes[name] = axes
+
         if doc is None:
             return
 
@@ -166,8 +157,8 @@ class PlotCanvas(FigureCanvas):
     def set_plot(self, axes_id, plot_id, values):
         if plot_id in self._plots:
             lines = self._plots.pop(plot_id)
-            for line in lines:
-                line.remove()
+            for l in lines:
+                l.remove()
             if plot_id == 'drift' and self._drift_label:
                 self._drift_label.remove()
                 self._drift_label = None
@@ -181,7 +172,7 @@ class PlotCanvas(FigureCanvas):
             if plot_id == 'drift':
                 label_x = x.iloc[-1]
                 label_y = y.iloc[-1]
-                self._drift_label = self._force_axes.text(label_x, label_y, 'drift', color=color, verticalalignment='center')
+                self._drift_label = self._axes['force'].text(label_x, label_y, 'drift', color=color, verticalalignment='center')
 
     def set_marker(self, label, value):
         if label in self._markers:
@@ -194,8 +185,7 @@ class PlotCanvas(FigureCanvas):
             if 'marker_' + label in self.COLORS:
                 color = self.COLORS['marker_' + label]
             line = axes.axvline(value, color=color)
-            text = axes.annotate(label, xy=(value, 1), xycoords=('data', 'axes fraction'),
-                                 rotation=90, verticalalignment='top', color=color)
+            text = axes.annotate(label, xy=(value, 1), xycoords=('data', 'axes fraction'), rotation=90, verticalalignment='top', color=color)
             self._markers[label] = line, text
 
     def draw(self):
@@ -211,11 +201,12 @@ class PlotCanvas(FigureCanvas):
             'marker_others': self.main_window.plot_markers_action.isChecked(),
         }
 
-        self._force_axes.yaxis.set_visible(visibility['plot_force'])
-        self._ssa_axes.yaxis.set_visible(visibility['plot_P2015_ssa'])
-        self._density_axes.yaxis.set_visible(visibility['plot_P2015_density'])
+        self._axes['force'].yaxis.set_visible(visibility['plot_force'])
+        self._axes['ssa'].yaxis.set_visible(visibility['plot_P2015_ssa'])
+        self._axes['density'].yaxis.set_visible(visibility['plot_P2015_density'])
+
         outward = 60 if visibility['plot_P2015_ssa'] and visibility['plot_P2015_density'] else 0
-        self._density_axes.spines['right'].set_position(('outward', outward))
+        self._axes['density'].spines['right'].set_position(('outward', outward))
 
         for k, lines in self._plots.items():
             v = visibility['plot_' + k]
@@ -239,24 +230,24 @@ class PlotCanvas(FigureCanvas):
         density_axis_limits = (prefs.density_axis_from, prefs.density_axis_to) if prefs.density_axis_fix else None
 
         if distance_axis_limits:
-            self._force_axes.set_xlim(*distance_axis_limits)
+            self._axes['force'].set_xlim(*distance_axis_limits)
         else:
-            self._force_axes.autoscale(axis='x')
+            self._axes['force'].autoscale(axis='x')
 
         if force_axis_limits:
-            self._force_axes.set_ylim(*force_axis_limits)
+            self._axes['force'].set_ylim(*force_axis_limits)
         else:
-            self._force_axes.autoscale(axis='y')
+            self._axes['force'].autoscale(axis='y')
 
         if ssa_axis_limits:
-            self._ssa_axes.set_ylim(*ssa_axis_limits)
+            self._axes['ssa'].set_ylim(*ssa_axis_limits)
         else:
-            self._ssa_axes.autoscale(axis='y')
+            self._axes['ssa'].autoscale(axis='y')
 
         if density_axis_limits:
-            self._density_axes.set_ylim(*density_axis_limits)
+            self._axes['density'].set_ylim(*density_axis_limits)
         else:
-            self._density_axes.autoscale(axis='y')
+            self._axes['density'].autoscale(axis='y')
 
     def mouse_button_pressed(self, event):
         log.debug('context click. x={}'.format(event))

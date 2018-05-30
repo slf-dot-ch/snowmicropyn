@@ -485,6 +485,7 @@ class MainWindow(QMainWindow):
                 doc.recalc_derivatives(ws, of)
             self.plot_canvas.set_limits()
             self.plot_canvas.draw()
+            self.plot_toolbar.update()
 
     def switch_document(self):
         doc = self.current_document
@@ -513,6 +514,9 @@ class MainWindow(QMainWindow):
 
         self.plot_canvas.set_document(doc)
         self.plot_canvas.draw()
+        # Reset toolbar history
+        self.plot_toolbar.update()
+
         self.superpos_canvas.set_active_doc(doc)
 
     # This method is called by PlotCanvas and Sidebar when a marker is set to
