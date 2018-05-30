@@ -24,7 +24,7 @@ A Simple Example
 
     from snowmicropyn import Profile
 
-    p = Profile.load('./some_directory/S31M0067.pnt')
+    p = Profile.load('/examples/profiles/S37M0876.ini')
 
     ts = p.timestamp
     coords = p.coordinates
