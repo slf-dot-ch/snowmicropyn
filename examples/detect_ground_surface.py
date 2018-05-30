@@ -7,11 +7,11 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 from snowmicropyn import Profile
 from snowmicropyn.detection import detect_ground, detect_surface
 
-p = Profile.load('./some_directory/S31M0067.pnt')
+p = Profile.load('profiles/S37M0876.pnt')
 
 # Explicit...
-ground = detect_ground(p.samples.values, p.overload)
-surface = detect_surface(p.samples.values)
+ground = detect_ground(p)
+surface = detect_surface(p)
 
 # ... implicit, this also set the markers 'ground' and 'surface'
 # on the profile

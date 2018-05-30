@@ -2,7 +2,7 @@ from snowmicropyn import Profile
 from snowmicropyn import proksch2015
 
 p = Profile.load('profiles/S37M0876.pnt')
-p2015 = proksch2015.model_ssa_and_density(p.samples)
+p2015 = proksch2015.calc(p.samples)
 
 crust_start = p.marker('crust_start')
 crust_end = p.marker('crust_end')

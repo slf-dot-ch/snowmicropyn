@@ -2,7 +2,7 @@ import glob
 
 from snowmicropyn import Profile
 
-match = './some_directory/*.pnt'
+match = 'profiles/*.pnt'
 
 for f in glob.glob(match):
     print('Processing file ' + f)

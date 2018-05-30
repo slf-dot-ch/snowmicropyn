@@ -1,6 +1,5 @@
-from snowmicropyn import Pnt
+import snowmicropyn as smp
+header, raw_samples = smp.Pnt.load('profiles/S37M0876.pnt')
 
-header, raw_samples = Pnt.load('./some_directory/S31M0067.pnt')
-
-print(header[Pnt.Header.TIMESTAMP_YEAR].value)
+print(header[smp.Pnt.Header.TIMESTAMP_YEAR].value)
 print(raw_samples[2000:2005])
