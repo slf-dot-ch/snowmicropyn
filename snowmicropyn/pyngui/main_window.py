@@ -483,7 +483,8 @@ class MainWindow(QMainWindow):
                 ws = self.preferences.window_size
                 of = self.preferences.overlap / 100
                 doc.recalc_derivatives(ws, of)
-            self.switch_document()
+            self.plot_canvas.set_limits()
+            self.plot_canvas.draw()
 
     def switch_document(self):
         doc = self.current_document
@@ -517,7 +518,8 @@ class MainWindow(QMainWindow):
     # This method is called by PlotCanvas and Sidebar when a marker is set to
     # a new value. This method then causes the required update of visualization
     def set_marker(self, label, value):
-        p = self.current_document.profile
+        doc = self.current_document
+        p = doc.profile
         if value is not None:
             value = float(value)
         log.info('Setting marker {} of profile {} to {}'.format(repr(label), p.name, value))
@@ -528,11 +530,12 @@ class MainWindow(QMainWindow):
 
         if label in ('surface', 'drift_begin', 'drift_end'):
             self.calc_drift()
+            self.plot_canvas.set_plot('force', 'drift', (doc._fit_x, doc._fit_y))
 
         if label in ('surface', 'ground'):
-            self.current_document.recalc_derivatives(self.preferences.window_size, self.preferences.overlap)
-            self.switch_document()
-            return
+            doc.recalc_derivatives(self.preferences.window_size, self.preferences.overlap)
+            self.plot_canvas.set_plot('ssa', 'P2015_ssa', (doc.derivatives.distance, doc.derivatives.P2015_ssa))
+            self.plot_canvas.set_plot('density', 'P2015_density', (doc.derivatives.distance, doc.derivatives.P2015_density))
 
         self.plot_canvas.draw()
 

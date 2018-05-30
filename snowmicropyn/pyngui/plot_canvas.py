@@ -1,6 +1,5 @@
 import logging
-import math
-from pandas import np as np
+from collections import defaultdict
 
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QAction, QMenu
@@ -11,13 +10,34 @@ log = logging.getLogger(__name__)
 
 
 class PlotCanvas(FigureCanvas):
+    COLOR_BLUE = 'C0'
+    COLOR_ORANGE = 'C1'
+    COLOR_GREEN = 'C2'
+    COLOR_RED = 'C3'
+    COLOR_VIOLET = 'C4'
+    COLOR_BROWN = 'C5'
+    COLOR_PINK = 'C6'
+    COLOR_GREY = 'C7'
+    COLOR_YELLOW = 'C8'
+    COLOR_CYAN = 'C9'
 
-    FORCE_COLOR = 'C0'
-    SSA_COLOR = 'C2'
-    DENSITY_COLOR = 'C3'
-    DRIFT_COLOR = 'C6'
-    SURFACE_GROUND_COLOR = 'C8'
-    MARKERS_COLOR = 'C7'
+    COLORS = {
+        'label_force': COLOR_BLUE,
+        'label_ssa': COLOR_GREEN,
+        'label_density': COLOR_VIOLET,
+        'label_drift': COLOR_CYAN,
+        'plot_force': COLOR_BLUE,
+        'plot_P2015_ssa': COLOR_GREEN,
+        'plot_P2015_density': COLOR_VIOLET,
+        'plot_drift': COLOR_CYAN,
+        'marker_surface': COLOR_RED,
+        'marker_ground': COLOR_RED,
+        'marker_others': COLOR_GREY,
+        'marker_drift_begin': COLOR_CYAN,
+        'marker_drift_end': COLOR_CYAN
+    }
+
+    COLORS = defaultdict(lambda: 'C0', COLORS)
 
     def __init__(self, main_window):
         self.main_window = main_window
@@ -29,9 +49,48 @@ class PlotCanvas(FigureCanvas):
         # is stored in this field.
         self._clicked_distance = None
 
-        self._markers = dict()
-        self._signals_axes = dict()
-        self._drift_axes = None
+        self._axes = dict()
+
+        LABEL_FONT_SIZE = 14
+        TICKS_FONT_SIZE = 12
+
+        name = 'force'
+        self._force_axes = self.figure.add_axes([0.1, 0.1, 0.72, 0.85])
+        self._force_axes.xaxis.set_label_text('Snow Depth [mm]')
+        self._force_axes.xaxis.label.set_size(LABEL_FONT_SIZE)
+        self._force_axes.xaxis.set_tick_params(labelsize=TICKS_FONT_SIZE)
+        self._force_axes.yaxis.label.set_text('Force [N]')
+        self._force_axes.yaxis.label.set_color(self.COLORS['label_' + name])
+        self._force_axes.yaxis.label.set_size(LABEL_FONT_SIZE)
+        self._force_axes.yaxis.set_tick_params(labelsize=TICKS_FONT_SIZE)
+
+        self._axes[name] = self._force_axes
+
+        name = 'ssa'
+        self._ssa_axes = self._force_axes.twinx()
+        self._ssa_axes.yaxis.label.set_text('SSA [$m^2/m^3$]')
+        self._ssa_axes.yaxis.label.set_color(self.COLORS['label_' + name])
+        self._ssa_axes.yaxis.tick_right()
+        self._ssa_axes.yaxis.set_label_position('right')
+        self._ssa_axes.yaxis.label.set_size(LABEL_FONT_SIZE)
+        self._ssa_axes.yaxis.set_tick_params(labelsize=TICKS_FONT_SIZE)
+
+        self._axes[name] = self._ssa_axes
+
+        name = 'density'
+        self._density_axes = self._force_axes.twinx()
+        self._density_axes.yaxis.label.set_text('Density [$kg/m^3$]')
+        self._density_axes.yaxis.label.set_color(self.COLORS['label_' + name])
+        self._density_axes.yaxis.tick_right()
+        self._density_axes.yaxis.set_label_position('right')
+        self._density_axes.yaxis.label.set_size(LABEL_FONT_SIZE)
+        self._density_axes.yaxis.set_tick_params(labelsize=TICKS_FONT_SIZE)
+
+        self._axes[name] = self._density_axes
+
+        self._plots = dict()
+        self._markers = dict()  # Contains tuples: line, text
+        self._drift_label = None
 
         self.mpl_connect('button_press_event', self.mouse_button_pressed)
 
@@ -71,128 +130,58 @@ class PlotCanvas(FigureCanvas):
     def clicked_distance(self):
         return self._clicked_distance
 
-    def color_for_marker(self, label):
-        if label in ['surface', 'ground']:
-            return self.SURFACE_GROUND_COLOR
-        if label.startswith('drift_'):
-            return self.DRIFT_COLOR
-        return self.MARKERS_COLOR
-
     def set_document(self, doc):
-        self.figure.clear()
-        self._markers.clear()
-        self._signals_axes.clear()
+        # Get rid of all existing markers and plots
+        for line, text in self._markers.values():
+            line.remove()
+            text.remove()
+        for lines in self._plots.values():
+            for l in lines:
+                l.remove()
+        self._plots = dict()
+        self._markers = dict()
+        if self._drift_label:
+            self._drift_label.remove()
+            self._drift_label = None
         if doc is None:
             return
 
-        main_axes = self.figure.add_axes([0.1, 0.1, 0.72, 0.85])
-        main_axes.xaxis.set_label_text('Distance [mm]')
-        main_axes.yaxis.set_visible(False)
+        values = (doc.profile.samples.distance, doc.profile.samples.force)
+        self.set_plot('force', 'force', values)
+
+        values = (doc.derivatives.distance, doc.derivatives.P2015_ssa)
+        self.set_plot('ssa', 'P2015_ssa', values)
+
+        values = (doc.derivatives.distance, doc.derivatives.P2015_density)
+        self.set_plot('density', 'P2015_density', values)
+
+        values = doc._fit_x, doc._fit_y
+        self.set_plot('force', 'drift', values)
 
         for label, value in doc.profile.markers:
             self.set_marker(label, value)
 
-        # Force signal
-        force_axes = main_axes.twinx()
-        force_axes.yaxis.set_label_text('Force [N]')
-        force_axes.yaxis.label.set_color(self.FORCE_COLOR)
-        force_axes.plot(doc.profile.samples.distance, doc.profile.samples.force, self.FORCE_COLOR)
-        self._signals_axes['smp'] = force_axes
+        self.set_limits()
 
-        # Drift signal and text
-        drift_axes = main_axes.twinx()
-        drift_axes.set_axis_off()
-        drift_axes.set_ylim(force_axes.get_ylim())
-        drift_axes.plot(doc._fit_x, doc._fit_y, self.DRIFT_COLOR)
-        x = doc._fit_x.iloc[-1]
-        y = doc._fit_y.iloc[-1]
-        dx = doc._fit_x.iloc[-1] - doc._fit_x.iloc[0]
-        dy = doc._fit_y.iloc[-1] - doc._fit_y.iloc[0]
-        angle = math.atan(dy/dx) * (180/math.pi)
-        loc = np.array((x, y))
-        trans_angle = self.figure.gca().transData.transform_angles(np.array((angle,)), loc.reshape((1, 2)))[0]
-        drift_axes.text(x, y, 'drift', color=self.DRIFT_COLOR, rotation=trans_angle, rotation_mode='anchor', verticalalignment='top', horizontalalignment='right')
-        self._drift_axes = drift_axes
+    def set_plot(self, axes_id, plot_id, values):
+        if plot_id in self._plots:
+            lines = self._plots.pop(plot_id)
+            for line in lines:
+                line.remove()
+            if plot_id == 'drift' and self._drift_label:
+                self._drift_label.remove()
+                self._drift_label = None
+        if values is not None:
+            color = self.COLORS['plot_' + plot_id]
+            x, y = values
+            axes = self._axes[axes_id]
+            lines = axes.plot(x, y, color)
+            self._plots[plot_id] = lines
 
-        # SSA Proksch 2015
-        ssa_axes = main_axes.twinx()
-        ssa_axes.yaxis.label.set_text('SSA [$m^2/m^3$]')
-        ssa_axes.yaxis.label.set_color(self.SSA_COLOR)
-        ssa_axes.plot(doc.derivatives.distance, doc.derivatives.P2015_ssa, self.SSA_COLOR)
-        self._signals_axes['P2015_ssa'] = ssa_axes
-
-        # Density Proksch 2015
-        density_axes = main_axes.twinx()
-        density_axes.yaxis.set_label_text('Density [$kg/m^3$]')
-        density_axes.yaxis.label.set_color(self.DENSITY_COLOR)
-        density_axes.plot(doc.derivatives.distance, doc.derivatives.P2015_density, self.DENSITY_COLOR)
-        self._signals_axes['P2015_density'] = density_axes
-
-    def draw(self):
-        plot_smpsignal = self.main_window.plot_smpsignal_action.isChecked()
-        plot_surface_and_ground = self.main_window.plot_surface_and_ground_action.isChecked()
-        plot_markers = self.main_window.plot_markers_action.isChecked()
-        plot_drift = self.main_window.plot_drift_action.isChecked()
-        plot_ssa_proksch2015 = self.main_window.plot_ssa_proksch2015_action.isChecked()
-        plot_density_proksch2015 = self.main_window.plot_density_proksch2015_action.isChecked()
-
-        prefs = self.main_window.preferences
-        distance_axis_limits = (prefs.distance_axis_from, prefs.distance_axis_to) if prefs.distance_axis_fix else None
-        force_axis_limits = (prefs.force_axis_from, prefs.force_axis_to) if prefs.force_axis_fix else None
-        density_axis_limits = (prefs.density_axis_from, prefs.density_axis_to) if prefs.density_axis_fix else None
-        ssa_axis_limits = (prefs.ssa_axis_from, prefs.ssa_axis_to) if prefs.ssa_axis_fix else None
-
-        for k, (line, text) in self._markers.items():
-            visibility = plot_markers
-            if k in ['surface', 'ground']:
-                visibility = plot_surface_and_ground
-            elif k.startswith('drift_'):
-                visibility = plot_drift
-            line.set_visible(visibility)
-            text.set_visible(visibility)
-
-        outward_pos = 0
-        for k, axes in self._signals_axes.items():
-            visibility = None
-            if k == 'smp':
-                visibility = plot_smpsignal
-                axes.yaxis.tick_left()
-                axes.yaxis.set_label_position('left')
-                if distance_axis_limits:
-                    axes.set_xlim(*distance_axis_limits)
-                if force_axis_limits:
-                    axes.set_ylim(*force_axis_limits)
-
-            if k == 'P2015_ssa':
-                visibility = plot_ssa_proksch2015
-                axes.yaxis.tick_right()
-                axes.yaxis.set_label_position('right')
-                if ssa_axis_limits:
-                    axes.set_ylim(*ssa_axis_limits)
-
-                # Place y-axis outside plot if axis on right is already in use
-                if visibility:
-                    axes.spines['right'].set_position(('outward', outward_pos))
-                    outward_pos += 60
-
-            if k == 'P2015_density':
-                visibility = plot_density_proksch2015
-                axes.yaxis.tick_right()
-                axes.yaxis.set_label_position('right')
-                if density_axis_limits:
-                    axes.set_ylim(*density_axis_limits)
-
-                # Place y-axis outside plot if axis on right is already in use
-                if visibility:
-                    axes.spines['right'].set_position(('outward', outward_pos))
-                    outward_pos += 60
-
-            axes.set_visible(visibility)
-
-        if self._drift_axes:
-            self._drift_axes.set_visible(plot_drift)
-
-        super(PlotCanvas, self).draw()
+            if plot_id == 'drift':
+                label_x = x.iloc[-1]
+                label_y = y.iloc[-1]
+                self._drift_label = self._force_axes.text(label_x, label_y, 'drift', color=color, verticalalignment='center')
 
     def set_marker(self, label, value):
         if label in self._markers:
@@ -200,11 +189,74 @@ class PlotCanvas(FigureCanvas):
             line.remove()
             text.remove()
         if value is not None:
-            axes = self.figure.gca()
-            color = self.color_for_marker(label)
+            axes = self._axes['force']
+            color = self.COLORS['marker_others']
+            if 'marker_' + label in self.COLORS:
+                color = self.COLORS['marker_' + label]
             line = axes.axvline(value, color=color)
-            text = axes.annotate(label, xy=(value, 1), xycoords=('data', 'axes fraction'), rotation=90, verticalalignment='top', color=color)
+            text = axes.annotate(label, xy=(value, 1), xycoords=('data', 'axes fraction'),
+                                 rotation=90, verticalalignment='top', color=color)
             self._markers[label] = line, text
+
+    def draw(self):
+        visibility = {
+            'plot_force': self.main_window.plot_smpsignal_action.isChecked(),
+            'plot_drift': self.main_window.plot_drift_action.isChecked(),
+            'plot_P2015_ssa': self.main_window.plot_ssa_proksch2015_action.isChecked(),
+            'plot_P2015_density': self.main_window.plot_density_proksch2015_action.isChecked(),
+            'marker_surface': self.main_window.plot_surface_and_ground_action.isChecked(),
+            'marker_ground': self.main_window.plot_surface_and_ground_action.isChecked(),
+            'marker_drift_begin': self.main_window.plot_drift_action.isChecked(),
+            'marker_drift_end': self.main_window.plot_drift_action.isChecked(),
+            'marker_others': self.main_window.plot_markers_action.isChecked(),
+        }
+
+        self._force_axes.yaxis.set_visible(visibility['plot_force'])
+        self._ssa_axes.yaxis.set_visible(visibility['plot_P2015_ssa'])
+        self._density_axes.yaxis.set_visible(visibility['plot_P2015_density'])
+        outward = 60 if visibility['plot_P2015_ssa'] and visibility['plot_P2015_density'] else 0
+        self._density_axes.spines['right'].set_position(('outward', outward))
+
+        for k, lines in self._plots.items():
+            v = visibility['plot_' + k]
+            for l in lines:
+                l.set_visible(v)
+
+        for k, (line, text) in self._markers.items():
+            v = visibility['marker_others']
+            if 'marker_' + k in visibility:
+                v = visibility['marker_' + k]
+            line.set_visible(v)
+            text.set_visible(v)
+
+        super(PlotCanvas, self).draw()
+
+    def set_limits(self):
+        prefs = self.main_window.preferences
+        distance_axis_limits = (prefs.distance_axis_from, prefs.distance_axis_to) if prefs.distance_axis_fix else None
+        force_axis_limits = (prefs.force_axis_from, prefs.force_axis_to) if prefs.force_axis_fix else None
+        ssa_axis_limits = (prefs.ssa_axis_from, prefs.ssa_axis_to) if prefs.ssa_axis_fix else None
+        density_axis_limits = (prefs.density_axis_from, prefs.density_axis_to) if prefs.density_axis_fix else None
+
+        if distance_axis_limits:
+            self._force_axes.set_xlim(*distance_axis_limits)
+        else:
+            self._force_axes.autoscale(axis='x')
+
+        if force_axis_limits:
+            self._force_axes.set_ylim(*force_axis_limits)
+        else:
+            self._force_axes.autoscale(axis='y')
+
+        if ssa_axis_limits:
+            self._ssa_axes.set_ylim(*ssa_axis_limits)
+        else:
+            self._ssa_axes.autoscale(axis='y')
+
+        if density_axis_limits:
+            self._density_axes.set_ylim(*density_axis_limits)
+        else:
+            self._density_axes.autoscale(axis='y')
 
     def mouse_button_pressed(self, event):
         log.debug('context click. x={}'.format(event))
