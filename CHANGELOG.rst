@@ -1,8 +1,17 @@
 snowmicropyn Changelog
 ======================
 
+Version 1.0.0
+-------------
+
+2018-05-31
+
+- Offer all available markers (markers of all open pnt files) in context menu.
+
 Version 1.0.0a2
 ---------------
+
+2018-05-30
 
 - Add simple superposition view.
 - Fixed coordinates for longitudes > 90/-90. Thanks to Mike Brady!
