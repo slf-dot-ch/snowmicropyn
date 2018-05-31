@@ -143,7 +143,7 @@ class SidebarWidget(QTreeWidget):
             self.markers_item.removeChild(item)
         self.marker_items = {}
 
-        for label, value in p.markers:
+        for label, value in p.markers.items():
             self.set_marker(label, value)
 
     def set_marker(self, label, value):

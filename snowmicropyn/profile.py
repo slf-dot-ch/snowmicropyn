@@ -309,13 +309,12 @@ class Profile(object):
 
     @property
     def markers(self):
-        """ Returns a list of all markers.
+        """ Returns all markers on the profile (a dictionary).
 
-        The lists contains tuples with label and value (``(str, float)``).
+        The dictionary keys are of type string, the values are floats. When no
+        markers are set, the returned dictionary is empty.
         """
-        markers = self._ini.items('markers')
-        markers = [(k, self.marker(k)) for k, v in markers]
-        return markers
+        return {k: float(v) for k, v in self._ini.items('markers')}
 
     # configparser._UNSET as default value for fallback is required to enable
     # None as a valid value to pass
@@ -489,7 +488,7 @@ class Profile(object):
             writer.writerow(('smp_sensor_sensitivity', self.sensor_sensitivity))
             writer.writerow(('smp_amplifier_serial', self.amplifier_serial))
             # Export markers
-            for k, v in self.markers:
+            for k, v in self.markers.items():
                 writer.writerow(('marker_' + k, v))
             # Export pnt header entries
             if include_pnt_header:

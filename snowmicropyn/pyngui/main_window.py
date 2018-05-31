@@ -601,6 +601,12 @@ class MainWindow(QMainWindow):
         self.superpos_toolbar.setVisible(checked)
         self.plot_toolbar.setVisible(not checked)
 
+    def all_marker_labels(self):
+        labels = set()
+        for d in self.documents:
+            labels.update(d.profile.markers.keys())
+        return labels
+
 # The NoDocWidget is visible when no document is open. It contains the SLF logo.
 class NoDocWidget(QWidget):
 
@@ -667,7 +673,7 @@ class MarkerDialog(QDialog):
             log.info('Checking for already existing marker labels')
             ok_button = self.button_box.button(QDialogButtonBox.Ok)
             name = self.label_editline.text()
-            existing_markers = [k for k, v in self.mainwin.current_document.profile.markers]
+            existing_markers = [k for k, v in self.mainwin.current_document.profile.markers.items()]
             valid_name = bool(name) and (name not in existing_markers)
             valid_value = self.validator.validate(self.value_lineedit.text(), 0)[
                               0] == QValidator.Acceptable

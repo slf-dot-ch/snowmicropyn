@@ -1,5 +1,6 @@
 import logging
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
+from functools import partial
 
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QAction, QMenu
@@ -59,38 +60,53 @@ class PlotCanvas(FigureCanvas):
 
         self.mpl_connect('button_press_event', self.mouse_button_pressed)
 
+    def build_menu(self):
         def set_marker(name):
-            main_window.set_marker(name, self.clicked_distance())
+            self.main_window.set_marker(name, self.clicked_distance())
 
         def add_marker():
-            main_window.new_marker(default_value=self.clicked_distance())
+            self.main_window.new_marker(default_value=self.clicked_distance())
 
-        set_surface_action = QAction('Set Surface to here', self)
-        set_surface_action.triggered.connect(lambda checked: set_marker('surface'))
+        labels = set(self.main_window.all_marker_labels())
+        labels.discard('surface')
+        labels.discard('ground')
+        labels.discard('drift_begin')
+        labels.discard('drift_end')
 
-        set_ground_action = QAction('Set Ground to here', self)
-        set_ground_action.triggered.connect(lambda checked: set_marker('ground'))
-
-        add_marker_action = QAction("Add Marker...", self)
-        add_marker_action.triggered.connect(lambda checked: add_marker())
-
-        set_drift_begin_action = QAction('Set Drift Begin to here', self)
-        set_drift_begin_action.triggered.connect(lambda checked: set_marker('drift_begin'))
-
-        set_drift_end_action = QAction('Set Drift End to here', self)
-        set_drift_end_action.triggered.connect(lambda checked: set_marker('drift_end'))
-
-        # Context Menu, shown on right click in canvas
         menu = QMenu()
-        menu.addAction(set_surface_action)
-        menu.addAction(set_ground_action)
-        menu.addSeparator()
-        menu.addAction(set_drift_begin_action)
-        menu.addAction(set_drift_end_action)
-        menu.addSeparator()
-        menu.addAction(add_marker_action)
 
-        self.context_menu = menu
+        action = QAction('Set surface', self)
+        action.triggered.connect(lambda: set_marker('surface'))
+        menu.addAction(action)
+
+        action = QAction('Set ground', self)
+        action.triggered.connect(lambda: set_marker('ground'))
+        menu.addAction(action)
+
+        menu.addSeparator()
+
+        action = QAction('Set drift_begin', self)
+        action.triggered.connect(lambda: set_marker('drift_begin'))
+        menu.addAction(action)
+
+        action = QAction('Set drift_end', self)
+        action.triggered.connect(lambda: set_marker('drift_end'))
+        menu.addAction(action)
+
+        menu.addSeparator()
+
+        for label in sorted(labels):
+            action = QAction('Set ' + label, self)
+            action.triggered.connect(partial(lambda l: set_marker(l), label))
+            menu.addAction(action)
+
+        menu.addSeparator()
+
+        action = QAction("New Marker...", self)
+        action.triggered.connect(lambda checked: add_marker())
+        menu.addAction(action)
+
+        return menu
 
     def clicked_distance(self):
         return self._clicked_distance
@@ -149,7 +165,7 @@ class PlotCanvas(FigureCanvas):
         values = doc._fit_x, doc._fit_y
         self.set_plot('force', 'drift', values)
 
-        for label, value in doc.profile.markers:
+        for label, value in doc.profile.markers.items():
             self.set_marker(label, value)
 
         self.set_limits()
@@ -257,4 +273,5 @@ class PlotCanvas(FigureCanvas):
             # Save distance value where the click was
             self._clicked_distance = event.xdata
             cursor = QCursor()
-            self.context_menu.popup(cursor.pos())
+            self.menu = self.build_menu()
+            self.menu.popup(cursor.pos())
