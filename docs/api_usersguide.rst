@@ -75,9 +75,9 @@ Some examples will help you to get an overview of *snowmicropyn*'s features.
 .. hint::
 
    To get the code mentioned in this guide, Download_ the source code of
-   *snowmicropyn*. You'll find the examples in the subfolder :folder:`examples`
+   *snowmicropyn*. You'll find the examples in the subfolder ``examples``
    and even some pnt files to play around with in the folder
-   :folder:`examples/profiles`.
+   ``examples/profiles``.
 
 Explore properties
 ^^^^^^^^^^^^^^^^^^

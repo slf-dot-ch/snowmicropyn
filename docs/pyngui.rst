@@ -45,7 +45,7 @@ to save your markers, otherwise they will be lost.
 Surface & ground
 ^^^^^^^^^^^^^^^^
 
-:program:`pyngui` uses the marker labels ``surface``and ``ground`` to mark the
+:program:`pyngui` uses the marker labels ``surface`` and ``ground`` to mark the
 begin and end of the snowpack. You can let :program:`pyngui` auto detect
 those markers for you by clicking the according icons in the toolbar.
 
