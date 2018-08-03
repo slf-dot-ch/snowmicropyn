@@ -1,17 +1,25 @@
-""" Implementation of poisson shot noise model
+"""Implementation of poisson shot noise model
 
-This module implements the shot noise model according to publication `A Poisson
-shot noise model for micro-penetration of snow
-<https://doi.org/10.1016/j.coldregions.2011.09.001>`_ by Henning Löwe and Alec
-van Herwijnen, publicised in `Cold Regions Science and Technology
+This module implements the shot noise model according to publication
+`A Poisson shot noise model for micro-penetration of snow
+<https://doi.org/10.1016/j.coldregions.2011.09.001>`_ by Henning Löwe
+and Alec van Herwijnen, publicised in `Cold Regions Science and
+Technology
 <https://www.sciencedirect.com/journal/cold-regions-science-and-technology>`_,
-Volume 70, January 2012.
+Volume 70, January 2012, with one addition: As suggested in Proksch,
+Henning Löwe and Martin Schneebeli, publicised in `Journal of
+Geophysical Research: Earth Surface
+<https://agupubs.onlinelibrary.wiley.com/journal/21699011>`_, Volume
+120, Issue 2, February 2015, the force signals are detrended before
+the shot-noise inversion is applied.
+
 """
 
 import math
 
 import pandas as pd
 from pandas import np as np
+from scipy import signal
 
 from .windowing import chunkup, DEFAULT_WINDOW, DEFAULT_WINDOW_OVERLAP
 
@@ -40,8 +48,11 @@ def calc_step(spatial_res, forces, cone_area=SMP_CONE_AREA):
     k1 = np.mean(forces)
     k2 = np.var(forces)
 
+    # signal detrending as suggested by Proksch 2015
+    force_detrended = signal.detrend(forces-k1, type='linear')
+    
     # Covariance/Autocorrelation (Equation 8 in publication)
-    c_f = np.correlate(forces, forces, mode='full')
+    c_f = np.correlate(force_detrended, force_detrended, mode='full')
 
     # Equation 11 in publication
     delta = -(3. / 2) * c_f[n - 1] / (c_f[n] - c_f[n - 1]) * spatial_res
