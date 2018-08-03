@@ -11,7 +11,7 @@ Henning Löwe and Martin Schneebeli, publicised in `Journal of
 Geophysical Research: Earth Surface
 <https://agupubs.onlinelibrary.wiley.com/journal/21699011>`_, Volume
 120, Issue 2, February 2015, the force signals are detrended before
-the shot-noise inversion is applied.
+the force correlation function is computed.
 
 """
 
