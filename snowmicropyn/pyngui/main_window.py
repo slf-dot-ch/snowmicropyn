@@ -412,6 +412,16 @@ class MainWindow(QMainWindow):
 
     def _next_triggered(self):
         log.debug('method next_profile called')
+
+        # Fix for https://github.com/slf-dot-ch/snowmicropyn/issues/7
+        # In case the lineedit widget to edit a markers value in the sidebar
+        # has the focus, we clear that focus first, otherwise the marker would
+        # set on the new profile instead.
+        w = QApplication.focusWidget()
+        if w:
+            w.clearFocus()
+        QApplication.processEvents()
+
         i = self.profile_combobox.currentIndex() + 1
         size = self.profile_combobox.count()
         if i > size - 1:
@@ -422,6 +432,16 @@ class MainWindow(QMainWindow):
 
     def _previous_triggered(self):
         log.debug('method previous_profile called')
+
+        # Fix for https://github.com/slf-dot-ch/snowmicropyn/issues/7
+        # In case the lineedit widget to edit a markers value in the sidebar
+        # has the focus, we clear that focus first, otherwise the marker would
+        # set on the new profile instead.
+        w = QApplication.focusWidget()
+        if w:
+            w.clearFocus()
+        QApplication.processEvents()
+
         i = self.profile_combobox.currentIndex() - 1
         size = self.profile_combobox.count()
         if i < 0:
@@ -491,6 +511,15 @@ class MainWindow(QMainWindow):
             self.plot_toolbar.update()
 
     def switch_document(self):
+        # Fix for https://github.com/slf-dot-ch/snowmicropyn/issues/7
+        # In case the lineedit widget to edit a markers value in the sidebar
+        # has the focus, we clear that focus first, otherwise the marker would
+        # set on the new profile instead.
+        w = QApplication.focusWidget()
+        if w:
+            w.clearFocus()
+        QApplication.processEvents()
+
         doc = self.current_document
         log.debug('Switching to document: {}'.format(doc.profile if doc else None))
 
