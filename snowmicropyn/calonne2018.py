@@ -29,6 +29,7 @@ def calc_step(elementSize, medianForce):
            median Force in N
        returns:
            density in kg/m^3
+           ssa in m^2/kg
        DISCLAIMER: unpublished (but likely better than proksch density)
        """
 
@@ -37,7 +38,13 @@ def calc_step(elementSize, medianForce):
     c = -43.2137
     d = 47.1206
     density = a + b * np.log(medianForce) + c * np.log(medianForce) * elementSize + d * elementSize
-    ssa = 0
+
+
+    c1 = 0.57
+    c2 = -18.56
+    c3 = -3.66
+    ssa = c1 + c2 * np.log(elementSize) + c3 * np.log(medianForce)
+
     return density, ssa
 
 

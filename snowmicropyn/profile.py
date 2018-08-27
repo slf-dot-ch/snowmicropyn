@@ -530,7 +530,7 @@ class Profile(object):
             'L2012_L': 'L2012_L [mm]',
             'P2015_ssa': 'P2015_ssa [m^2/m^3]',
             'P2015_density': 'P2015_density [kg/m^3]',
-            'C2018_ssa': 'C2018_ssa [m^2/m^3]',
+            'C2018_ssa': 'C2018_ssa [m^2/kg]',
             'C2018_density': 'C2018_density [kg/m^3]'
         }
         derivatives = derivatives.rename(columns=with_units)
