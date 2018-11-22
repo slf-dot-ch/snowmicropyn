@@ -45,21 +45,21 @@ def detect_surface(profile):
     """
 
     # Cut off ca. 1 mm
-    distance = profile.samples.distance.values[250:]
-    force = profile.samples.force.values[250:]
-
-    force = downsample(force, 20)
-    distance = downsample(distance, 20)
-
-    force = smooth(force, 242)
-
-    y_grad = np.gradient(force)
-    y_grad = downsample(y_grad, 3)
-    x_grad = downsample(distance, 3)
-
-    max_force = np.amax(force)
-
     try:
+        distance = profile.samples.distance.values[250:]
+        force = profile.samples.force.values[250:]
+
+        force = downsample(force, 20)
+        distance = downsample(distance, 20)
+
+        force = smooth(force, 242)
+
+        y_grad = np.gradient(force)
+        y_grad = downsample(y_grad, 3)
+        x_grad = downsample(distance, 3)
+
+        max_force = np.amax(force)
+
         for i in np.arange(100, x_grad.size):
             std = np.std(y_grad[:i - 1])
             mean = np.mean(y_grad[:i - 1])
@@ -75,4 +75,4 @@ def detect_surface(profile):
 
     except ValueError:
         log.warning('Failed to detect surface')
-        return max_force
+        return 0
