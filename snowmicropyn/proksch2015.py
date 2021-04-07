@@ -10,7 +10,7 @@ Geophysical Research: Earth Surface
 Issue 2, February 2015.
 """
 
-from pandas import np as np
+import numpy as np
 import pandas as pd
 
 import snowmicropyn.loewe2012
