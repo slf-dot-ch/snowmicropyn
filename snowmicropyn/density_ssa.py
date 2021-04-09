@@ -77,6 +77,9 @@ def calc(samples, coeff_model=None, window=snowmicropyn.windowing.DEFAULT_WINDOW
     else:
         coeffs = coeff_model
 
+    # Apply filtering to remove -ve force and linearly interpolate
+    samples.loc[samples['force'] < 0, 'force'] = np.nan
+    samples.force.interpolate(method='linear', inplace=True)
 
     sn = snowmicropyn.loewe2012.calc(samples, window, overlap)
     result = []
