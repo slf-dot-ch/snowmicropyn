@@ -17,6 +17,7 @@ import warnings
 
 import snowmicropyn.loewe2012
 import snowmicropyn.windowing
+import snowmicropyn.profile as profile
 
 DENSITY_ICE = 917.
 
@@ -109,3 +110,43 @@ def calc(samples, coeff_model=None, window=snowmicropyn.windowing.DEFAULT_WINDOW
         density, ssa = calc_step(row.force_median, row.L2012_L, coeff_model)
         result.append((row.distance, density, ssa))
     return pd.DataFrame(result, columns=['distance', 'density', 'ssa'])
+
+
+def median_profile(list_of_filenames):
+    
+    '''
+    Function to calculate the median force of several SMP profiles. 
+    Avoids negative SSA when single profile used (but not completely).
+
+    Crops to length of shortest profile from the surface. Used detected surface and ground
+
+    :param list_of_filenames: List of SMP filenames used to generate median profile
+        
+    '''    
+    
+    
+    # Find shortest profile
+    shortest_length = min([(profile.Profile(p).detect_ground() - profile.Profile(p).detect_surface()) for p in list_of_filenames])
+    # Get depth resolution from first file
+    depth_step = profile.Profile(list_of_filenames[0]).samples.distance.diff().iloc[-1]
+    # NB detect_ground is at measured height, detect_surface is between measured heights
+    # Round up: number of boundaries is number of layers plus one
+    # This still ignores first half layer i.e. surface is put at first measurement within snow
+    nlayers = int(np.ceil(shortest_length / depth_step))
+    # Create pandas dataframe with depths - will add force for each profile later
+    df = pd.DataFrame(range(nlayers) * depth_step, columns=['distance'])
+    
+    # Add cropped force profiles to dataframe
+    for p in list_of_filenames:
+        # Crop to surface
+        force = profile.Profile(p).samples[profile.Profile(p).samples.distance > profile.Profile(p).detect_surface()]['force'].to_numpy(copy=True)[:nlayers]
+        # Add to dataframe: column name is profile name
+        df[p] = force
+        
+    # Find median of forces
+    median_force = df.drop(columns=['distance']).median(axis=1).to_numpy(copy=True)
+    
+    # Add to df - keep all in local df for error checking
+    df['force'] = median_force
+    
+    return df[['distance', 'force']]
