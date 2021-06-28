@@ -75,17 +75,12 @@ def calc(samples, coeff_model=None, window=snowmicropyn.windowing.DEFAULT_WINDOW
     """Calculate ssa and density from a pandas dataframe containing the samples
     of a SnowMicroPen recording.
 
-    :param samples: A pandas dataframe containing the columns 'distance' and 'force'.
+    :param samples: A pandas dataframe containing the columns 'distance' and 'force' or list of profiles containing these (will find median)
     :param coeffs [Optional]: dict of coefficients for calculating density and ssa. Defaults to Proksch et al. (2015)
     :param window: Size of window in millimeters.
     :param overlap: Overlap factor in percent.
     :return: A pandas dataframe with the columns 'distance', 'density' and 'ssa'.
     """
-
-
-    # Apply filtering to remove -ve force and linearly interpolate
-    samples.loc[samples['force'] < 0, 'force'] = np.nan
-    samples.force.interpolate(method='linear', inplace=True)
 
     if coeff_model == 'C2020':
         # Calonne et al. 2020 https://doi.org/10.5194/tc-14-1829-2020
@@ -103,7 +98,13 @@ def calc(samples, coeff_model=None, window=snowmicropyn.windowing.DEFAULT_WINDOW
         # Use defaults for Proksch 2015
         pass
 
-    sn = snowmicropyn.loewe2012.calc(samples, window, overlap)
+    if isinstance(samples, list):
+        sn = median_profile(samples, window, overlap)
+    else:
+        # Apply filtering to remove -ve force and linearly interpolate
+        samples.loc[samples['force'] < 0, 'force'] = np.nan
+        samples.force.interpolate(method='linear', inplace=True)
+        sn = snowmicropyn.loewe2012.calc(samples, window, overlap)
 
     result = []
     for index, row in sn.iterrows():
@@ -112,41 +113,52 @@ def calc(samples, coeff_model=None, window=snowmicropyn.windowing.DEFAULT_WINDOW
     return pd.DataFrame(result, columns=['distance', 'density', 'ssa'])
 
 
-def median_profile(list_of_filenames):
+def median_profile(list_of_filenames, window, overlap):
     
     '''
     Function to calculate the median force of several SMP profiles. 
     Avoids negative SSA when single profile used (but not completely).
 
-    Crops to length of shortest profile from the surface. Used detected surface and ground
+    NB no filtering applied here - finding median should eliminate -ve forces
+
+    Crops to length of shortest profile from the surface. Used detected surface and ground.
+    Then calculates median force and structural element length for each profile from loewe2012 method
+    Then finds medians of the median force and structural element length for all profiles
 
     :param list_of_filenames: List of SMP filenames used to generate median profile
         
     '''    
     
-    
     # Find shortest profile
     shortest_length = min([(profile.Profile(p).detect_ground() - profile.Profile(p).detect_surface()) for p in list_of_filenames])
-    # Get depth resolution from first file
+    # Get depth resolution of samples
     depth_step = profile.Profile(list_of_filenames[0]).samples.distance.diff().iloc[-1]
+    # Get final resolution from windowing method
+    final_resolution = window - (window * overlap) / 100
     # NB detect_ground is at measured height, detect_surface is between measured heights
-    # Round up: number of boundaries is number of layers plus one
     # This still ignores first half layer i.e. surface is put at first measurement within snow
-    nlayers = int(np.ceil(shortest_length / depth_step))
+    nlayers = int(shortest_length / depth_step)
+    final_nlayers = int(shortest_length / final_resolution)
     # Create pandas dataframe with depths - will add force for each profile later
-    df = pd.DataFrame(range(nlayers) * depth_step, columns=['distance'])
+    df = pd.DataFrame(np.arange(final_nlayers) * final_resolution, columns=['distance'])
     
-    # Add cropped force profiles to dataframe
+    # Add cropped profile calculated median force and structural element length to dataframe
     for p in list_of_filenames:
-        # Crop to surface
-        force = profile.Profile(p).samples[profile.Profile(p).samples.distance > profile.Profile(p).detect_surface()]['force'].to_numpy(copy=True)[:nlayers]
-        # Add to dataframe: column name is profile name
-        df[p] = force
+        # Crop to surface NB original distance retained i.e. doesn't start at zero but think this is ok
+        cropped_samples = profile.Profile(p).samples[profile.Profile(p).samples.distance > profile.Profile(p).detect_surface()][:nlayers]
+        # force = profile.Profile(p).samples[profile.Profile(p).samples.distance > profile.Profile(p).detect_surface()]['force'].to_numpy(copy=True)[:nlayers]
+        # Try to run loewe2012 calc
+        profile_fandL = snowmicropyn.loewe2012.calc(cropped_samples, window, overlap)
+        # Add to dataframe: column name is profile name followed by parameter of interest
+        df[p+'_F'] = profile_fandL.force_median.values
+        df[p+'_L'] = profile_fandL.L2012_L.values
+
         
     # Find median of forces
-    median_force = df.drop(columns=['distance']).median(axis=1).to_numpy(copy=True)
-    
+    df['force_median'] = df.loc[:,df.columns.str.endswith('pnt_F')].median(axis=1).to_numpy(copy=True)
+    # Median of structural element length
+    df['L2012_L'] = df.loc[:,df.columns.str.endswith('pnt_L')].median(axis=1).to_numpy(copy=True)
     # Add to df - keep all in local df for error checking
-    df['force'] = median_force
+    #df['force'] = median_force
     
-    return df[['distance', 'force']]
+    return df #df[['distance', 'force']]
