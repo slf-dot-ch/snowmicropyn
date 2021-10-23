@@ -4,6 +4,7 @@ import logging
 import pathlib
 from datetime import datetime
 import numpy as np
+from math import cos, pi
 
 import pandas as pd
 import pytz
@@ -446,6 +447,50 @@ class Profile(object):
             data.to_csv(f, header=True, index=False, float_format=fmt)
         return file
 
+    def export_samples_niviz(self, export_settings, file=None, precision=4):
+        """ Export the samples of this profile into a CSV file readable by niViz.
+
+        When parameter ``file`` is not provided, the default name is used which
+        is same as the pnt file from which the profile was loaded with a suffix
+        `_samples` and the `csv` extension.
+
+        :param file: A `path-like object`_.
+        :param precision: Precision (number of digits after comma) of the
+               values. Default value is 4.
+
+        .. _path-like object: https://docs.python.org/3/glossary.html#term-path-like-object
+        """
+
+        mm2cm = lambda mm : mm / 10
+        def projectVertical(angle):
+            return lambda xx : xx / cos(angle * pi / 180)
+        def stretchProfile(factor):
+            return lambda xx : xx * factor
+
+        if file:
+            file = pathlib.Path(file)
+        else:
+            file = self._pnt_file.with_name(self._pnt_file.stem + '_samples_niviz').with_suffix('.csv')
+
+        log.info('Exporting samples of {} to {}'.format(self, file))
+        samples = self.samples_within_snowpack()
+        fmt = '%.{}f'.format(precision)
+        with file.open('w') as f:
+            # Write version and git hash as comment for tracking
+            crumbs = '; Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
+            f.write(crumbs)
+            # For niViz, the column information must be in a comment instead of a separate header line
+            header = '; distance [cm], force [N]\n'
+            f.write(header)
+            samples = samples[::export_settings.export_data_thinning]
+            samples['distance'] = samples['distance'].apply(mm2cm)
+            samples['distance'] = samples['distance'].apply(projectVertical(export_settings.export_slope_angle))
+            samples['distance'] = samples['distance'].apply(stretchProfile(export_settings.export_stretch_factor))
+
+            samples.to_csv(f, header=False, index=False, float_format=fmt)
+
+        return file
+
     def export_meta(self, file=None, include_pnt_header=False):
         """ Export meta information of this profile into a CSV file.
 
@@ -464,6 +509,7 @@ class Profile(object):
         log.info('Exporting meta information of {} to {}'.format(self, file))
         with file.open('w') as f:
             writer = csv.writer(f)
+#            writer = csv.writer(f, lineterminator='\n')
             # Write version and git hash as comment for tracking
             crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
             f.write(crumbs)

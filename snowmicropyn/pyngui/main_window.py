@@ -15,6 +15,7 @@ from snowmicropyn.pyngui.document import Document
 from snowmicropyn.pyngui.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.pyngui.plot_canvas import PlotCanvas
 from snowmicropyn.pyngui.preferences import Preferences, PreferencesDialog
+from snowmicropyn.pyngui.export_window import ExportDialog
 from snowmicropyn.pyngui.sidebar import SidebarWidget
 from snowmicropyn.pyngui.superpos_canvas import SuperposCanvas
 
@@ -41,6 +42,7 @@ class MainWindow(QMainWindow):
         self.notify_dialog = NotificationDialog()
         self.marker_dialog = MarkerDialog(self)
         self.prefs_dialog = PreferencesDialog()
+        self.export_dialog = ExportDialog()
 
         self.documents = []
         self.preferences = Preferences.load()
@@ -84,6 +86,7 @@ class MainWindow(QMainWindow):
         self.saveall_action = QAction('Save &All', self)
         self.drop_action = QAction('&Drop', self)
         self.export_action = QAction('&Export', self)
+        self.export_niviz_action = QAction('Export for niViz...', self)
         self.next_action = QAction('Next Profile', self)
         self.previous_action = QAction('Previous Profile', self)
         self.plot_smpsignal_action = QAction('Plot SMP Signal', self)
@@ -160,6 +163,12 @@ class MainWindow(QMainWindow):
         action.setShortcut('Ctrl+E')
         action.setStatusTip('Export Profile to CSV')
         action.triggered.connect(self._export_triggered)
+
+        action = self.export_niviz_action
+        action.setIcon(QIcon(':/icons/csv.png'))
+#        action.setShortcut('Ctrl+E')
+        action.setStatusTip('Export Profile to CSV readable by niViz')
+        action.triggered.connect(self._export_niviz_triggered)
 
         action = self.next_action
         action.setIcon(QIcon(':/icons/next.png'))
@@ -276,6 +285,7 @@ class MainWindow(QMainWindow):
         menu.addAction(self.saveall_action)
         menu.addSeparator()
         menu.addAction(self.export_action)
+        menu.addAction(self.export_niviz_action)
         menu.addSeparator()
         menu.addAction(self.drop_action)
         menu.addSeparator()
@@ -395,6 +405,18 @@ class MainWindow(QMainWindow):
         samples_file = p.export_samples()
         derivatives_file = p.export_derivatives(window_size=window, overlap_factor=overlap)
         self.notify_dialog.notifyFilesWritten([meta_file, samples_file, derivatives_file])
+
+    def _export_niviz_triggered(self):
+        export_settings = lambda : 0 # mimic a 'struct' for default values
+        export_settings.export_slope_angle = 0
+        export_settings.export_data_thinning = 150
+        export_settings.export_stretch_factor = 1
+
+        perform_export = self.export_dialog.exportForNiviz(export_settings)
+        if perform_export:
+            p = self.current_document.profile
+            samples_file = p.export_samples_niviz(export_settings)
+            self.notify_dialog.notifyFilesWritten([samples_file])
 
     @property
     def current_document(self):
@@ -532,6 +554,7 @@ class MainWindow(QMainWindow):
         self.save_action.setEnabled(at_least_one)
         self.saveall_action.setEnabled(at_least_one)
         self.export_action.setEnabled(at_least_one)
+        self.export_niviz_action.setEnabled(at_least_one)
         self.detect_surface_action.setEnabled(at_least_one)
         self.detect_ground_action.setEnabled(at_least_one)
         self.add_marker_action.setEnabled(at_least_one)
