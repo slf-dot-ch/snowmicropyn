@@ -3,10 +3,10 @@ import csv
 import logging
 import pathlib
 from datetime import datetime
+import numpy as np
 
 import pandas as pd
 import pytz
-from pandas import np as np
 
 from . import windowing
 from . import __version__, githash

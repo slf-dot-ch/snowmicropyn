@@ -18,7 +18,7 @@ the force correlation function is computed.
 import math
 
 import pandas as pd
-from pandas import np as np
+import numpy as np
 from scipy import signal
 
 from .windowing import chunkup, DEFAULT_WINDOW, DEFAULT_WINDOW_OVERLAP

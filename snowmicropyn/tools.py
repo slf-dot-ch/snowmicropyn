@@ -1,5 +1,4 @@
-from pandas import np as np
-
+import numpy as np
 
 def merge_profiles(profiles):
     raise NotImplementedError('merge_profiles not implemented yet')

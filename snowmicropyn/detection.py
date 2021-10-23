@@ -1,6 +1,6 @@
 import logging
 
-from pandas import np as np
+import numpy as np
 
 from .tools import downsample, smooth
 
