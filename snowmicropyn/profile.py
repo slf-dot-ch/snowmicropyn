@@ -450,15 +450,27 @@ class Profile(object):
     def export_samples_niviz(self, export_settings, file=None, precision=4):
         """ Export the samples of this profile into a CSV file readable by niViz.
 
+        The following transformations will be applied for `niViz`_:
+            1) Remove air gap
+            2) Convert from mm to cm
+            3) Reproject profile to an angled slope
+            4) Data thinning: keep every n-th element only
+            5) Data stretching: multiply by a factor (to match a measured snow height)
+            6) Remove header lines
+
         When parameter ``file`` is not provided, the default name is used which
         is same as the pnt file from which the profile was loaded with a suffix
-        `_samples` and the `csv` extension.
+        `_samples_niviz` and the `csv` extension.
 
+        :param export_settings: An object with properties "export_data_thinning",
+               (``integer``), "export_slope_angle" (``float``) and "export_stretch_factor"
+               (``float``).
         :param file: A `path-like object`_.
         :param precision: Precision (number of digits after comma) of the
                values. Default value is 4.
 
         .. _path-like object: https://docs.python.org/3/glossary.html#term-path-like-object
+        .. _niViz: https::run.niviz.org
         """
 
         mm2cm = lambda mm : mm / 10

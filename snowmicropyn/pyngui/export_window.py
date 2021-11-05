@@ -2,8 +2,8 @@ import logging
 
 from PyQt5.QtCore import QSettings, Qt
 from PyQt5.QtGui import QDoubleValidator, QIntValidator
-from PyQt5.QtWidgets import QWidget, QLineEdit, QFormLayout, QHBoxLayout, QLabel, \
-    QDialogButtonBox, QDialog
+from PyQt5.QtWidgets import QWidget, QLineEdit, QFormLayout, QHBoxLayout, QVBoxLayout, \
+    QLabel, QDialogButtonBox, QDialog, QVBoxLayout
 
 log = logging.getLogger(__name__)
 
@@ -61,17 +61,11 @@ class ExportDialog(QDialog):
         self.init_ui()
 
     def init_ui(self):
+
+        main_layout = QVBoxLayout()
+
         layout = QFormLayout()
         layout.setHorizontalSpacing(20)
-
-        layout.addRow('The following transformations will be applied for niViz: \n \
-                \t- Remove air gap \n \
-                \t- Convert from mm to cm \n \
-                \t- Reproject profile to an angled slope \n \
-                \t- Data thinning: keep every n-th element only \n \
-                \t- Data stretching: multiply by a factor \n \
-                \t  (to match a measured snow height), \n \
-                \t- Remove header lines', QLabel('<a href="https://run.niviz.org">Open niViz</a>'))
 
         content_layout = QHBoxLayout()
         content_layout.addWidget(self.slope_angle_lineedit)
@@ -88,15 +82,22 @@ class ExportDialog(QDialog):
         
         layout.addWidget(self.button_box)
 
-        self.setLayout(layout)
+        main_layout.addWidget(QLabel('Export profile as CSV directly readable by \
+            <b><a href="https://run.niviz.org">niViz</a></b>:'))
+
+        main_layout.addLayout(layout)
+        self.setLayout(main_layout)
 
     def exportForNiviz(self, export_settings):
         self._set_values(export_settings)
         result = self.exec()
         if result == QDialog.Accepted:
-            export_settings.export_slope_angle = 0 if not self.slope_angle_lineedit.text() else float(self.slope_angle_lineedit.text())
-            export_settings.export_data_thinning = 1 if not self.data_thinning_lineedit.text() else int(self.data_thinning_lineedit.text())
-            export_settings.export_stretch_factor = 1 if not self.stretch_factor_lineedit.text() else float(self.stretch_factor_lineedit.text())
+            export_settings.export_slope_angle = 0 if not self.slope_angle_lineedit.text() \
+                    else float(self.slope_angle_lineedit.text())
+            export_settings.export_data_thinning = 1 if not self.data_thinning_lineedit.text() \
+                    else int(self.data_thinning_lineedit.text())
+            export_settings.export_stretch_factor = 1 if not self.stretch_factor_lineedit.text() \
+                    else float(self.stretch_factor_lineedit.text())
             return True
         return False
 
