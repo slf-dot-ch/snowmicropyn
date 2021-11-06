@@ -31,6 +31,8 @@ class MainWindow(QMainWindow):
     SETTING_PLOT_DRIFT = 'MainFrame/plot/drift'
     SETTING_PLOT_SSA_PROKSCH2015 = 'MainFrame/plot/ssa_proksch2015'
     SETTING_PLOT_DENSITY_PROKSCH2015 = 'MainFrame/plot/density_proksch2015'
+    SETTING_PLOT_SSA_CALONNE_RICHTER2020 = 'MainFrame/plot/ssa_calonne_richter2020'
+    SETTING_PLOT_DENSITY_CALONNE_RICHTER2020 = 'MainFrame/plot/density_calonne_richter2020'
 
     DEFAULT_GEOMETRY = QRect(100, 100, 800, 600)
 
@@ -95,6 +97,8 @@ class MainWindow(QMainWindow):
         self.plot_drift_action = QAction('Plot Drift', self)
         self.plot_ssa_proksch2015_action = QAction('Proksch 2015', self)
         self.plot_density_proksch2015_action = QAction('Proksch 2015', self)
+        self.plot_ssa_calonne_richter2020_action = QAction('Calonne and Richter 2020', self)
+        self.plot_density_calonne_richter2020_action = QAction('Calonne and Richter 2020', self)
         self.detect_surface_action = QAction('Auto Detect Surface', self)
         self.detect_ground_action = QAction('Auto Detect Ground', self)
         self.add_marker_action = QAction('New Marker', self)
@@ -257,6 +261,24 @@ class MainWindow(QMainWindow):
         enabled = QSettings().value(setting, defaultValue=False, type=bool)
         action.setChecked(enabled)
 
+        action = self.plot_ssa_calonne_richter2020_action
+        action.setShortcut('Alt+A,C')
+        action.setStatusTip('Show SSA according Calonne and Richter 2020')
+        action.setCheckable(True)
+        action.triggered.connect(force_plot)
+        setting = MainWindow.SETTING_PLOT_SSA_CALONNE_RICHTER2020
+        enabled = QSettings().value(setting, defaultValue=False, type=bool)
+        action.setChecked(enabled)
+
+        action = self.plot_density_calonne_richter2020_action
+        action.setShortcut('Alt+D,C')
+        action.setStatusTip('Show Density according Calonne and Richter 2020')
+        action.setCheckable(True)
+        action.triggered.connect(force_plot)
+        setting = MainWindow.SETTING_PLOT_DENSITY_CALONNE_RICHTER2020
+        enabled = QSettings().value(setting, defaultValue=False, type=bool)
+        action.setChecked(enabled)
+
         action = self.kml_action
         action.setIcon(QIcon(':/icons/kml.png'))
         action.setShortcut('Ctrl+K')
@@ -296,9 +318,11 @@ class MainWindow(QMainWindow):
 
         ssa_menu = menu.addMenu('Plot &SSA')
         ssa_menu.addAction(self.plot_ssa_proksch2015_action)
+        ssa_menu.addAction(self.plot_ssa_calonne_richter2020_action)
 
         density_menu = menu.addMenu('Plot &Density')
         density_menu.addAction(self.plot_density_proksch2015_action)
+        density_menu.addAction(self.plot_density_calonne_richter2020_action)
 
         menu.addSeparator()
         menu.addAction(self.plot_surface_and_ground_action)

@@ -30,6 +30,8 @@ class PlotCanvas(FigureCanvas):
         'plot_force': COLOR_BLUE,
         'plot_P2015_ssa': COLOR_GREEN,
         'plot_P2015_density': COLOR_VIOLET,
+        'plot_CR2020_ssa': COLOR_GREEN,
+        'plot_CR2020_density': COLOR_VIOLET,
         'plot_drift': COLOR_CYAN,
         'marker_surface': COLOR_RED,
         'marker_ground': COLOR_RED,
@@ -162,6 +164,12 @@ class PlotCanvas(FigureCanvas):
         values = (doc.derivatives.distance, doc.derivatives.P2015_density)
         self.set_plot('density', 'P2015_density', values)
 
+        values = (doc.derivatives.distance, doc.derivatives.CR2020_ssa)
+        self.set_plot('ssa', 'CR2020_ssa', values)
+
+        values = (doc.derivatives.distance, doc.derivatives.CR2020_density)
+        self.set_plot('density', 'CR2020_density', values)
+
         values = doc._fit_x, doc._fit_y
         self.set_plot('force', 'drift', values)
 
@@ -210,18 +218,22 @@ class PlotCanvas(FigureCanvas):
             'plot_drift': self.main_window.plot_drift_action.isChecked(),
             'plot_P2015_ssa': self.main_window.plot_ssa_proksch2015_action.isChecked(),
             'plot_P2015_density': self.main_window.plot_density_proksch2015_action.isChecked(),
+            'plot_CR2020_ssa': self.main_window.plot_ssa_calonne_richter2020_action.isChecked(),
+            'plot_CR2020_density': self.main_window.plot_density_calonne_richter2020_action.isChecked(),
             'marker_surface': self.main_window.plot_surface_and_ground_action.isChecked(),
             'marker_ground': self.main_window.plot_surface_and_ground_action.isChecked(),
             'marker_drift_begin': self.main_window.plot_drift_action.isChecked(),
             'marker_drift_end': self.main_window.plot_drift_action.isChecked(),
             'marker_others': self.main_window.plot_markers_action.isChecked(),
         }
+        visibility['plot_ssa'] = visibility['plot_P2015_ssa'] or visibility['plot_CR2020_ssa']
+        visibility['plot_density'] = visibility['plot_P2015_density'] or visibility['plot_CR2020_density']
 
         self._axes['force'].yaxis.set_visible(visibility['plot_force'])
-        self._axes['ssa'].yaxis.set_visible(visibility['plot_P2015_ssa'])
-        self._axes['density'].yaxis.set_visible(visibility['plot_P2015_density'])
+        self._axes['ssa'].yaxis.set_visible(visibility['plot_ssa'])
+        self._axes['density'].yaxis.set_visible(visibility['plot_density'])
 
-        outward = 60 if visibility['plot_P2015_ssa'] and visibility['plot_P2015_density'] else 0
+        outward = 60 if visibility['plot_ssa'] and visibility['plot_density'] else 0
         self._axes['density'].spines['right'].set_position(('outward', outward))
 
         for k, lines in self._plots.items():
