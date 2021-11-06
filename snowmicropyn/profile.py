@@ -14,6 +14,7 @@ from . import __version__, githash
 from . import detection
 from . import loewe2012
 from . import proksch2015
+from . import calonne_richter2020
 from .pnt import Pnt
 
 log = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ class Profile(object):
     ini file named as the pnt file. In case one is found, it's read
     automatically and your prior set markers are available again.
 
-    To improve readability of your code, your encouraged to load a profile using
+    To improve readability of your code, you're encouraged to load a profile using
     its static method :meth:`load`. Here's an example::
 
         import snowmicropyn
@@ -385,7 +386,7 @@ class Profile(object):
     def load(pnt_file, name=None):
         """ Loads a profile from a pnt file.
 
-        This static method loads a pnt file and also its ini file in case its
+        This static method loads a pnt file and also its ini file in case it's
         available. You can pass a name for the profile if you like. When omitted
         (passing ``None``), the content of the pnt header field
         (:const:`Pnt.Header.FILENAME`) is used.
@@ -398,7 +399,7 @@ class Profile(object):
         return Profile(pnt_file, name)
 
     def save(self):
-        """ Save markers of this profile to a ini file.
+        """ Save markers of this profile to an ini file.
 
         .. warning::
            An already existing ini file is overwritten with no warning.
@@ -569,8 +570,11 @@ class Profile(object):
 
         log.info('Calculating derivatives by Proksch 2015')
         proksch_data = proksch2015.calc_from_loewe2012(loewe2012_df)
+        log.info('Calculating derivatives by Calonne and Richter 2020')
+        calonne_richter_data = calonne_richter2020.calc_from_loewe2012(loewe2012_df)
 
         derivatives = loewe2012_df.merge(proksch_data)
+        derivatives = derivatives.merge(calonne_richter_data)
 
         # Add units in label for export
         with_units = {
@@ -581,7 +585,9 @@ class Profile(object):
             'L2012_delta': 'L2012_delta [mm]',
             'L2012_L': 'L2012_L [mm]',
             'P2015_ssa': 'P2015_ssa [m^2/m^3]',
-            'P2015_density': 'P2015_density [kg/m^3]'
+            'P2015_density': 'P2015_density [kg/m^3]',
+            'CR2020_ssa': 'CR2020_ssa [m^2/m^3]',
+            'CR2020_density': 'CR2020_density [kg/m^3]'
         }
         derivatives = derivatives.rename(columns=with_units)
 

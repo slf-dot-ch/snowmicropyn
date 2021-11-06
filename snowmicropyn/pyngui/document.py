@@ -1,4 +1,4 @@
-from snowmicropyn import proksch2015
+from snowmicropyn import proksch2015, calonne_richter2020
 
 
 class Document:
@@ -29,3 +29,5 @@ class Document:
         samples = samples[samples.distance.between(surface, ground)]
 
         self._derivatives = proksch2015.calc(samples, window_size, overlap_factor)
+        self._derivatives = self._derivatives.merge(
+                calonne_richter2020.calc(samples, window_size, overlap_factor))
