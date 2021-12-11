@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
         self.save_action = QAction('&Save', self)
         self.saveall_action = QAction('Save &All', self)
         self.drop_action = QAction('&Drop', self)
-        self.export_action = QAction('&Export', self)
+        self.exportall_action = QAction('&Export &All', self)
         self.next_action = QAction('Next Profile', self)
         self.previous_action = QAction('Previous Profile', self)
         self.plot_smpsignal_action = QAction('Plot SMP Signal', self)
@@ -155,11 +155,11 @@ class MainWindow(QMainWindow):
         action.setStatusTip('Drop Profile')
         action.triggered.connect(self._drop_triggered)
 
-        action = self.export_action
+        action = self.exportall_action
         action.setIcon(QIcon(':/icons/csv.png'))
         action.setShortcut('Ctrl+E')
-        action.setStatusTip('Export Profile to CSV')
-        action.triggered.connect(self._export_triggered)
+        action.setStatusTip('Export All Profiles to CSV')
+        action.triggered.connect(self._exportall_triggered)
 
         action = self.next_action
         action.setIcon(QIcon(':/icons/next.png'))
@@ -275,7 +275,7 @@ class MainWindow(QMainWindow):
         menu.addAction(self.save_action)
         menu.addAction(self.saveall_action)
         menu.addSeparator()
-        menu.addAction(self.export_action)
+        menu.addAction(self.exportall_action)
         menu.addSeparator()
         menu.addAction(self.drop_action)
         menu.addSeparator()
@@ -314,7 +314,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.open_action)
         toolbar.addAction(self.drop_action)
         toolbar.addAction(self.save_action)
-        toolbar.addAction(self.export_action)
+        toolbar.addAction(self.exportall_action)
         toolbar.addSeparator()
         toolbar.addAction(self.detect_surface_action)
         toolbar.addAction(self.detect_ground_action)
@@ -385,16 +385,21 @@ class MainWindow(QMainWindow):
         f = [doc.profile.ini_file for doc in self.documents]
         self.notify_dialog.notifyFilesWritten(f)
 
-    def _export_triggered(self):
-        p = self.current_document.profile
+    def _exportall_triggered(self):
+        files=[]
+        for doc in self.documents:
+            p = doc.profile
 
-        window = self.preferences.window_size
-        overlap = self.preferences.overlap
+            window = self.preferences.window_size
+            overlap = self.preferences.overlap
 
-        meta_file = p.export_meta(include_pnt_header=True)
-        samples_file = p.export_samples()
-        derivatives_file = p.export_derivatives(window_size=window, overlap_factor=overlap)
-        self.notify_dialog.notifyFilesWritten([meta_file, samples_file, derivatives_file])
+            meta_file = p.export_meta(include_pnt_header=True)
+            samples_file = p.export_samples()
+            derivatives_file = p.export_derivatives(window_size=window, overlap_factor=overlap)
+            files.append(derivatives_file)
+            files.append(meta_file)
+            files.append(samples_file)
+        self.notify_dialog.notifyFilesWritten(files)
 
     @property
     def current_document(self):
@@ -531,7 +536,7 @@ class MainWindow(QMainWindow):
         self.drop_action.setEnabled(at_least_one)
         self.save_action.setEnabled(at_least_one)
         self.saveall_action.setEnabled(at_least_one)
-        self.export_action.setEnabled(at_least_one)
+        self.exportall_action.setEnabled(at_least_one)
         self.detect_surface_action.setEnabled(at_least_one)
         self.detect_ground_action.setEnabled(at_least_one)
         self.add_marker_action.setEnabled(at_least_one)

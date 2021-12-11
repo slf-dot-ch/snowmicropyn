@@ -13,6 +13,7 @@ from . import __version__, githash
 from . import detection
 from . import loewe2012
 from . import proksch2015
+from . import calonne2018
 from .pnt import Pnt
 
 log = logging.getLogger(__name__)
@@ -514,6 +515,11 @@ class Profile(object):
 
         derivatives = loewe2012_df.merge(proksch_data)
 
+        log.info('Calculating derivatives by Calonne 2018')
+        calonne_data = calonne2018.calc_from_loewe2012(loewe2012_df)
+
+        derivatives = derivatives.merge(calonne_data)
+
         # Add units in label for export
         with_units = {
             'distance': 'distance [mm]',
@@ -523,7 +529,9 @@ class Profile(object):
             'L2012_delta': 'L2012_delta [mm]',
             'L2012_L': 'L2012_L [mm]',
             'P2015_ssa': 'P2015_ssa [m^2/m^3]',
-            'P2015_density': 'P2015_density [kg/m^3]'
+            'P2015_density': 'P2015_density [kg/m^3]',
+            'C2018_ssa': 'C2018_ssa [m^2/kg]',
+            'C2018_density': 'C2018_density [kg/m^3]'
         }
         derivatives = derivatives.rename(columns=with_units)
 
