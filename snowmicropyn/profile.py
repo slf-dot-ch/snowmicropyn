@@ -3,17 +3,18 @@ import csv
 import logging
 import pathlib
 from datetime import datetime
+import numpy as np
+from math import cos, pi
 
 import pandas as pd
 import pytz
-from pandas import np as np
 
 from . import windowing
 from . import __version__, githash
 from . import detection
 from . import loewe2012
 from . import proksch2015
-from . import calonne2018
+from . import calonne_richter2020
 from .pnt import Pnt
 
 log = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ class Profile(object):
     ini file named as the pnt file. In case one is found, it's read
     automatically and your prior set markers are available again.
 
-    To improve readability of your code, your encouraged to load a profile using
+    To improve readability of your code, you're encouraged to load a profile using
     its static method :meth:`load`. Here's an example::
 
         import snowmicropyn
@@ -385,7 +386,7 @@ class Profile(object):
     def load(pnt_file, name=None):
         """ Loads a profile from a pnt file.
 
-        This static method loads a pnt file and also its ini file in case its
+        This static method loads a pnt file and also its ini file in case it's
         available. You can pass a name for the profile if you like. When omitted
         (passing ``None``), the content of the pnt header field
         (:const:`Pnt.Header.FILENAME`) is used.
@@ -398,7 +399,7 @@ class Profile(object):
         return Profile(pnt_file, name)
 
     def save(self):
-        """ Save markers of this profile to a ini file.
+        """ Save markers of this profile to an ini file.
 
         .. warning::
            An already existing ini file is overwritten with no warning.
@@ -447,6 +448,62 @@ class Profile(object):
             data.to_csv(f, header=True, index=False, float_format=fmt)
         return file
 
+    def export_samples_niviz(self, export_settings, file=None, precision=4):
+        """ Export the samples of this profile into a CSV file readable by niViz.
+
+        The following transformations will be applied for `niViz`_:
+            1) Remove air gap
+            2) Convert from mm to cm
+            3) Reproject profile to an angled slope
+            4) Data thinning: keep every n-th element only
+            5) Data stretching: multiply by a factor (to match a measured snow height)
+            6) Remove header lines
+
+        When parameter ``file`` is not provided, the default name is used which
+        is same as the pnt file from which the profile was loaded with a suffix
+        `_samples_niviz` and the `csv` extension.
+
+        :param export_settings: An object with properties "export_data_thinning",
+               (``integer``), "export_slope_angle" (``float``) and "export_stretch_factor"
+               (``float``).
+        :param file: A `path-like object`_.
+        :param precision: Precision (number of digits after comma) of the
+               values. Default value is 4.
+
+        .. _path-like object: https://docs.python.org/3/glossary.html#term-path-like-object
+        .. _niViz: https::run.niviz.org
+        """
+
+        mm2cm = lambda mm : mm / 10
+        def projectVertical(angle):
+            return lambda xx : xx / cos(angle * pi / 180)
+        def stretchProfile(factor):
+            return lambda xx : xx * factor
+
+        if file:
+            file = pathlib.Path(file)
+        else:
+            file = self._pnt_file.with_name(self._pnt_file.stem + '_samples_niviz').with_suffix('.csv')
+
+        log.info('Exporting samples of {} to {}'.format(self, file))
+        samples = self.samples_within_snowpack()
+        fmt = '%.{}f'.format(precision)
+        with file.open('w') as f:
+            # Write version and git hash as comment for tracking
+            crumbs = '; Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
+            f.write(crumbs)
+            # For niViz, the column information must be in a comment instead of a separate header line
+            header = '; distance [cm], force [N]\n'
+            f.write(header)
+            samples = samples[::export_settings.export_data_thinning]
+            samples['distance'] = samples['distance'].apply(mm2cm)
+            samples['distance'] = samples['distance'].apply(projectVertical(export_settings.export_slope_angle))
+            samples['distance'] = samples['distance'].apply(stretchProfile(export_settings.export_stretch_factor))
+
+            samples.to_csv(f, header=False, index=False, float_format=fmt)
+
+        return file
+
     def export_meta(self, file=None, include_pnt_header=False):
         """ Export meta information of this profile into a CSV file.
 
@@ -465,6 +522,7 @@ class Profile(object):
         log.info('Exporting meta information of {} to {}'.format(self, file))
         with file.open('w') as f:
             writer = csv.writer(f)
+#            writer = csv.writer(f, lineterminator='\n')
             # Write version and git hash as comment for tracking
             crumbs = '# Exported by snowmicropyn {} (git hash {})\n'.format(__version__, githash())
             f.write(crumbs)
@@ -512,13 +570,11 @@ class Profile(object):
 
         log.info('Calculating derivatives by Proksch 2015')
         proksch_data = proksch2015.calc_from_loewe2012(loewe2012_df)
+        log.info('Calculating derivatives by Calonne and Richter 2020')
+        calonne_richter_data = calonne_richter2020.calc_from_loewe2012(loewe2012_df)
 
         derivatives = loewe2012_df.merge(proksch_data)
-
-        log.info('Calculating derivatives by Calonne 2018')
-        calonne_data = calonne2018.calc_from_loewe2012(loewe2012_df)
-
-        derivatives = derivatives.merge(calonne_data)
+        derivatives = derivatives.merge(calonne_richter_data)
 
         # Add units in label for export
         with_units = {
@@ -530,8 +586,8 @@ class Profile(object):
             'L2012_L': 'L2012_L [mm]',
             'P2015_ssa': 'P2015_ssa [m^2/m^3]',
             'P2015_density': 'P2015_density [kg/m^3]',
-            'C2018_ssa': 'C2018_ssa [m^2/kg]',
-            'C2018_density': 'C2018_density [kg/m^3]'
+            'CR2020_ssa': 'CR2020_ssa [m^2/kg]',
+            'CR2020_density': 'CR2020_density [kg/m^3]'
         }
         derivatives = derivatives.rename(columns=with_units)
 

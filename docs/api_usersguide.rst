@@ -92,7 +92,7 @@ Batch exporting
 ^^^^^^^^^^^^^^^
 
 You're just home from backcountry where you recorded a series of profiles with
-your SnowMicroPen and now want to read this data with your tool of choise which
+your SnowMicroPen and now want to read this data with your tool of choice which
 supports reading CSV files? Then this example is for you!
 
 .. literalinclude::  ../examples/batch_export.py

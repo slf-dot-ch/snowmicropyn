@@ -1,4 +1,4 @@
-from pandas import np as np
+import numpy as np
 
 DEFAULT_WINDOW = 2.5
 DEFAULT_WINDOW_OVERLAP = 50

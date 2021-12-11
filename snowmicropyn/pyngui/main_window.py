@@ -15,6 +15,7 @@ from snowmicropyn.pyngui.document import Document
 from snowmicropyn.pyngui.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.pyngui.plot_canvas import PlotCanvas
 from snowmicropyn.pyngui.preferences import Preferences, PreferencesDialog
+from snowmicropyn.pyngui.export_window import ExportDialog
 from snowmicropyn.pyngui.sidebar import SidebarWidget
 from snowmicropyn.pyngui.superpos_canvas import SuperposCanvas
 
@@ -30,6 +31,8 @@ class MainWindow(QMainWindow):
     SETTING_PLOT_DRIFT = 'MainFrame/plot/drift'
     SETTING_PLOT_SSA_PROKSCH2015 = 'MainFrame/plot/ssa_proksch2015'
     SETTING_PLOT_DENSITY_PROKSCH2015 = 'MainFrame/plot/density_proksch2015'
+    SETTING_PLOT_SSA_CALONNE_RICHTER2020 = 'MainFrame/plot/ssa_calonne_richter2020'
+    SETTING_PLOT_DENSITY_CALONNE_RICHTER2020 = 'MainFrame/plot/density_calonne_richter2020'
 
     DEFAULT_GEOMETRY = QRect(100, 100, 800, 600)
 
@@ -41,6 +44,7 @@ class MainWindow(QMainWindow):
         self.notify_dialog = NotificationDialog()
         self.marker_dialog = MarkerDialog(self)
         self.prefs_dialog = PreferencesDialog()
+        self.export_dialog = ExportDialog()
 
         self.documents = []
         self.preferences = Preferences.load()
@@ -84,6 +88,7 @@ class MainWindow(QMainWindow):
         self.saveall_action = QAction('Save &All', self)
         self.drop_action = QAction('&Drop', self)
         self.exportall_action = QAction('&Export &All', self)
+        self.export_niviz_action = QAction('Export for niViz...', self)
         self.next_action = QAction('Next Profile', self)
         self.previous_action = QAction('Previous Profile', self)
         self.plot_smpsignal_action = QAction('Plot SMP Signal', self)
@@ -92,6 +97,8 @@ class MainWindow(QMainWindow):
         self.plot_drift_action = QAction('Plot Drift', self)
         self.plot_ssa_proksch2015_action = QAction('Proksch 2015', self)
         self.plot_density_proksch2015_action = QAction('Proksch 2015', self)
+        self.plot_ssa_calonne_richter2020_action = QAction('Calonne and Richter 2020', self)
+        self.plot_density_calonne_richter2020_action = QAction('Calonne and Richter 2020', self)
         self.detect_surface_action = QAction('Auto Detect Surface', self)
         self.detect_ground_action = QAction('Auto Detect Ground', self)
         self.add_marker_action = QAction('New Marker', self)
@@ -160,6 +167,12 @@ class MainWindow(QMainWindow):
         action.setShortcut('Ctrl+E')
         action.setStatusTip('Export All Profiles to CSV')
         action.triggered.connect(self._exportall_triggered)
+
+        action = self.export_niviz_action
+        action.setIcon(QIcon(':/icons/csv.png'))
+#        action.setShortcut('Ctrl+E')
+        action.setStatusTip('Export Profile to CSV readable by niViz')
+        action.triggered.connect(self._export_niviz_triggered)
 
         action = self.next_action
         action.setIcon(QIcon(':/icons/next.png'))
@@ -248,6 +261,24 @@ class MainWindow(QMainWindow):
         enabled = QSettings().value(setting, defaultValue=False, type=bool)
         action.setChecked(enabled)
 
+        action = self.plot_ssa_calonne_richter2020_action
+        action.setShortcut('Alt+A,C')
+        action.setStatusTip('Show SSA according Calonne and Richter 2020')
+        action.setCheckable(True)
+        action.triggered.connect(force_plot)
+        setting = MainWindow.SETTING_PLOT_SSA_CALONNE_RICHTER2020
+        enabled = QSettings().value(setting, defaultValue=False, type=bool)
+        action.setChecked(enabled)
+
+        action = self.plot_density_calonne_richter2020_action
+        action.setShortcut('Alt+D,C')
+        action.setStatusTip('Show Density according Calonne and Richter 2020')
+        action.setCheckable(True)
+        action.triggered.connect(force_plot)
+        setting = MainWindow.SETTING_PLOT_DENSITY_CALONNE_RICHTER2020
+        enabled = QSettings().value(setting, defaultValue=False, type=bool)
+        action.setChecked(enabled)
+
         action = self.kml_action
         action.setIcon(QIcon(':/icons/kml.png'))
         action.setShortcut('Ctrl+K')
@@ -276,6 +307,7 @@ class MainWindow(QMainWindow):
         menu.addAction(self.saveall_action)
         menu.addSeparator()
         menu.addAction(self.exportall_action)
+        menu.addAction(self.export_niviz_action)
         menu.addSeparator()
         menu.addAction(self.drop_action)
         menu.addSeparator()
@@ -286,9 +318,11 @@ class MainWindow(QMainWindow):
 
         ssa_menu = menu.addMenu('Plot &SSA')
         ssa_menu.addAction(self.plot_ssa_proksch2015_action)
+        ssa_menu.addAction(self.plot_ssa_calonne_richter2020_action)
 
         density_menu = menu.addMenu('Plot &Density')
         density_menu.addAction(self.plot_density_proksch2015_action)
+        density_menu.addAction(self.plot_density_calonne_richter2020_action)
 
         menu.addSeparator()
         menu.addAction(self.plot_surface_and_ground_action)
@@ -339,6 +373,8 @@ class MainWindow(QMainWindow):
         QSettings().setValue(MainWindow.SETTING_PLOT_DRIFT, self.plot_drift_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_SSA_PROKSCH2015, self.plot_ssa_proksch2015_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_PROKSCH2015, self.plot_density_proksch2015_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_PLOT_SSA_CALONNE_RICHTER2020, self.plot_ssa_proksch2015_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_CALONNE_RICHTER2020, self.plot_density_proksch2015_action.isChecked())
         QSettings().sync()
         # This is the main window. In case it's closed, we close all
         # other windows too which results in quitting the application
@@ -400,6 +436,18 @@ class MainWindow(QMainWindow):
             files.append(meta_file)
             files.append(samples_file)
         self.notify_dialog.notifyFilesWritten(files)
+
+    def _export_niviz_triggered(self):
+        export_settings = lambda : 0 # mimic a 'struct' for default values
+        export_settings.export_slope_angle = 0
+        export_settings.export_data_thinning = 150
+        export_settings.export_stretch_factor = 1
+
+        perform_export = self.export_dialog.exportForNiviz(export_settings)
+        if perform_export:
+            p = self.current_document.profile
+            samples_file = p.export_samples_niviz(export_settings)
+            self.notify_dialog.notifyFilesWritten([samples_file])
 
     @property
     def current_document(self):
@@ -537,6 +585,7 @@ class MainWindow(QMainWindow):
         self.save_action.setEnabled(at_least_one)
         self.saveall_action.setEnabled(at_least_one)
         self.exportall_action.setEnabled(at_least_one)
+        self.export_niviz_action.setEnabled(at_least_one)
         self.detect_surface_action.setEnabled(at_least_one)
         self.detect_ground_action.setEnabled(at_least_one)
         self.add_marker_action.setEnabled(at_least_one)
