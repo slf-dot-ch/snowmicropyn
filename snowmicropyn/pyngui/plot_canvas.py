@@ -21,6 +21,8 @@ class PlotCanvas(FigureCanvas):
     COLOR_GREY = 'C7'
     COLOR_YELLOW = 'C8'
     COLOR_CYAN = 'C9'
+    COLOR_DARKGREEN = '#006400'
+    COLOR_DARKVIOLET = '#9400d3'
 
     COLORS = {
         'label_force': COLOR_BLUE,
@@ -30,8 +32,8 @@ class PlotCanvas(FigureCanvas):
         'plot_force': COLOR_BLUE,
         'plot_P2015_ssa': COLOR_GREEN,
         'plot_P2015_density': COLOR_VIOLET,
-        'plot_CR2020_ssa': COLOR_GREEN,
-        'plot_CR2020_density': COLOR_VIOLET,
+        'plot_CR2020_ssa': COLOR_DARKGREEN,
+        'plot_CR2020_density': COLOR_DARKVIOLET,
         'plot_drift': COLOR_CYAN,
         'marker_surface': COLOR_RED,
         'marker_ground': COLOR_RED,

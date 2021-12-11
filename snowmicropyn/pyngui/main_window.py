@@ -373,6 +373,8 @@ class MainWindow(QMainWindow):
         QSettings().setValue(MainWindow.SETTING_PLOT_DRIFT, self.plot_drift_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_SSA_PROKSCH2015, self.plot_ssa_proksch2015_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_PROKSCH2015, self.plot_density_proksch2015_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_PLOT_SSA_CALONNE_RICHTER2020, self.plot_ssa_proksch2015_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_CALONNE_RICHTER2020, self.plot_density_proksch2015_action.isChecked())
         QSettings().sync()
         # This is the main window. In case it's closed, we close all
         # other windows too which results in quitting the application

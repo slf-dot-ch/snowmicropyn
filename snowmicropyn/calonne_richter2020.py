@@ -1,4 +1,13 @@
 """Calculation of density and ssa.
+
+This module implements the methods to derive density and specific surface area
+(SSA) from SnowMicroPen's signal as described in publication
+`The RHOSSA campaign: multi-resolution monitoring of the seasonal evolution of the
+seasonal evolution of the structure and mechanical stability of an alpine snowpack
+<https://doi.org/10.5194/tc-14-1829-2020>`_ by Neige Calonne, Bettina Richter, Henning Löwe,
+Cecilia Cetti, Judith ter Schure, Alec Van Herwijnen, Charles Fierz, Matthias Jaggi, and
+Martin Schneebeli publicised in `The Cryosphere
+<https://tc.copernicus.org/articles/14/1829/2020/tc-14-1829-2020.html>`_, Volume 14, 2020.
 """
 
 import pandas as pd
@@ -9,6 +18,12 @@ import snowmicropyn.windowing
 
 def calc_step(median_force, element_size):
     """Calculation of density and ssa from median of force and element size.
+
+    This is the actual math described in the publication.
+
+    :param median_force: Median of force.
+    :param element_size: Element size.
+    :return: Tuple containing density and ssa value.
     """
     LL = element_size
     F_m = median_force
