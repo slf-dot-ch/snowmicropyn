@@ -447,7 +447,7 @@ class MainWindow(QMainWindow):
         if perform_export:
             p = self.current_document.profile
             samples_file = p.export_samples_niviz(export_settings)
-            self.notify_dialog.notifyFilesWritten([samples_file])
+            self.notify_dialog.notifyFilesWritten([samples_file], False)
 
     @property
     def current_document(self):
@@ -711,6 +711,7 @@ class NotificationDialog(QDialog):
         super(NotificationDialog, self).__init__(*args)
 
         self.hint_label = QLabel()
+        self.hint_label.setWordWrap(True)
         self.content_textedit = QTextEdit()
         self.content_textedit.setReadOnly(True)
 
@@ -727,12 +728,16 @@ class NotificationDialog(QDialog):
         self.setLayout(layout)
         self.resize(500, 200)
 
-    def notifyFilesWritten(self, files):
+    def notifyFilesWritten(self, files, derivatives_written=True):
         if isinstance(files, str):
             files = [files]
-        multipe = len(files) > 1
         self.setWindowTitle('Notification')
-        self.hint_label.setText('File{} written:'.format('s' if multipe else ''))
+        multipe = len(files) > 1
+        hint_text = 'File{} written:'.format('s' if multipe else '')
+        if derivatives_written:
+            hint_text = '<b>NOTE:</b> All derivatives written with constant window size (as per your settings). However, existing parameterizations require a specific window size as stated in the respective publications.' \
+            + '<br><br>' + hint_text
+        self.hint_label.setText(hint_text)
         self.content_textedit.setText('\n'.join([str(f) for f in files]))
         self.exec()
 
