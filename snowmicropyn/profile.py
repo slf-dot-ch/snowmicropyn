@@ -584,7 +584,7 @@ class Profile(object):
             'L2012_f0': 'L2012_f0 [N]',
             'L2012_delta': 'L2012_delta [mm]',
             'L2012_L': 'L2012_L [mm]',
-            'P2015_ssa': 'P2015_ssa [m^2/m^3]',
+            'P2015_ssa': 'P2015_ssa [m^2/kg]',
             'P2015_density': 'P2015_density [kg/m^3]',
             'CR2020_ssa': 'CR2020_ssa [m^2/kg]',
             'CR2020_density': 'CR2020_density [kg/m^3]'

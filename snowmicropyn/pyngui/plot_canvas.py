@@ -136,7 +136,7 @@ class PlotCanvas(FigureCanvas):
 
         name = 'ssa'
         axes = self._axes['force'].twinx()
-        axes.yaxis.label.set_text('SSA [$m^2/m^3$]')
+        axes.yaxis.label.set_text('SSA [$m^2/kg$]')
         axes.yaxis.label.set_color(self.COLORS['label_' + name])
         axes.yaxis.tick_right()
         axes.yaxis.set_label_position('right')

@@ -24,9 +24,9 @@ def calc_step(median_force, element_size):
 
     This is the actual math described in the publication.
 
-    :param median_force: Median of force.
-    :param element_size: Element size.
-    :return: Tuple containing density and ssa value.
+    :param median_force: Median of force in N.
+    :param element_size: Element size in mm.
+    :return: Tuple containing density in kg/m^3 and ssa value in m^2/kg.
     """
     l = element_size
     fm = median_force
@@ -46,6 +46,9 @@ def calc_step(median_force, element_size):
 
     # Equation 12 in publication
     ssa = 4 * (1 - (density / DENSITY_ICE)) / lc
+
+    # Last line yields ssa in 1/mm, conversion to m^2/kg as per convention:
+    ssa = ssa * 1000 / DENSITY_ICE
 
     return density, ssa
 
