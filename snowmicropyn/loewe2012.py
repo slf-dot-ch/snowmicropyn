@@ -16,12 +16,14 @@ the force correlation function is computed.
 """
 
 import math
-
 import pandas as pd
 import numpy as np
 from scipy import signal
+import logging
 
 from .windowing import chunkup, DEFAULT_WINDOW, DEFAULT_WINDOW_OVERLAP
+
+log = logging.getLogger(__name__)
 
 #: Default value for SnowMicroPen's cone diameter im mm.
 SMP_CONE_DIAMETER = 5  # [mm]
@@ -58,7 +60,10 @@ def calc_step(spatial_res, forces, cone_area=SMP_CONE_AREA):
     delta = -(3. / 2) * c_f[n - 1] / (c_f[n] - c_f[n - 1]) * spatial_res
 
     # Equation 12 in publication
-    lambda_ = (4. / 3) * (k1 ** 2) / k2 / delta  # Intensity
+    try: # Try/catch for speed
+        lambda_ = (4. / 3) * (k1 ** 2) / k2 / delta  # Intensity
+    except FloatingPointError:
+        lambda_ = np.inf # A warning will be shown later
     f0 = (3. / 2) * k2 / k1
 
     # According to equation 2 in publication
@@ -84,9 +89,13 @@ def calc(samples, window=DEFAULT_WINDOW, overlap=DEFAULT_WINDOW_OVERLAP):
     # Split dataframe into chunks
     chunks = chunkup(samples, window, overlap)
     result = []
-    for center, chunk in chunks:
-        f_median = np.median(chunk.force)
-        sn = calc_step(spatial_res, chunk.force)
-        result.append((center, f_median) + sn)
-    return pd.DataFrame(result, columns=['distance', 'force_median', 'L2012_lambda', 'L2012_f0',
+    with np.errstate(divide='raise'): # Allow for our own handling with all np configurations
+        for center, chunk in chunks:
+            f_median = np.median(chunk.force)
+            sn = calc_step(spatial_res, chunk.force)
+            result.append((center, f_median) + sn)
+    result = pd.DataFrame(result, columns=['distance', 'force_median', 'L2012_lambda', 'L2012_f0',
                                          'L2012_delta', 'L2012_L'])
+    if np.isinf(result.L2012_lambda).values.any(): # check only once in the end
+        log.warning('Constant signal - could not compute intensity of Poisson process')
+    return result
