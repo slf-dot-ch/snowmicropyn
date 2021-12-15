@@ -1,6 +1,24 @@
 snowmicropyn Changelog
 ======================
 
+Version 1.1.0a1
+
+2021-12-15
+
+- Added Calonne/Richter parameterizations for density and SSA
+- Changed Proksch SSA units to m^2/kg
+- Added export tool for visualization with niViz
+- Export menu now exports all open profiles
+- Bugfix for linefeeds
+- Minor bugfixes
+
+Version 1.0.1
+-------------
+
+2018-08-03
+
+- Added force detrending step for the calculation of the shot noise paramters
+
 Version 1.0.0
 -------------
 

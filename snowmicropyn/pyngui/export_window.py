@@ -79,7 +79,7 @@ class ExportDialog(QDialog):
         content_layout = QHBoxLayout()
         content_layout.addWidget(self.stretch_factor_lineedit)
         layout.addRow('Stretch factor:', content_layout)
-        
+
         layout.addWidget(self.button_box)
 
         main_layout.addWidget(QLabel('Export profile as CSV directly readable by \
