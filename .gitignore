@@ -112,6 +112,10 @@ venv.bak/
 # Release folders
 RELEASE_*
 
+# Test data
+tests/*_ref.csv
+
 # Editor files
 *.swp
+*.swo
 tags
