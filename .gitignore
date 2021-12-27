@@ -115,6 +115,9 @@ RELEASE_*
 # Test data
 tests/*_ref.csv
 
+# Example derivatives
+examples/profiles/*.csv
+
 # Editor files
 *.swp
 *.swo

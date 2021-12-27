@@ -15,10 +15,11 @@ from . import detection
 from . import loewe2012
 from . import proksch2015
 from . import calonne_richter2020
+from .derivatives import parameterizations
+
 from .pnt import Pnt
 
 log = logging.getLogger(__name__)
-
 
 class Profile(object):
     """ Represents a loaded pnt file.
@@ -569,9 +570,10 @@ class Profile(object):
         loewe2012_df = loewe2012.calc(samples, window_size, overlap_factor)
 
         log.info('Calculating derivatives by Proksch 2015')
-        proksch_data = proksch2015.calc_from_loewe2012(loewe2012_df)
+        proksch_data = parameterizations['proksch2015'].calc_from_loewe2012(loewe2012_df)
+
         log.info('Calculating derivatives by Calonne and Richter 2020')
-        calonne_richter_data = calonne_richter2020.calc_from_loewe2012(loewe2012_df)
+        calonne_richter_data = parameterizations['calonne_richter2020'].calc_from_loewe2012(loewe2012_df)
 
         derivatives = loewe2012_df.merge(proksch_data)
         derivatives = derivatives.merge(calonne_richter_data)

@@ -10,64 +10,35 @@ Martin Schneebeli publicised in `The Cryosphere
 <https://tc.copernicus.org/articles/14/1829/2020/tc-14-1829-2020.html>`_, Volume 14, 2020.
 """
 
-import pandas as pd
+from . import derivatives
 import numpy as np
 
-import snowmicropyn.loewe2012
-import snowmicropyn.windowing
+class CalonneRichter2020(derivatives.Derivatives):
+    def __init__(self):
+        self.name = 'Calonne and Richter 2020'
+        self.shortname = 'CR2020'
 
-def calc_step(median_force, element_size):
-    """Calculation of density and ssa from median of force and element size.
+    def density(self, F_m, LL):
+        """Calculation of density from median of force and element size.
 
-    This is the actual math described in the publication.
+        :param median_force: Median of force in N.
+        :param element_size: Element size in mm.
+        :return: density in kg/m^3.
+        """
+        # Equation (1) in publication
+        aa = [295.8, 65.1, -43.2, 47.1]
+        return aa[0] + aa[1] * np.log(F_m) + aa[2] * np.log(F_m) * LL + aa[3] * LL
 
-    :param median_force: Median of force in N.
-    :param element_size: Element size in mm.
-    :return: Tuple containing density in kg/m^3 and SSA in m^2/kg.
-    """
-    LL = element_size
-    F_m = median_force
+    def ssa(self, density, F_m, LL):
+        """Calculation of SSA from density, median of force and element size.
 
-    # Equation (1) in publication
-    a1 = 295.8
-    a2 = 65.1
-    a3 = -43.2
-    a4 = 47.1
-    density = a1 + a2 * np.log(F_m) + a3 * np.log(F_m) * LL + a4 * LL
+        :param density: Density in kg/m^3
+        :param median_force: Median of force in N.
+        :param element_size: Element size in mm.
+        :return: SSA value in m^2/kg.
+        """
+        # Equation (2) in publication
+        bb = [0.57, -18.56, -3.66]
+        return bb[0] + bb[1] * np.log(LL) + bb[2] * np.log(F_m)
 
-    # Equation (2) in publication
-    b1 = 0.57
-    b2 = -18.56
-    b3 = -3.66
-    ssa = b1 + b2 * np.log(LL) + b3 * np.log(F_m)
-
-    return density, ssa
-
-def calc_from_loewe2012(shotnoise_dataframe):
-    """Calculate ssa and density from a pandas dataframe containing shot noise
-    model values.
-
-    :param shotnoise_dataframe: A pandas dataframe containing shot noise model values.
-    :return: A pandas dataframe with the columns 'distance', 'CR2020_density' and 'CR2020_ssa'.
-    """
-    result = []
-    for index, row in shotnoise_dataframe.iterrows():
-        density, ssa = calc_step(row.force_median, row.L2012_L)
-        result.append((row.distance, density, ssa))
-    return pd.DataFrame(result, columns=['distance', 'CR2020_density', 'CR2020_ssa'])
-
-def calc(samples, window=snowmicropyn.windowing.DEFAULT_WINDOW, overlap=snowmicropyn.windowing.DEFAULT_WINDOW_OVERLAP):
-    """Calculate ssa and density from a pandas dataframe containing the samples
-    of a SnowMicroPen recording.
-
-    :param samples: A pandas dataframe containing the columns 'distance' and 'force'.
-    :param window: Size of window in millimeters.
-    :param overlap: Overlap factor in percent.
-    :return: A pandas dataframe with the columns 'distance', 'CR2020_density' and 'CR2020_ssa'.
-    """
-    sn = snowmicropyn.loewe2012.calc(samples, window, overlap)
-    result = []
-    for index, row in sn.iterrows():
-        density, ssa = calc_step(row.force_median, row.L2012_L)
-        result.append((row.distance, density, ssa))
-    return pd.DataFrame(result, columns=['distance', 'CR2020_density', 'CR2020_ssa'])
+derivatives.parameterizations.register('calonne_richter2020', CalonneRichter2020())
