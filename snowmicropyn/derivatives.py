@@ -11,13 +11,33 @@ class Parameterizations:
     def register(self, author, param):
         self._parameterizations[author] = param
 
+        rgb = lambda rr, gg, bb: '#%02x%02x%02x' % (rr, gg, bb)
+        offset = 50
+        param.density_color = rgb(100, 0, offset + len(self._parameterizations) * offset);
+        param.ssa_color = rgb(0, offset + len(self._parameterizations) * offset, 0);
+
     def get(self, author):
         param = self._parameterizations.get(author)
         if not param:
             raise ValueError(author)
         return param
 
+    def __iter__(self):
+        return iter(self._parameterizations)
+
+    def keys(self):
+        return self._parameterizations.keys()
+
+    def items(self):
+        return self._parameterizations.items()
+
+    def values(self):
+        return self._parameterizations.values()
+
 class Derivatives:
+    color_density = None # will be auto-chosen in Parameterizations.register()
+    color_ssa = None
+
     def calc_step(self, median_force, element_size):
         density = self.density(median_force, element_size)
         ssa = self.ssa(density, median_force, element_size)

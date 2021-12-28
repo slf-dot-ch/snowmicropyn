@@ -21,8 +21,6 @@ class PlotCanvas(FigureCanvas):
     COLOR_GREY = 'C7'
     COLOR_YELLOW = 'C8'
     COLOR_CYAN = 'C9'
-    COLOR_DARKGREEN = '#006400'
-    COLOR_DARKVIOLET = '#9400d3'
 
     COLORS = {
         'label_force': COLOR_BLUE,
@@ -30,10 +28,6 @@ class PlotCanvas(FigureCanvas):
         'label_density': COLOR_VIOLET,
         'label_drift': COLOR_CYAN,
         'plot_force': COLOR_BLUE,
-        'plot_P2015_ssa': COLOR_GREEN,
-        'plot_P2015_density': COLOR_VIOLET,
-        'plot_CR2020_ssa': COLOR_DARKGREEN,
-        'plot_CR2020_density': COLOR_DARKVIOLET,
         'plot_drift': COLOR_CYAN,
         'marker_surface': COLOR_RED,
         'marker_ground': COLOR_RED,
@@ -49,6 +43,11 @@ class PlotCanvas(FigureCanvas):
 
     def __init__(self, main_window):
         self.main_window = main_window
+
+        for key, par in self.main_window.params.items():
+            self.COLORS['plot_density_' + key] = par.density_color
+            self.COLORS['plot_ssa_' + key] = par.ssa_color
+
         self.figure = Figure()
         super(PlotCanvas, self).__init__(self.figure)
 
@@ -160,17 +159,11 @@ class PlotCanvas(FigureCanvas):
         values = (doc.profile.samples.distance, doc.profile.samples.force)
         self.set_plot('force', 'force', values)
 
-        values = (doc.derivatives.distance, doc.derivatives.P2015_ssa)
-        self.set_plot('ssa', 'P2015_ssa', values)
-
-        values = (doc.derivatives.distance, doc.derivatives.P2015_density)
-        self.set_plot('density', 'P2015_density', values)
-
-        values = (doc.derivatives.distance, doc.derivatives.CR2020_ssa)
-        self.set_plot('ssa', 'CR2020_ssa', values)
-
-        values = (doc.derivatives.distance, doc.derivatives.CR2020_density)
-        self.set_plot('density', 'CR2020_density', values)
+        for key, param in self.main_window.params.items():
+            values = (doc.derivatives.distance, doc.derivatives[param.shortname + '_ssa'])
+            self.set_plot('ssa', 'ssa_' + key, values)
+            values = (doc.derivatives.distance, doc.derivatives[param.shortname + '_density'])
+            self.set_plot('density', 'density_' + key, values)
 
         values = doc._fit_x, doc._fit_y
         self.set_plot('force', 'drift', values)
@@ -215,22 +208,24 @@ class PlotCanvas(FigureCanvas):
             self._markers[label] = line, text
 
     def draw(self):
+
         visibility = {
             'plot_force': self.main_window.plot_smpsignal_action.isChecked(),
             'plot_drift': self.main_window.plot_drift_action.isChecked(),
-            'plot_P2015_ssa': self.main_window.plot_ssa_proksch2015_action.isChecked(),
-            'plot_P2015_density': self.main_window.plot_density_proksch2015_action.isChecked(),
-            'plot_CR2020_ssa': self.main_window.plot_ssa_calonne_richter2020_action.isChecked(),
-            'plot_CR2020_density': self.main_window.plot_density_calonne_richter2020_action.isChecked(),
             'marker_surface': self.main_window.plot_surface_and_ground_action.isChecked(),
             'marker_ground': self.main_window.plot_surface_and_ground_action.isChecked(),
             'marker_drift_begin': self.main_window.plot_drift_action.isChecked(),
             'marker_drift_end': self.main_window.plot_drift_action.isChecked(),
             'marker_others': self.main_window.plot_markers_action.isChecked(),
+            'plot_density': False,
+            'plot_ssa': False
         }
-        visibility['plot_ssa'] = visibility['plot_P2015_ssa'] or visibility['plot_CR2020_ssa']
-        visibility['plot_density'] = visibility['plot_P2015_density'] or visibility['plot_CR2020_density']
-
+        for key, action in self.main_window.plot_density_actions.items():
+            visibility['plot_density_' + key] = action.isChecked()
+            visibility['plot_density'] = visibility['plot_density'] or action.isChecked()
+        for key, action in self.main_window.plot_ssa_actions.items():
+            visibility['plot_ssa_' + key] = action.isChecked()
+            visibility['plot_ssa'] = visibility['plot_ssa'] or action.isChecked()
         self._axes['force'].yaxis.set_visible(visibility['plot_force'])
         self._axes['ssa'].yaxis.set_visible(visibility['plot_ssa'])
         self._axes['density'].yaxis.set_visible(visibility['plot_density'])

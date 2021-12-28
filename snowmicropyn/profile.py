@@ -566,17 +566,10 @@ class Profile(object):
         if snowpack_only:
             samples = self.samples_within_snowpack()
 
+
         log.info('Calculating derivatives by Löwe 2012')
         loewe2012_df = loewe2012.calc(samples, window_size, overlap_factor)
-
-        log.info('Calculating derivatives by Proksch 2015')
-        proksch_data = parameterizations['proksch2015'].calc_from_loewe2012(loewe2012_df)
-
-        log.info('Calculating derivatives by Calonne and Richter 2020')
-        calonne_richter_data = parameterizations['calonne_richter2020'].calc_from_loewe2012(loewe2012_df)
-
-        derivatives = loewe2012_df.merge(proksch_data)
-        derivatives = derivatives.merge(calonne_richter_data)
+        derivatives = loewe2012_df
 
         # Add units in label for export
         with_units = {
@@ -586,11 +579,12 @@ class Profile(object):
             'L2012_f0': 'L2012_f0 [N]',
             'L2012_delta': 'L2012_delta [mm]',
             'L2012_L': 'L2012_L [mm]',
-            'P2015_ssa': 'P2015_ssa [m^2/kg]',
-            'P2015_density': 'P2015_density [kg/m^3]',
-            'CR2020_ssa': 'CR2020_ssa [m^2/kg]',
-            'CR2020_density': 'CR2020_density [kg/m^3]'
         }
+        for key, par in parameterizations.items():
+            log.info('Calculating derivatives by ' + par.name)
+            derivatives = derivatives.merge(parameterizations[key].calc_from_loewe2012(loewe2012_df))
+            with_units[par.shortname + '_ssa'] = par.shortname + '_ssa [m^2/kg]'
+            with_units[par.shortname + '_density'] = par.shortname + '_density [kg/m^3]'
         derivatives = derivatives.rename(columns=with_units)
 
         fmt = '%.{}f'.format(precision)

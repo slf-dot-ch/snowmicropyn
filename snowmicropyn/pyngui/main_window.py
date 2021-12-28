@@ -29,10 +29,8 @@ class MainWindow(QMainWindow):
     SETTING_PLOT_SURFACE_AND_GROUND = 'MainFrame/plot/surface+ground'
     SETTING_PLOT_MARKERS = 'MainFrame/plot/markers'
     SETTING_PLOT_DRIFT = 'MainFrame/plot/drift'
-    SETTING_PLOT_SSA_PROKSCH2015 = 'MainFrame/plot/ssa_proksch2015'
-    SETTING_PLOT_DENSITY_PROKSCH2015 = 'MainFrame/plot/density_proksch2015'
-    SETTING_PLOT_SSA_CALONNE_RICHTER2020 = 'MainFrame/plot/ssa_calonne_richter2020'
-    SETTING_PLOT_DENSITY_CALONNE_RICHTER2020 = 'MainFrame/plot/density_calonne_richter2020'
+    SETTING_PLOT_DENSITY_ROOT = 'MainFrame/plot/density_'
+    SETTING_PLOT_SSA_ROOT = 'MainFrame/plot/ssa_'
 
     DEFAULT_GEOMETRY = QRect(100, 100, 800, 600)
 
@@ -48,6 +46,7 @@ class MainWindow(QMainWindow):
 
         self.documents = []
         self.preferences = Preferences.load()
+        self.params = snowmicropyn.params
 
         homedir = expanduser('~')
         self._last_directory = QSettings().value(self.SETTING_LAST_DIRECTORY, defaultValue=homedir)
@@ -80,6 +79,12 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.stacked_widget)
 
+        self.plot_density_actions = {}
+        self.plot_ssa_actions = {}
+        for key, par in self.params.items():
+            self.plot_density_actions[key] = QAction(par.name, self)
+            self.plot_ssa_actions[key] = QAction(par.name, self)
+
         self.about_action = QAction('About', self)
         self.quit_action = QAction('Quit', self)
         self.preferences_action = QAction('Preferences', self)
@@ -95,10 +100,6 @@ class MainWindow(QMainWindow):
         self.plot_surface_and_ground_action = QAction('Plot Surface && Ground', self)
         self.plot_markers_action = QAction('Plot other Markers', self)
         self.plot_drift_action = QAction('Plot Drift', self)
-        self.plot_ssa_proksch2015_action = QAction('Proksch 2015', self)
-        self.plot_density_proksch2015_action = QAction('Proksch 2015', self)
-        self.plot_ssa_calonne_richter2020_action = QAction('Calonne and Richter 2020', self)
-        self.plot_density_calonne_richter2020_action = QAction('Calonne and Richter 2020', self)
         self.detect_surface_action = QAction('Auto Detect Surface', self)
         self.detect_ground_action = QAction('Auto Detect Ground', self)
         self.add_marker_action = QAction('New Marker', self)
@@ -243,42 +244,6 @@ class MainWindow(QMainWindow):
         action.setStatusTip('Add New Marker...')
         action.triggered.connect(lambda checked: self.new_marker(default_value=0))
 
-        action = self.plot_ssa_proksch2015_action
-        action.setShortcut('Alt+A,P')
-        action.setStatusTip('Show SSA according Proksch 2015')
-        action.setCheckable(True)
-        action.triggered.connect(force_plot)
-        setting = MainWindow.SETTING_PLOT_SSA_PROKSCH2015
-        enabled = QSettings().value(setting, defaultValue=False, type=bool)
-        action.setChecked(enabled)
-
-        action = self.plot_density_proksch2015_action
-        action.setShortcut('Alt+D,P')
-        action.setStatusTip('Show Density according Proksch 2015')
-        action.setCheckable(True)
-        action.triggered.connect(force_plot)
-        setting = MainWindow.SETTING_PLOT_DENSITY_PROKSCH2015
-        enabled = QSettings().value(setting, defaultValue=False, type=bool)
-        action.setChecked(enabled)
-
-        action = self.plot_ssa_calonne_richter2020_action
-        action.setShortcut('Alt+A,C')
-        action.setStatusTip('Show SSA according Calonne and Richter 2020')
-        action.setCheckable(True)
-        action.triggered.connect(force_plot)
-        setting = MainWindow.SETTING_PLOT_SSA_CALONNE_RICHTER2020
-        enabled = QSettings().value(setting, defaultValue=False, type=bool)
-        action.setChecked(enabled)
-
-        action = self.plot_density_calonne_richter2020_action
-        action.setShortcut('Alt+D,C')
-        action.setStatusTip('Show Density according Calonne and Richter 2020')
-        action.setCheckable(True)
-        action.triggered.connect(force_plot)
-        setting = MainWindow.SETTING_PLOT_DENSITY_CALONNE_RICHTER2020
-        enabled = QSettings().value(setting, defaultValue=False, type=bool)
-        action.setChecked(enabled)
-
         action = self.kml_action
         action.setIcon(QIcon(':/icons/kml.png'))
         action.setShortcut('Ctrl+K')
@@ -316,13 +281,29 @@ class MainWindow(QMainWindow):
         menu = menubar.addMenu('&View')
         menu.addAction(self.plot_smpsignal_action)
 
-        ssa_menu = menu.addMenu('Plot &SSA')
-        ssa_menu.addAction(self.plot_ssa_proksch2015_action)
-        ssa_menu.addAction(self.plot_ssa_calonne_richter2020_action)
-
         density_menu = menu.addMenu('Plot &Density')
-        density_menu.addAction(self.plot_density_proksch2015_action)
-        density_menu.addAction(self.plot_density_calonne_richter2020_action)
+        for key, par in self.params.items():
+            #action.setShortcut('Alt+D,P')
+            action = self.plot_density_actions[key]
+            action.setStatusTip('Show Density according to ' + par.name)
+            action.setCheckable(True)
+            action.triggered.connect(force_plot)
+            setting = MainWindow.SETTING_PLOT_DENSITY_ROOT + key
+            enabled = QSettings().value(setting, defaultValue=False, type=bool)
+            action.setChecked(enabled)
+            density_menu.addAction(action)
+
+        ssa_menu = menu.addMenu('Plot &SSA')
+        for key, par in self.params.items():
+            #action.setShortcut('Alt+A,P')
+            action = self.plot_ssa_actions[key]
+            action.setStatusTip('Show SSA according to ' + par.name)
+            action.setCheckable(True)
+            action.triggered.connect(force_plot)
+            setting = MainWindow.SETTING_PLOT_SSA_ROOT + key
+            enabled = QSettings().value(setting, defaultValue=False, type=bool)
+            action.setChecked(enabled)
+            ssa_menu.addAction(action)
 
         menu.addSeparator()
         menu.addAction(self.plot_surface_and_ground_action)
@@ -371,10 +352,9 @@ class MainWindow(QMainWindow):
         QSettings().setValue(MainWindow.SETTING_PLOT_SURFACE_AND_GROUND, self.plot_surface_and_ground_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_MARKERS, self.plot_markers_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_DRIFT, self.plot_drift_action.isChecked())
-        QSettings().setValue(MainWindow.SETTING_PLOT_SSA_PROKSCH2015, self.plot_ssa_proksch2015_action.isChecked())
-        QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_PROKSCH2015, self.plot_density_proksch2015_action.isChecked())
-        QSettings().setValue(MainWindow.SETTING_PLOT_SSA_CALONNE_RICHTER2020, self.plot_ssa_proksch2015_action.isChecked())
-        QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_CALONNE_RICHTER2020, self.plot_density_proksch2015_action.isChecked())
+        for key in self.params:
+            QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_ROOT + key, self.plot_density_actions[key].isChecked())
+            QSettings().setValue(MainWindow.SETTING_PLOT_SSA_ROOT + key, self.plot_ssa_actions[key].isChecked())
         QSettings().sync()
         # This is the main window. In case it's closed, we close all
         # other windows too which results in quitting the application
@@ -624,8 +604,11 @@ class MainWindow(QMainWindow):
 
         if label in ('surface', 'ground'):
             doc.recalc_derivatives(self.preferences.window_size, self.preferences.overlap)
-            self.plot_canvas.set_plot('ssa', 'P2015_ssa', (doc.derivatives.distance, doc.derivatives.P2015_ssa))
-            self.plot_canvas.set_plot('density', 'P2015_density', (doc.derivatives.distance, doc.derivatives.P2015_density))
+            for key, par in snowmicropyn.params.items():
+                self.plot_canvas.set_plot('ssa', 'ssa_' + key,
+                    (doc.derivatives.distance, doc.derivatives[par.shortname + '_ssa']))
+                self.plot_canvas.set_plot('density', 'density_' + key,
+                    (doc.derivatives.distance, doc.derivatives[par.shortname + '_density']))
 
         self.plot_canvas.draw()
 

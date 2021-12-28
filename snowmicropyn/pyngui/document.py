@@ -1,4 +1,4 @@
-from snowmicropyn import proksch2015, calonne_richter2020
+from snowmicropyn.derivatives import parameterizations as params
 
 
 class Document:
@@ -28,6 +28,11 @@ class Document:
 
         samples = samples[samples.distance.between(surface, ground)]
 
-        self._derivatives = proksch2015.calc(samples, window_size, overlap_factor)
-        self._derivatives = self._derivatives.merge(
-                calonne_richter2020.calc(samples, window_size, overlap_factor))
+        #TODO: how to merge this with correct resolutions?
+        self._derivatives = None
+        for key, par in params.items():
+            if self._derivatives is None:
+                self._derivatives = par.calc(samples, window_size, overlap_factor)
+            else:
+                self._derivatives = self._derivatives.merge(
+                    par.calc(samples, window_size, overlap_factor))
