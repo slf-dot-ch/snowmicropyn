@@ -27,6 +27,7 @@ Table of Content
    api_usersguide.rst
    api_reference.rst
    pyngui.rst
+   parameterization.rst
    develop.rst
 
 Contributors
@@ -36,6 +37,7 @@ Contributors
 - Henning Löwe, SLF
 - Thiemo Theile, SLF
 - Marcel Schoch, SLF
+- Michael Reisecker
 
 License
 -------

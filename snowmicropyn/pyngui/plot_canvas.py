@@ -45,8 +45,8 @@ class PlotCanvas(FigureCanvas):
         self.main_window = main_window
 
         for key, par in self.main_window.params.items():
-            self.COLORS['plot_density_' + key] = par.density_color
-            self.COLORS['plot_ssa_' + key] = par.ssa_color
+            self.COLORS['plot_density_' + key] = par._density_color
+            self.COLORS['plot_ssa_' + key] = par._ssa_color
 
         self.figure = Figure()
         super(PlotCanvas, self).__init__(self.figure)

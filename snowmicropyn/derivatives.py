@@ -13,8 +13,8 @@ class Parameterizations:
 
         rgb = lambda rr, gg, bb: '#%02x%02x%02x' % (rr, gg, bb)
         offset = 50
-        param.density_color = rgb(100, 0, offset + len(self._parameterizations) * offset);
-        param.ssa_color = rgb(0, offset + len(self._parameterizations) * offset, 0);
+        param._density_color = rgb(100, 0, offset + len(self._parameterizations) * offset);
+        param._ssa_color = rgb(0, offset + len(self._parameterizations) * offset, 0);
 
     def get(self, author):
         param = self._parameterizations.get(author)

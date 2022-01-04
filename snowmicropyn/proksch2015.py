@@ -1,14 +1,14 @@
-# """Calculation of density and ssa.
-#
-# This module implements the methods to derive density and specific surface area
-# (SSA) from SnowMicroPen's signal as described in publication
-# `Density, specific surface area, and correlation length of snow measured by
-# high‐resolution penetrometry <https://doi.org/10.1002/2014JF003266>`_ by Martin
-# Proksch, Henning Löwe and Martin Schneebeli, publicised in `Journal of
-# Geophysical Research: Earth Surface
-# <https://agupubs.onlinelibrary.wiley.com/journal/21699011>`_, Volume 120,
-# Issue 2, February 2015.
-# """
+"""Calculation of density and ssa.
+
+This module implements the methods to derive density and specific surface area
+(SSA) from SnowMicroPen's signal as described in publication
+`Density, specific surface area, and correlation length of snow measured by
+high‐resolution penetrometry <https://doi.org/10.1002/2014JF003266>`_ by Martin
+Proksch, Henning Löwe and Martin Schneebeli, publicised in `Journal of
+Geophysical Research: Earth Surface
+<https://agupubs.onlinelibrary.wiley.com/journal/21699011>`_, Volume 120,
+Issue 2, February 2015.
+"""
 
 from . import derivatives
 import numpy as np
@@ -21,8 +21,8 @@ class Proksch2015(derivatives.Derivatives):
     def density(self, F_m, LL):
         """Calculation of density from median of force and element size.
 
-        :param median_force: Median of force in N.
-        :param element_size: Element size in mm.
+        :param F_m: Median of force in N.
+        :param LL: Element size in mm.
         :return: density in kg/m^3.
         """
         # Equation 9 in publication
@@ -33,8 +33,8 @@ class Proksch2015(derivatives.Derivatives):
         """Calculation of SSA from density, median of force and element size.
 
         :param density: Density in kg/m^3
-        :param median_force: Median of force in N.
-        :param element_size: Element size in mm.
+        :param F_m: Median of force in N.
+        :param LL: Element size in mm.
         :return: SSA value in m^2/kg.
         """
         DENSITY_ICE = 917.

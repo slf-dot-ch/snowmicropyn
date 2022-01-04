@@ -21,8 +21,8 @@ class CalonneRichter2020(derivatives.Derivatives):
     def density(self, F_m, LL):
         """Calculation of density from median of force and element size.
 
-        :param median_force: Median of force in N.
-        :param element_size: Element size in mm.
+        :param F_m: Median of force in N.
+        :param LL: Element size in mm.
         :return: density in kg/m^3.
         """
         # Equation (1) in publication
