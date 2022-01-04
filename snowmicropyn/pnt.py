@@ -23,7 +23,7 @@ class Pnt:
         print(header[Pnt.Header.TIMESTAMP_YEAR].value)
         print(raw_samples[2000:2005])
 
-    This may prints lines like ``2017`` and ``(40, 41, 42, 43, 42)``.
+    This prints lines like ``2017`` and ``(40, 41, 42, 43, 42)``.
     """
 
     class Header(Enum):
@@ -204,7 +204,7 @@ class Pnt:
 
     @staticmethod
     def load(file):
-        """ Loads the raw data of a pnt file
+        """ Loads the raw data of a pnt file.
 
         This is the low level method used by class :class:`snowmicropyn.Profile`
         to load the content of a pnt file. The method returns a tuple: A header

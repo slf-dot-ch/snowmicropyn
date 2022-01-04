@@ -6,7 +6,7 @@ Information for Developers of *snowmicropyn*
 Necessary Accounts
 ------------------
 
-To **develop** on *snowmicropyn*, you need a Github_ account. In case you're got
+To **develop** on *snowmicropyn*, you need a Github_ account. In case you've got
 write access to the repository, you can push you changes directly. Otherwise
 you have to send a pull request.
 
@@ -39,7 +39,7 @@ Compiling Icons Into a Python File
 The :program:`pyngui` application requires icons used in menus and toolbar
 buttons. They are stored in the folder :file:`resources`. For easy deployment,
 they are compiled into a python source file using the :command:`pyrcc5` tool,
-which comes with the Qt package. Execute the following command when you did do
+which comes with the Qt package. Execute the following command when you made
 changes in the resources folder:
 
 .. code-block:: console
@@ -52,8 +52,8 @@ Don't ever edit this file manually.
 WTF, the icons are gone!
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-In case you're suddenly see no more icons when running :program:`pyngui`, it's
-likely due to your IDE has optimized your imports and dropped the statement
+In case you suddenly see no more icons when running :program:`pyngui`, it's
+likely due to your IDE optimizing your imports and dropping the statement
 
 .. code-block:: python
 
@@ -71,7 +71,7 @@ Releasing a New Version of *snowmicropyn*
 
    git commit -m "Some nice words about your changes"
 
-   Also make sure you updated the documentation if necessary!
+Also make sure you updated the documentation if necessary!
 
 #. Update version string (``__version__``) in file
    :file:`snowmicropyn/__init__.py`
@@ -92,8 +92,7 @@ Releasing a New Version of *snowmicropyn*
 
       git tag -a v<version-number> -m "Version v<version-number>"
 
-   .. note:: It's common to add a 'v' character in front of the version number
-   in a git version tag.
+   .. note:: It's common to add a 'v' character in front of the version number in a git version tag.
 
 #. Push the Tag to GitHub
 
@@ -102,9 +101,9 @@ Releasing a New Version of *snowmicropyn*
       git push origin
 
 #. Use the script :command:`publish_to_pypi.sh` to publish this release on PyPI.
-   You have to provide the git tag which you want to release a a first
+   You have to provide the git tag which you want to release as a first
    parameter. In case you want to release to the hot PyPI (not test PyPI), you
-   have to provide they string LIVE as a second parameter.
+   have to provide the string LIVE as a second parameter.
 
    The script will ask for your username and password on PyPI.
 
@@ -129,7 +128,7 @@ Releasing a New Version of *snowmicropyn*
 
       pip install --index-url https://test.pypi.org/simple/ --upgrade --no-cache-dir snowmicropyn
 
-#. Release new documentation on Read the Docs
+#. Release new documentation on Read the Docs.
 
 .. _Github: https://github.com/
 .. _PyPI: https://pypi.org/

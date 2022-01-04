@@ -6,7 +6,7 @@
 What is :program:`pyngui`?
 --------------------------
 
-:program:`pyngui` is a desktop application to read, visualise and export files
+:program:`pyngui` is a desktop application to read, visualize and export files
 recorded by SnowMicroPen (pnt files).
 
 Launch :program:`pyngui`
@@ -14,7 +14,7 @@ Launch :program:`pyngui`
 
 When the *snowicropyn* package is installed, a simple script to start
 :program:`pyngui` is registered too. Open a Terminal Window and type
-:kbd:`pyngui` and hit :kbd:`return`. A window should open which looks alike
+:kbd:`pyngui` and hit :kbd:`return`. A window should open which looks like
 this screenshot:
 
 .. figure:: images/screenshot_pyngui.png
@@ -31,7 +31,7 @@ or:
 
 .. code-block:: console
 
-   python -m snowmicropyn.pyngui.app
+   python3 -m snowmicropyn.pyngui.app
 
 Features & Tips
 ---------------
@@ -46,7 +46,7 @@ Surface & ground
 ^^^^^^^^^^^^^^^^
 
 :program:`pyngui` uses the marker labels ``surface`` and ``ground`` to mark the
-begin and end of the snowpack. You can let :program:`pyngui` auto detect
+beginning and end of the snowpack. You can let :program:`pyngui` auto-detect
 those markers for you by clicking the according icons in the toolbar.
 
 Drift, Offset & Noise
@@ -55,6 +55,6 @@ Drift, Offset & Noise
 For each profile, the :program:`pyngui` calculates drift, offset and noise and
 displays those values in the sidebar. This data is useful to check for a bad
 signal. The values are calculated for a section within the signal. Where this
-section starts and end is indicated in the sidebar. In case you want to specify
-the section yourself, set markers called ``drift_begin`` and ``drift_end``. To
+section starts and ends is indicated in the sidebar. In case you want to specify
+the section yourself, set markers called ``drift_begin`` and ``drift_end``. The
 simplest way to do so is context clicking into the plot.
