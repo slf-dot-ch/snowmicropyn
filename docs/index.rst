@@ -51,8 +51,8 @@ Also, many thanks to the people behind the products who made developing this
 package possible in reasonable time:
 
 - The beloved language of Python_.
-- The beautiful Qt_ toolkit and the python binding PyQt_.
-- The awesome python packages matplotlib_, numpy_, scipy_, pandas_ and pytz_.
+- The beautiful Qt_ toolkit and the Python binding PyQt_.
+- The awesome Python packages matplotlib_, numpy_, scipy_, pandas_ and pytz_.
 
 
 .. _SLF: https://www.slf.ch/

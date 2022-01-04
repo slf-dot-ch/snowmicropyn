@@ -26,24 +26,24 @@ class Profile(object):
     SnowMicroPen stores a recorded profile in a proprietary and binary format
     with a ``pnt`` file extension. A pnt file consists of a header with meta
     information and the recorded force measurement values. When a pnt file is
-    loaded using this class, it reads this data. Meta information then can be
+    loaded using this class, it reads this data. Meta information can then be
     accessed by many properties like :attr:`timestamp` or :attr:`overload`.
-    The measurement data is called "samples". Its accessed using the property
+    The measurement data is called "samples". It's accessed using the property
     :attr:`samples` or methods prefix with ``samples_``.
 
-    The class supports the settings of "markers". They identified by name and
-    mark a certain distance value on the profile. You can set markers, read
+    The class supports the settings of "markers". They are identified by name
+    and mark a certain distance value on the profile. You can set markers, read
     marker values, and remove markers. The two *well known* markers called
     "surface" and "ground" are used to determine the snowpack. Markers are not
     stored in a pnt file. As a fact, the pnt file is always just read and never
     written by the *snowmicropyn* package. To store marker values, this class
-    writes ini files (``*.ini``) named same as the pnt file (but with its
+    writes ini files (``*.ini``) named the same as the pnt file (but with its
     ini file extension, of course). Use the method :meth:`save` to save your
     markers.
 
-    When a profile is loaded, the class tries to find a
-    ini file named as the pnt file. In case one is found, it's read
-    automatically and your prior set markers are available again.
+    When a profile is loaded, the class tries to find an
+    ini file named like the pnt file. In case one is found, it's read
+    automatically and your priorly set markers are available again.
 
     To improve readability of your code, you're encouraged to load a profile using
     its static method :meth:`load`. Here's an example::
@@ -183,7 +183,7 @@ class Profile(object):
     def ini_file(self):
         """ ``pathlib.Path`` instance of the ini file in which markers are saved.
 
-        This file may does not exist.
+        This file may not exist.
         """
         return self._ini_file
 
@@ -284,12 +284,12 @@ class Profile(object):
     @property
     def coordinates(self):
         """ Returns WGS 84 coordinates (latitude, longitude) of this profile in
-        decimal format as a tuple (``(float, float)``) or ``None`` when
+        decimal format as a tuple ``(float, float)`` or ``None`` when
         coordinates are not available.
 
         The coordinates are constructed by header fields of the pnt file. In
         case these header fields are empty or contain garbage, ``None`` is
-        returned. You always can read the header fields yourself using the
+        returned. You can always read the header fields yourself using the
         :meth:`pnt_header_value` of this class for investigating what's
         present in the pnt header fields.
         """
@@ -339,7 +339,7 @@ class Profile(object):
     def set_marker(self, label, value):
         """ Sets a marker.
 
-        When passing ``None``as value, the marker is removed. Otherwise, the
+        When passing ``None`` as value, the marker is removed. Otherwise, the
         provided value is converted into a ``float``. The method raises
         :exc:`ValueError` in case this fails.
 
@@ -414,9 +414,9 @@ class Profile(object):
     def export_samples(self, file=None, precision=4, snowpack_only=False):
         """ Export the samples of this profile into a CSV file.
 
-        When parameter ``file`` is not provided, the default name is used which
-        is same as the pnt file from which the profile was loaded with a suffix
-        `_samples` and the `csv` extension.
+        When the parameter ``file`` is not provided, the default name is used
+        which is same as the pnt file from which the profile was loaded with a
+        suffix `_samples` and the `csv` extension.
 
         :param file: A `path-like object`_.
         :param precision: Precision (number of digits after comma) of the
@@ -459,9 +459,9 @@ class Profile(object):
             5) Data stretching: multiply by a factor (to match a measured snow height)
             6) Remove header lines
 
-        When parameter ``file`` is not provided, the default name is used which
-        is same as the pnt file from which the profile was loaded with a suffix
-        `_samples_niviz` and the `csv` extension.
+        When the parameter ``file`` is not provided, the default name is used 
+        which is same as the pnt file from which the profile was loaded with a
+        suffix `_samples_niviz` and the `csv` extension.
 
         :param export_settings: An object with properties "export_data_thinning",
                (``integer``), "export_slope_angle" (``float``) and "export_stretch_factor"
@@ -507,13 +507,15 @@ class Profile(object):
     def export_meta(self, file=None, include_pnt_header=False):
         """ Export meta information of this profile into a CSV file.
 
-        When parameter ``file`` is not provided, the default name is used which
-        is same as the pnt file from which the profile was loaded with a suffix
-        `_meta` and the `csv` extension.
+        When the parameter ``file`` is not provided, the default name is used
+        which is same as the pnt file from which the profile was loaded with a
+        suffix `_meta` and the `csv` extension.
 
-        :param file: A `Path-like object<https://docs.python.org/3/glossary.html#term-path-like-object>`_.
+        :param file: A `path-like object`_.
         :param include_pnt_header: When ``True``, raw pnt header fields are
                included too.
+
+        .. _path-like object: https://docs.python.org/3/glossary.html#term-path-like-object
         """
         if file:
             file = pathlib.Path(file)
@@ -599,8 +601,8 @@ class Profile(object):
         """ Get samples within a certain distance, specified by parameters
         ``begin`` and ``end``
 
-        Default value for both is ``None`` and results to returns values from
-        beginning or to the end of the profile.
+        Default value for both is ``None`` which results in values from
+        beginning to the end of the profile.
 
         Use parameter ``relativize`` in case you want to have the returned
         samples with distance values beginning from zero.
@@ -648,7 +650,7 @@ class Profile(object):
 
     def detect_ground(self):
         """ Convenience method to detect the ground. This also sets the marker
-        called "surface". """
+        called "ground". """
         ground = detection.detect_ground(self)
         self.set_marker('ground', ground)
         return ground

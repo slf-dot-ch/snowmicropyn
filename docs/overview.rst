@@ -7,7 +7,7 @@ What's inside?
 The *snowmicropyn* package contains two entities:
 
 - An :doc:`API <api_usersguide>` to automate reading, exporting and post
-  processing pnt files using the python language. You'll need some basic
+  processing pnt files using the Python language. You'll need some basic
   programming skills to use it.
 - :doc:`pyngui`, a desktop application to read, export and post
   process pnt files. :program:`pyngui` uses the API itself too.
@@ -22,15 +22,15 @@ Python:
 
    pip install snowmicropyn
 
-No clue what we're talking about? You find a more detailed description in
+No clue what we're talking about? You can find a more detailed description in
 section :doc:`install`!
 
 *snowmicropyn*'s API
 --------------------
 
-The following snippet is a simple example how to read a pnt file, read some of
-it's meta information and export its samples (measured distance & force) into a
-CSV file.
+The following snippet is a simple example of how to read a pnt file, read some
+of its meta information and export its samples (measured distance & force) into
+a CSV file.
 
 .. code-block:: python
 
@@ -46,8 +46,9 @@ CSV file.
    # (By default, filename will be :file:`S31M0067_samples.csv)
    p.export_samples()
 
-You find detailed information about the API in the :doc:`api_usersguide`. For
-more information about the API's elements, checkout the :doc:`api_reference`.
+You can find detailed information about the API in the :doc:`api_usersguide`.
+For more information about the API's elements, checkout the
+:doc:`api_reference`.
 
 Launch :program:`pyngui`
 ------------------------

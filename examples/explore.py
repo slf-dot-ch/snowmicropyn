@@ -19,6 +19,6 @@ p.set_marker('surface', 100)
 p.set_marker('ground', 400)
 print('Markers: {}'.format(p.markers))
 
-# We don't want to loose our markers. Call save to write it to an ini
+# We don't want to lose our markers. Call save to write it to an ini
 # file named like the pnt file.
 p.save()
