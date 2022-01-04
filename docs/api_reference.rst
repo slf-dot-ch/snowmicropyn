@@ -38,10 +38,10 @@ you process your data any further.
 .. automodule:: snowmicropyn.detection
    :members:
 
-Shot Noise Model (Löwe, 2011)
+Shot Noise Model (Löwe, 2012)
 -----------------------------
 
-.. automodule:: snowmicropyn.loewe2011
+.. automodule:: snowmicropyn.loewe2012
    :members:
 
 SSA & Density (Proksch, 2015)
