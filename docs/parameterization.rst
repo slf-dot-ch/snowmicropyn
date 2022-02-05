@@ -17,8 +17,8 @@ Implementation
 
 #. Copy a fitting template.
    
-   Copy :file:`proksch2015.py` and rename it as a starting point. Give your
-   class a fitting name, here `Custom2022`.
+   Duplicate :file:`parameterizations/proksch2015.py` and rename it as a
+   starting point. Give your class a fitting name, here `Custom2022`.
 
 #. Choose your attributes.
 

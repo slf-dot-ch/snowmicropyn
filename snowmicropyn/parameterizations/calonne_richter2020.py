@@ -10,7 +10,7 @@ Martin Schneebeli publicised in `The Cryosphere
 <https://tc.copernicus.org/articles/14/1829/2020/tc-14-1829-2020.html>`_, Volume 14, 2020.
 """
 
-from . import derivatives
+from .. import derivatives
 import numpy as np
 
 class CalonneRichter2020(derivatives.Derivatives):

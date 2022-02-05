@@ -13,8 +13,8 @@ from . import windowing
 from . import __version__, githash
 from . import detection
 from . import loewe2012
-from . import proksch2015
-from . import calonne_richter2020
+# to keep code for a new parameterization to a single file we import all modules available:
+from .parameterizations import *
 from .derivatives import parameterizations
 
 from .pnt import Pnt

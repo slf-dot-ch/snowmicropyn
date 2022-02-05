@@ -10,7 +10,7 @@ Geophysical Research: Earth Surface
 Issue 2, February 2015.
 """
 
-from . import derivatives
+from .. import derivatives
 import numpy as np
 
 class Proksch2015(derivatives.Derivatives):
