@@ -557,7 +557,7 @@ class MainWindow(QMainWindow):
             # Recalculate derivations
             for doc in self.documents:
                 ws = self.preferences.window_size
-                of = self.preferences.overlap / 100
+                of = self.preferences.overlap
                 doc.recalc_derivatives(ws, of)
             self.plot_canvas.set_limits()
             self.plot_canvas.draw()
