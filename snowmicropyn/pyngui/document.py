@@ -1,11 +1,10 @@
-from snowmicropyn import proksch2015, calonne_richter2020
-
+from snowmicropyn.derivatives import parameterizations as params
 
 class Document:
 
     def __init__(self, profile):
         self._profile = profile
-        self._derivatives = None
+        self._derivatives = {}
         self._drift = None
         self._offset = None
         self._noise = None
@@ -20,7 +19,7 @@ class Document:
     def derivatives(self):
         return self._derivatives
 
-    def recalc_derivatives(self, window_size, overlap_factor):
+    def recalc_derivatives(self):
         samples = self.profile.samples
 
         surface = self.profile.marker('surface', samples.distance.iloc[0])
@@ -28,6 +27,6 @@ class Document:
 
         samples = samples[samples.distance.between(surface, ground)]
 
-        self._derivatives = proksch2015.calc(samples, window_size, overlap_factor)
-        self._derivatives = self._derivatives.merge(
-                calonne_richter2020.calc(samples, window_size, overlap_factor))
+        self._derivatives = {}
+        for key, par in params.items():
+            self._derivatives[key] = par.calc(samples)

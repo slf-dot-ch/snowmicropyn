@@ -2,18 +2,19 @@ import logging
 
 from PyQt5.QtCore import QSettings, Qt
 from PyQt5.QtGui import QDoubleValidator
-from PyQt5.QtWidgets import QWidget, QLineEdit, QRadioButton, QFormLayout, QHBoxLayout, \
+from PyQt5.QtWidgets import QWidget, QCheckBox, QComboBox, QLineEdit, QRadioButton, QFormLayout, QHBoxLayout, \
     QVBoxLayout, QButtonGroup, QLabel, QDialogButtonBox, QGroupBox, QDialog
 
 log = logging.getLogger(__name__)
 
 _GAP = 20
 _LINEEDIT_WIDTH = 50
+_COMBOBOX_WIDTH = 200
 
-PREFS_WINDOWSSIZE = 'Preferences/window_size'
-PREFS_WINDOWSSIZE_DEFAULT = 2.5
-PREFS_OVERLAP = 'Preferences/overlap'
-PREFS_OVERLAP_DEFAULT = 50
+PREFS_EXPORT_PARAMETERIZATION = 'Preferences/parameterizations'
+PREFS_EXPORT_PARAMETERIZATION_DEFAULT = 'proksch2015'
+PREFS_EXPORT_SAMPLES = 'Preferences/export_samples'
+PREFS_OVERLAP_DEFAULT = True
 
 PREFS_DISTANCE_AXIS_FIX = 'Preferences/distance_axis_fix'
 PREFS_DISTANCE_AXIS_FIX_DEFAULT = False
@@ -47,8 +48,8 @@ PREFS_SSA_AXIS_TO_DEFAULT = 42
 class Preferences:
 
     def __init__(self):
-        self.window_size = PREFS_WINDOWSSIZE_DEFAULT
-        self.overlap = PREFS_OVERLAP_DEFAULT
+        self.export_parameterization = PREFS_EXPORT_PARAMETERIZATION
+        self.export_samples = PREFS_EXPORT_SAMPLES
 
         self.distance_axis_fix = PREFS_DISTANCE_AXIS_FIX_DEFAULT
         self.distance_axis_from = PREFS_DISTANCE_AXIS_FROM_DEFAULT
@@ -72,8 +73,8 @@ class Preferences:
         instance = Preferences()
 
         f = QSettings().value
-        instance.window_size = f(PREFS_WINDOWSSIZE, PREFS_WINDOWSSIZE_DEFAULT, float)
-        instance.overlap = f(PREFS_OVERLAP, PREFS_OVERLAP_DEFAULT, float)
+        instance.export_parameterization = f(PREFS_EXPORT_PARAMETERIZATION, PREFS_EXPORT_PARAMETERIZATION_DEFAULT, str)
+        instance.export_samples = f(PREFS_EXPORT_SAMPLES, PREFS_EXPORT_PARAMETERIZATION_DEFAULT, bool)
 
         instance.distance_axis_fix = f(PREFS_DISTANCE_AXIS_FIX, PREFS_DISTANCE_AXIS_FIX_DEFAULT, bool)
         instance.distance_axis_from = f(PREFS_DISTANCE_AXIS_FROM, PREFS_DISTANCE_AXIS_FROM_DEFAULT, float)
@@ -94,8 +95,8 @@ class Preferences:
 
     def save(self):
         log.info('Saving Preferences')
-        QSettings().setValue(PREFS_WINDOWSSIZE, self.window_size)
-        QSettings().setValue(PREFS_OVERLAP, self.overlap)
+        QSettings().setValue(PREFS_EXPORT_PARAMETERIZATION, self.export_parameterization)
+        QSettings().setValue(PREFS_EXPORT_SAMPLES, self.export_samples)
 
         QSettings().setValue(PREFS_DISTANCE_AXIS_FIX, self.distance_axis_fix)
         QSettings().setValue(PREFS_DISTANCE_AXIS_FROM, self.distance_axis_from)
@@ -171,20 +172,16 @@ class AxisSettings(QWidget):
 
 
 class PreferencesDialog(QDialog):
-    def __init__(self):
+    def __init__(self, parameterizations):
         super().__init__()
 
         self.setWindowTitle('Preferences')
 
-        self.windows_size_lineedit = QLineEdit()
-        self.windows_size_lineedit.setFixedWidth(_LINEEDIT_WIDTH)
-        self.windows_size_lineedit.setValidator(QDoubleValidator())
-        self.windows_size_lineedit.setAlignment(Qt.AlignRight)
-
-        self.overlap_factor_lineedit = QLineEdit()
-        self.overlap_factor_lineedit.setFixedWidth(_LINEEDIT_WIDTH)
-        self.overlap_factor_lineedit.setValidator(QDoubleValidator())
-        self.overlap_factor_lineedit.setAlignment(Qt.AlignRight)
+        self.export_param_combo = QComboBox()
+        self.export_param_combo.setFixedWidth(_COMBOBOX_WIDTH)
+        for key, par in parameterizations.items():
+            self.export_param_combo.addItem(par.name, userData=key)
+        self.export_samples_checkbox = QCheckBox()
 
         buttons = QDialogButtonBox.RestoreDefaults | QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         self.button_box = QDialogButtonBox(buttons)
@@ -206,17 +203,16 @@ class PreferencesDialog(QDialog):
         layout.setHorizontalSpacing(20)
 
         content_layout = QHBoxLayout()
-        content_layout.addWidget(self.windows_size_lineedit)
-        content_layout.addWidget(QLabel('mm'))
-        layout.addRow('Window Size', content_layout)
+        content_layout.addWidget(self.export_param_combo)
+        layout.addRow('Export parameterization', content_layout)
 
         content_layout = QHBoxLayout()
-        content_layout.addWidget(self.overlap_factor_lineedit)
-        content_layout.addWidget(QLabel('%'))
-        layout.addRow('Overlap Factor', content_layout)
+        content_layout.addWidget(self.export_samples_checkbox)
+        self.export_samples_checkbox.setEnabled(False)
+        layout.addRow('Export samples', content_layout)
 
-        derivations_box = QGroupBox('Derivatives')
-        derivations_box.setLayout(layout)
+        export_box = QGroupBox('Export')
+        export_box.setLayout(layout)
 
         layout = QFormLayout()
         layout.setVerticalSpacing(0)
@@ -245,7 +241,7 @@ class PreferencesDialog(QDialog):
         axes_box.setLayout(layout)
 
         layout = QVBoxLayout()
-        layout.addWidget(derivations_box)
+        layout.addWidget(export_box)
         layout.addWidget(axes_box)
         layout.addWidget(self.button_box)
         self.setLayout(layout)
@@ -254,8 +250,9 @@ class PreferencesDialog(QDialog):
         self._set_values(preferences)
         result = self.exec()
         if result == QDialog.Accepted:
-            preferences.window_size = float(self.windows_size_lineedit.text())
-            preferences.overlap = float(self.overlap_factor_lineedit.text())
+            preferences.export_parameterization = self.export_param_combo.itemData(
+                self.export_param_combo.currentIndex())
+            preferences.export_samples = self.export_samples_checkbox.isChecked()
 
             preferences.distance_axis_fix = self.distance_setting.fix_enabled
             preferences.distance_axis_from = self.distance_setting.from_value
@@ -276,8 +273,10 @@ class PreferencesDialog(QDialog):
         return False
 
     def _set_values(self, prefs):
-        self.windows_size_lineedit.setText(str(prefs.window_size))
-        self.overlap_factor_lineedit.setText(str(prefs.overlap))
+        idx = self.export_param_combo.findData(prefs.export_parameterization)
+        self.export_param_combo.setCurrentIndex(idx)
+        self.export_param_combo.setCurrentText(prefs.export_parameterization)
+        self.export_samples_checkbox.setChecked(prefs.export_samples)
         self.distance_setting.set_values(prefs.distance_axis_fix, prefs.distance_axis_from, prefs.distance_axis_to)
         self.force_setting.set_values(prefs.force_axis_fix, prefs.force_axis_from, prefs.force_axis_to)
         self.density_setting.set_values(prefs.density_axis_fix, prefs.density_axis_from, prefs.density_axis_to)

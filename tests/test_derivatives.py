@@ -5,7 +5,8 @@ import snowmicropyn as smp
 
 pro = smp.Profile.load('../examples/profiles/S37M0876.pnt')
 p2015 = smp.proksch2015.calc(pro.samples)
-cr2020 = smp.calonne_richter2020.calc(pro.samples)
+p2015 = smp.params['proksch2015'].calc(pro.samples)
+cr2020 = smp.params['calonne_richter2020'].calc(pro.samples)
 
 fp_ref = './p2015_ref.csv'
 fcr_ref = './cr2020_ref.csv'
