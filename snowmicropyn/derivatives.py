@@ -56,7 +56,7 @@ class Derivatives:
             result.append((row.distance, density, ssa))
         return pd.DataFrame(result, columns=['distance', self.shortname + '_density', self.shortname + '_ssa'])
 
-    def calc(self, samples, window=snowmicropyn.windowing.DEFAULT_WINDOW, overlap=snowmicropyn.windowing.DEFAULT_WINDOW_OVERLAP):
+    def calc(self, samples):
         """Calculate ssa and density from a pandas dataframe containing the samples
         of a SnowMicroPen recording.
 
@@ -65,7 +65,7 @@ class Derivatives:
         :param overlap: Overlap factor in percent.
         :return: A pandas dataframe with the columns distance, density and ssa.
         """
-        sn = snowmicropyn.loewe2012.calc(samples, window, overlap)
+        sn = snowmicropyn.loewe2012.calc(samples, self.window_size, self.overlap)
         result = []
         for index, row in sn.iterrows():
             density, ssa = self.calc_step(row.force_median, row.L2012_L)

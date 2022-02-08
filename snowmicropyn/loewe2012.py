@@ -21,7 +21,7 @@ import numpy as np
 from scipy import signal
 import logging
 
-from .windowing import chunkup, DEFAULT_WINDOW, DEFAULT_WINDOW_OVERLAP
+from .windowing import chunkup
 
 log = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ def calc_step(spatial_res, forces, cone_area=SMP_CONE_AREA):
     return lambda_, f0, delta, L
 
 
-def calc(samples, window=DEFAULT_WINDOW, overlap=DEFAULT_WINDOW_OVERLAP):
+def calc(samples, window, overlap):
     """Calculation of shot noise model parameters.
 
     :param samples: A pandas dataframe with columns called 'distance' and 'force'.

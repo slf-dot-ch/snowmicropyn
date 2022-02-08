@@ -18,6 +18,7 @@ from snowmicropyn.pyngui.preferences import Preferences, PreferencesDialog
 from snowmicropyn.pyngui.export_window import ExportDialog
 from snowmicropyn.pyngui.sidebar import SidebarWidget
 from snowmicropyn.pyngui.superpos_canvas import SuperposCanvas
+from snowmicropyn.derivatives import parameterizations
 
 log = logging.getLogger(__name__)
 
@@ -127,7 +128,7 @@ class MainWindow(QMainWindow):
         action.setIcon(QIcon(':/icons/shutdown.png'))
         action.setShortcut('Ctrl+Q')
         action.setStatusTip('Quit application')
-        # Call MainFrame.close when user want's to quit the application,
+        # Call MainFrame.close when user wants to quit the application,
         # causing a call of MainFrame.closeEvent where we close all
         # other windows too (like LogWindow for example), which quits
         # the application itself
@@ -379,7 +380,7 @@ class MainWindow(QMainWindow):
         for f in files:
             p = snowmicropyn.Profile.load(f)
             doc = Document(p)
-            doc.recalc_derivatives(self.preferences.window_size, self.preferences.overlap)
+            doc.recalc_derivatives()
             new_docs.append(doc)
             self.superpos_canvas.add_doc(doc)
         self.documents.extend(new_docs)
@@ -406,12 +407,9 @@ class MainWindow(QMainWindow):
         for doc in self.documents:
             p = doc.profile
 
-            window = self.preferences.window_size
-            overlap = self.preferences.overlap
-
             meta_file = p.export_meta(include_pnt_header=True)
             samples_file = p.export_samples()
-            derivatives_file = p.export_derivatives(window_size=window, overlap_factor=overlap)
+            derivatives_file = p.export_derivatives(parameterization=self.preferences.export_parameterization)
             files.append(derivatives_file)
             files.append(meta_file)
             files.append(samples_file)
@@ -534,11 +532,6 @@ class MainWindow(QMainWindow):
         modified = self.prefs_dialog.modifyPreferences(self.preferences)
         if modified:
             self.preferences.save()
-            # Recalculate derivations
-            for doc in self.documents:
-                ws = self.preferences.window_size
-                of = self.preferences.overlap / 100
-                doc.recalc_derivatives(ws, of)
             self.plot_canvas.set_limits()
             self.plot_canvas.draw()
             self.plot_toolbar.update()
@@ -603,12 +596,12 @@ class MainWindow(QMainWindow):
             self.plot_canvas.set_plot('force', 'drift', (doc._fit_x, doc._fit_y))
 
         if label in ('surface', 'ground'):
-            doc.recalc_derivatives(self.preferences.window_size, self.preferences.overlap)
+            doc.recalc_derivatives()
             for key, par in snowmicropyn.params.items():
                 self.plot_canvas.set_plot('ssa', 'ssa_' + key,
-                    (doc.derivatives.distance, doc.derivatives[par.shortname + '_ssa']))
+                    (doc.derivatives[key]['distance'], doc.derivatives[key][par.shortname + '_ssa']))
                 self.plot_canvas.set_plot('density', 'density_' + key,
-                    (doc.derivatives.distance, doc.derivatives[par.shortname + '_density']))
+                    (doc.derivatives[key]['distance'], doc.derivatives[key][par.shortname + '_density']))
 
         self.plot_canvas.draw()
 
@@ -718,7 +711,7 @@ class NotificationDialog(QDialog):
         multipe = len(files) > 1
         hint_text = 'File{} written:'.format('s' if multipe else '')
         if derivatives_written:
-            hint_text = '<b>NOTE:</b> All derivatives written with constant window size (as per your settings). However, existing parameterizations require a specific window size as stated in the respective publications.' \
+            hint_text = '<b>NOTE:</b> Only the parameterization chosen in your user settings was exported (due to different resolutions of the respective publications).' \
             + '<br><br>' + hint_text
         self.hint_label.setText(hint_text)
         self.content_textedit.setText('\n'.join([str(f) for f in files]))

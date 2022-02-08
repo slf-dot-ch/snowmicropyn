@@ -1,9 +1,5 @@
 import numpy as np
 
-DEFAULT_WINDOW = 2.5
-DEFAULT_WINDOW_OVERLAP = 50
-
-
 def chunkup(samples, window, overlap):
     if 0 < overlap >= 100:
         raise ValueError('overlap value {} invalid, must be a value between 0 and 100 [%]'.format(overlap))

@@ -558,7 +558,7 @@ class Profile(object):
                     writer.writerow(['pnt_' + header_id.name, str(value)])
         return file
 
-    def export_derivatives(self, file=None, snowpack_only=True, window_size=windowing.DEFAULT_WINDOW, overlap_factor=windowing.DEFAULT_WINDOW_OVERLAP, precision=4):
+    def export_derivatives(self, file=None, snowpack_only=True, parameterization='proksch2015', precision=4):
         if file:
             file = pathlib.Path(file)
         else:
@@ -568,9 +568,11 @@ class Profile(object):
         if snowpack_only:
             samples = self.samples_within_snowpack()
 
+        param = parameterizations[parameterization]
 
         log.info('Calculating derivatives by Löwe 2012')
-        loewe2012_df = loewe2012.calc(samples, window_size, overlap_factor)
+        log.info('Window size: ' + str(param.window_size) + ', overlap: ' + str(param.overlap))
+        loewe2012_df = loewe2012.calc(samples, param.window_size, param.overlap)
         derivatives = loewe2012_df
 
         # Add units in label for export
@@ -582,11 +584,11 @@ class Profile(object):
             'L2012_delta': 'L2012_delta [mm]',
             'L2012_L': 'L2012_L [mm]',
         }
-        for key, par in parameterizations.items():
-            log.info('Calculating derivatives by ' + par.name)
-            derivatives = derivatives.merge(parameterizations[key].calc_from_loewe2012(loewe2012_df))
-            with_units[par.shortname + '_ssa'] = par.shortname + '_ssa [m^2/kg]'
-            with_units[par.shortname + '_density'] = par.shortname + '_density [kg/m^3]'
+        log.info('Calculating derivatives by ' + param.name)
+        x = param.calc_from_loewe2012(loewe2012_df)
+        derivatives = derivatives.merge(param.calc_from_loewe2012(loewe2012_df))
+        with_units[param.shortname + '_ssa'] = param.shortname + '_ssa [m^2/kg]'
+        with_units[param.shortname + '_density'] = param.shortname + '_density [kg/m^3]'
         derivatives = derivatives.rename(columns=with_units)
 
         fmt = '%.{}f'.format(precision)

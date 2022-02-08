@@ -17,6 +17,8 @@ class CalonneRichter2020(derivatives.Derivatives):
     def __init__(self):
         self.name = 'Calonne and Richter 2020'
         self.shortname = 'CR2020'
+        self.window_size = 1 
+        self.overlap = 50
 
     def density(self, F_m, LL):
         """Calculation of density from median of force and element size.

@@ -17,6 +17,8 @@ class Proksch2015(derivatives.Derivatives):
     def __init__(self):
         self.name = 'Proksch 2015' # used in menus etc.
         self.shortname = 'P2015' # used in data frames etc.
+        self.window_size = 2.5
+        self.overlap = 50
 
     def density(self, F_m, LL):
         """Calculation of density from median of force and element size.
