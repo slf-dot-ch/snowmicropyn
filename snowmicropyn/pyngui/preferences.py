@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 
 _GAP = 20
 _LINEEDIT_WIDTH = 50
+_COMBOBOX_WIDTH = 200
 
 PREFS_EXPORT_PARAMETERIZATION = 'Preferences/parameterizations'
 PREFS_EXPORT_PARAMETERIZATION_DEFAULT = 'proksch2015'
@@ -171,12 +172,15 @@ class AxisSettings(QWidget):
 
 
 class PreferencesDialog(QDialog):
-    def __init__(self):
+    def __init__(self, parameterizations):
         super().__init__()
 
         self.setWindowTitle('Preferences')
 
         self.export_param_combo = QComboBox()
+        self.export_param_combo.setFixedWidth(_COMBOBOX_WIDTH)
+        for key, par in parameterizations.items():
+            self.export_param_combo.addItem(par.name, userData=key)
         self.export_samples_checkbox = QCheckBox()
 
         buttons = QDialogButtonBox.RestoreDefaults | QDialogButtonBox.Ok | QDialogButtonBox.Cancel
@@ -204,6 +208,7 @@ class PreferencesDialog(QDialog):
 
         content_layout = QHBoxLayout()
         content_layout.addWidget(self.export_samples_checkbox)
+        self.export_samples_checkbox.setEnabled(False)
         layout.addRow('Export samples', content_layout)
 
         export_box = QGroupBox('Export')
@@ -245,7 +250,8 @@ class PreferencesDialog(QDialog):
         self._set_values(preferences)
         result = self.exec()
         if result == QDialog.Accepted:
-            preferences.export_parameterization = self.export_param_combo.text()
+            preferences.export_parameterization = self.export_param_combo.itemData(
+                self.export_param_combo.currentIndex())
             preferences.export_samples = self.export_samples_checkbox.isChecked()
 
             preferences.distance_axis_fix = self.distance_setting.fix_enabled
@@ -267,6 +273,8 @@ class PreferencesDialog(QDialog):
         return False
 
     def _set_values(self, prefs):
+        idx = self.export_param_combo.findData(prefs.export_parameterization)
+        self.export_param_combo.setCurrentIndex(idx)
         self.export_param_combo.setCurrentText(prefs.export_parameterization)
         self.export_samples_checkbox.setChecked(prefs.export_samples)
         self.distance_setting.set_values(prefs.distance_axis_fix, prefs.distance_axis_from, prefs.distance_axis_to)

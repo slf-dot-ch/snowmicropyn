@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
         self.log_window = log_window
         self.notify_dialog = NotificationDialog()
         self.marker_dialog = MarkerDialog(self)
-        self.prefs_dialog = PreferencesDialog()
+        self.prefs_dialog = PreferencesDialog(parameterizations)
         self.export_dialog = ExportDialog()
 
         self.documents = []
