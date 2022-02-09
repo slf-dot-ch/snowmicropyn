@@ -585,7 +585,6 @@ class Profile(object):
             'L2012_L': 'L2012_L [mm]',
         }
         log.info('Calculating derivatives by ' + param.name)
-        x = param.calc_from_loewe2012(loewe2012_df)
         derivatives = derivatives.merge(param.calc_from_loewe2012(loewe2012_df))
         with_units[param.shortname + '_ssa'] = param.shortname + '_ssa [m^2/kg]'
         with_units[param.shortname + '_density'] = param.shortname + '_density [kg/m^3]'
