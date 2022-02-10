@@ -1,6 +1,12 @@
 import numpy as np
 
 def chunkup(samples, window, overlap):
+    """Combine data into chunks.
+
+    :param samples: SMP samples
+    :param window: size of moving window in mm
+    :param overlap: overlap factor in percent
+    """
     if 0 < overlap >= 100:
         raise ValueError('overlap value {} invalid, must be a value between 0 and 100 [%]'.format(overlap))
 

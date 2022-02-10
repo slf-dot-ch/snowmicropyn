@@ -62,4 +62,4 @@ class Proksch2015(derivatives.Derivatives):
         ssa = ssa * 1000 / DENSITY_ICE
         return ssa
 
-derivatives.parameterizations.register(Proksch2015())
+derivatives.parameterizations.register(Proksch2015()) # create instance for all of SMPyn

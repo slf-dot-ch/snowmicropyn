@@ -27,6 +27,9 @@ class Document:
 
         samples = samples[samples.distance.between(surface, ground)]
 
+        # A dictionary is built with the parameterization's shortname as the key,
+        # and a pandas dataframe containing the (distance, parameters) datapoints
+        # for this parameterization:
         self._derivatives = {}
         for key, par in params.items():
             self._derivatives[key] = par.calc(samples)

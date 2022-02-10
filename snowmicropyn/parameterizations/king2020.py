@@ -54,5 +54,5 @@ class King2020b(derivatives.Derivatives):
         aa = [312.54, 50.27, -50.26, -85.35]
         return aa[0] + aa[1] * np.log(F_m) + aa[2] * np.log(F_m) * LL + aa[3] * LL
 
-derivatives.parameterizations.register(King2020a())
+derivatives.parameterizations.register(King2020a()) # create instances for all of SMPyn
 derivatives.parameterizations.register(King2020b())

@@ -1,3 +1,9 @@
+"""Snowmicropyn's user settings.
+
+This module defines names for user and appearance settings and offers
+an API for them to be used and saved.
+"""
+
 import logging
 
 from PyQt5.QtCore import QSettings, Qt
@@ -69,6 +75,9 @@ class Preferences:
 
     @staticmethod
     def load():
+        """Create an instance of a Preferences object.
+
+        Values will be read from the settings or defaulted and then returned."""
         log.info('Loading Preferences')
         instance = Preferences()
 
@@ -94,6 +103,7 @@ class Preferences:
         return instance
 
     def save(self):
+        """Save preferences to an appropriate location (chosen by Qt)."""
         log.info('Saving Preferences')
         QSettings().setValue(PREFS_EXPORT_PARAMETERIZATION, self.export_parameterization)
         QSettings().setValue(PREFS_EXPORT_SAMPLES, self.export_samples)

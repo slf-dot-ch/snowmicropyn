@@ -457,8 +457,8 @@ class Profile(object):
             2) Convert from mm to cm
             3) Reproject profile to an angled slope
             4) Data thinning: keep every n-th element only
-            5) Data stretching: multiply by a factor (to match a measured snow height)
-            6) Remove header lines
+            5) Data stretching: multiply by a factor (to match a nearby snow pit height)
+            6) Adapt header lines
 
         When the parameter ``file`` is not provided, the default name is used 
         which is same as the pnt file from which the profile was loaded with a
@@ -470,6 +470,13 @@ class Profile(object):
         :param file: A `path-like object`_.
         :param precision: Precision (number of digits after comma) of the
                values. Default value is 4.
+
+        *Visualization in niViz:*
+        Enter a new profile in niViz, add hardness and import the prepared CSV
+        file. Then, by clicking on the x-axis label (e. g. "Grain size") you
+        should be able to switch parameters. If the SMP is not there, enter
+        the settings / simple profile and set it as additional parameter with
+        boundaries for the x-axis (e. g. 30, 0).
 
         .. _path-like object: https://docs.python.org/3/glossary.html#term-path-like-object
         .. _niViz: https::run.niviz.org
@@ -559,6 +566,11 @@ class Profile(object):
         return file
 
     def export_derivatives(self, file=None, snowpack_only=True, parameterization='P2015', precision=4):
+        """Export observables derived from the SMP signal.
+
+        From the GUI, this is called with the parameterzation set in the user settings. Programmatically,
+        Proksch 2015 is defaulted; for others you must supply the object's .shortname property.
+        """
         if file:
             file = pathlib.Path(file)
         else:
@@ -570,6 +582,7 @@ class Profile(object):
 
         param = parameterizations[parameterization]
 
+        # Note that the calculations here are independent of the ones shown in the GUI
         log.info('Calculating derivatives by Löwe 2012')
         log.info('Window size: ' + str(param.window_size) + ', overlap: ' + str(param.overlap))
         loewe2012_df = loewe2012.calc(samples, param.window_size, param.overlap)

@@ -67,10 +67,10 @@ the class:
 
    .. code-block:: python
 
-      derivatives.parameterizations.register('custom2022', Custom2022())
+      derivatives.parameterizations.register('Custom2022())
       rgb = lambda rr, gg, bb: '#%02x%02x%02x' % (rr, gg, bb)
-      derivatives.parameterizations['custom2022']._density_color = rgb(255, 0, 0) # RGB color
-      derivatives.parameterizations['custom2022']._ssa_color = 'C1' # matplotlib enumerated color
+      derivatives.parameterizations['C2022']._density_color = rgb(255, 0, 0) # RGB color
+      derivatives.parameterizations['C2022']._ssa_color = 'C1' # matplotlib enumerated color
 
 
 Publishing your Efforts

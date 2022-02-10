@@ -446,8 +446,6 @@ class MainWindow(QMainWindow):
         self.profile_combobox.removeItem(i)
 
     def _next_triggered(self):
-        log.debug('method next_profile called')
-
         # Fix for https://github.com/slf-dot-ch/snowmicropyn/issues/7
         # In case the lineedit widget to edit a markers value in the sidebar
         # has the focus, we clear that focus first, otherwise the marker would

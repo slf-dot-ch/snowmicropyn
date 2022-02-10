@@ -1,3 +1,5 @@
+"""GUI entry point."""
+
 import logging
 import sys
 import pathlib
@@ -38,7 +40,6 @@ def main():
     main_window.show()
 
     sys.exit(app.exec())
-
 
 if __name__ == '__main__':
     main()

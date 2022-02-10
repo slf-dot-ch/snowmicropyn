@@ -73,6 +73,10 @@ Releasing a New Version of *snowmicropyn*
 
 Also make sure you updated the documentation if necessary!
 
+#. Run the unit tests
+
+   This will (partly) make sure that the core functionality was not messed up.
+
 #. Update version string (``__version__``) in file
    :file:`snowmicropyn/__init__.py`
 

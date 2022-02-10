@@ -159,8 +159,8 @@ class PlotCanvas(FigureCanvas):
         values = (doc.profile.samples.distance, doc.profile.samples.force)
         self.set_plot('force', 'force', values)
 
-        for key, param in self.main_window.params.items():
-            derivs = doc.derivatives[key]
+        for key, param in self.main_window.params.items():  # run through all available parameterizations
+            derivs = doc.derivatives[key] # these were already calculated with the creation of doc
             values = (derivs['distance'], derivs[param.shortname + '_density'])
             self.set_plot('density', 'density_' + key, values)
             if hasattr(param, 'ssa'):

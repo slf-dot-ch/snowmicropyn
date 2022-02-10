@@ -3,7 +3,6 @@ import logging
 from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import QMainWindow, QPlainTextEdit
 
-
 class LogWindow(QMainWindow, logging.Handler):
     FORMAT = '%(asctime)s  %(levelname)s  %(message)s'
 

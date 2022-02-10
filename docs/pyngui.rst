@@ -42,6 +42,16 @@ Save your changes!
 :program:`pyngui` does not prompt or warn for unsaved changes. Don't forget
 to save your markers, otherwise they will be lost.
 
+Loading profiles on startup
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can load a list of profiles by giving their file paths as command
+line arguments:
+
+.. code-block:: console
+
+   python3 -m snowmicropyn.pyngui.app examples/profiles/S37M0876.pnt
+
 Surface & ground
 ^^^^^^^^^^^^^^^^
 

@@ -1,3 +1,15 @@
+"""Backend for "custom" parameterizations.
+
+An important design goal is to offer a most easy to use interface to add new
+parameterizations with as little effort as possible. The functions here are
+housekeeping for this to keep the core code short.
+On startup, we auto-load all modules in 'parameterizations' giving us a list
+of the available processing elements. In here we handle this list and offer
+some generic/common functionality.
+Neither the end user nor the parameterization developer should need to interact
+with this.
+"""
+
 import snowmicropyn.windowing
 import pandas as pd
 import numpy as np
@@ -10,20 +22,29 @@ class Parameterizations:
         return self.get(key)
 
     def register(self, param):
+        """Make a new parameterization available.
+
+        :param param: An instance of a ready-to-use parameterization class.
+
+        If there is a parameterization class Proksch2015() available, then
+        an instance of it can be registered here to be available throughout
+        snowmicropyn, cf. the examples.
+        """
         self._parameterizations[param.shortname] = param
 
+        # auto-choose a color depending on the number of similar plots:
         rgb = lambda rr, gg, bb: '#%02x%02x%02x' % (rr, gg, bb)
         offset = 25
         param._density_color = rgb(100, 0, len(self._parameterizations) * offset);
         param._ssa_color = rgb(0, offset + len(self._parameterizations) * offset, 0);
 
-    def get(self, author):
+    def get(self, author): # get by .shortname property
         param = self._parameterizations.get(author)
-        if not param:
+        if not param: # this parameterization is not known
             raise ValueError(author)
         return param
 
-    def __iter__(self):
+    def __iter__(self): # delegate calls to make iterable
         return iter(self._parameterizations)
 
     def keys(self):
@@ -36,6 +57,11 @@ class Parameterizations:
         return self._parameterizations.values()
 
 class Derivatives:
+    """Base class for all parameterizations.
+
+    In this class we collect code common to all parameterizations, e. g. the
+    stepping through the samples to calculate derivatives.
+    """
     color_density = None # will be auto-chosen in Parameterizations.register()
     color_ssa = None
 
@@ -80,4 +106,4 @@ class Derivatives:
             result.append((row.distance, density, ssa))
         return pd.DataFrame(result, columns=['distance', self.shortname + '_density', self.shortname + '_ssa'])
 
-parameterizations = Parameterizations()
+parameterizations = Parameterizations() # access throughout SMPyn via this

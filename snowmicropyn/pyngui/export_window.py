@@ -1,3 +1,9 @@
+"""niViz export settings dialog.
+
+This file handles showing an export to niViz dialog, as well as
+remembering these settings.
+"""
+
 import logging
 
 from PyQt5.QtCore import QSettings, Qt, QUrl
@@ -9,6 +15,7 @@ log = logging.getLogger(__name__)
 
 _LINEEDIT_WIDTH = 50
 
+# settings file keys
 EXPORT_SLOPE_ANGLE = 'Preferences/export_slope_angle'
 EXPORT_SLOPE_ANGLE_DEFAULT = 0
 EXPORT_DATA_THINNING = 'Preferences/export_data_thinning'
@@ -17,7 +24,7 @@ EXPORT_STRETCH_FACTOR = 'Preferences/export_stretch_factor'
 EXPORT_STRETCH_FACTOR_DEFAULT = 1
 
 class ExportSettings:
-
+    """Set of properties for niViz export."""
     def __init__(self):
         self.export_slope_angle = EXPORT_SLOPE_ANGLE_DEFAULT
         self.export_data_thinning = EXPORT_DATA_THINNING_DEFAULT
@@ -25,6 +32,10 @@ class ExportSettings:
 
     @staticmethod
     def load():
+        """Create a niViz export settings object.
+
+        Read values from the user settings, or set to defaults.
+        """
         instance = ExportSettings()
 
         f = QSettings().value
@@ -34,6 +45,7 @@ class ExportSettings:
         return instance
 
     def save(self):
+        """Remember niViz output settings."""
         QSettings().setValue(EXPORT_SLOPE_ANGLE, self.export_slope_angle)
         QSettings().setValue(EXPORT_DATA_THINNING, self.export_data_thinning)
         QSettings().setValue(EXPORT_STRETCH_FACTOR, self.export_stretch_factor)
@@ -59,19 +71,18 @@ class ExportDialog(QDialog):
         self.stretch_factor_lineedit.setValidator(QDoubleValidator())
         self.stretch_factor_lineedit.setAlignment(Qt.AlignRight)
 
-        buttons = QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Help
+        buttons = QDialogButtonBox.Help | QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         self.button_box = QDialogButtonBox(buttons)
 
         self.button_box.rejected.connect(self.reject)
         self.button_box.accepted.connect(self.accept)
         self.button_box.helpRequested.connect(lambda: QDesktopServices.openUrl(
-            QUrl('https://snowmicropyn.readthedocs.io/en/latest')))
+            QUrl('https://snowmicropyn.readthedocs.io/en/latest/api_reference.html#snowmicropyn.Profile.export_samples_niviz')))
 
         self.setMinimumWidth(500)
         self.init_ui()
 
     def init_ui(self):
-
         main_layout = QVBoxLayout()
 
         layout = QFormLayout()
