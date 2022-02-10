@@ -1,7 +1,7 @@
 import logging
 
-from PyQt5.QtCore import QSettings, Qt
-from PyQt5.QtGui import QDoubleValidator, QIntValidator
+from PyQt5.QtCore import QSettings, Qt, QUrl
+from PyQt5.QtGui import QDoubleValidator, QIntValidator, QDesktopServices
 from PyQt5.QtWidgets import QWidget, QLineEdit, QFormLayout, QHBoxLayout, QVBoxLayout, \
     QLabel, QDialogButtonBox, QDialog, QVBoxLayout
 
@@ -59,11 +59,13 @@ class ExportDialog(QDialog):
         self.stretch_factor_lineedit.setValidator(QDoubleValidator())
         self.stretch_factor_lineedit.setAlignment(Qt.AlignRight)
 
-        buttons = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        buttons = QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Help
         self.button_box = QDialogButtonBox(buttons)
 
         self.button_box.rejected.connect(self.reject)
         self.button_box.accepted.connect(self.accept)
+        self.button_box.helpRequested.connect(lambda: QDesktopServices.openUrl(
+            QUrl('https://snowmicropyn.readthedocs.io/en/latest')))
 
         self.setMinimumWidth(500)
         self.init_ui()
