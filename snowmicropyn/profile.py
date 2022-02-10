@@ -558,7 +558,7 @@ class Profile(object):
                     writer.writerow(['pnt_' + header_id.name, str(value)])
         return file
 
-    def export_derivatives(self, file=None, snowpack_only=True, parameterization='proksch2015', precision=4):
+    def export_derivatives(self, file=None, snowpack_only=True, parameterization='P2015', precision=4):
         if file:
             file = pathlib.Path(file)
         else:

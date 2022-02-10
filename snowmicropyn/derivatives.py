@@ -8,8 +8,8 @@ class Parameterizations:
     def __getitem__(self, key):
         return self.get(key)
 
-    def register(self, author, param):
-        self._parameterizations[author] = param
+    def register(self, param):
+        self._parameterizations[param.shortname] = param
 
         rgb = lambda rr, gg, bb: '#%02x%02x%02x' % (rr, gg, bb)
         offset = 50

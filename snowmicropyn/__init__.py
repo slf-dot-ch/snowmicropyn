@@ -27,4 +27,4 @@ from .profile import Profile
 from .pnt import Pnt
 
 from .derivatives import parameterizations as params
-proksch2015 = params.get('proksch2015') # backwards compatibility to < v1.1.0
+proksch2015 = params.get('P2015') # backwards compatibility to < v1.1.0

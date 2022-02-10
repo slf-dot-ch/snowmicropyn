@@ -49,4 +49,4 @@ class Proksch2015(derivatives.Derivatives):
         ssa = ssa * 1000 / DENSITY_ICE
         return ssa
 
-derivatives.parameterizations.register('proksch2015', Proksch2015())
+derivatives.parameterizations.register(Proksch2015())

@@ -43,4 +43,4 @@ class CalonneRichter2020(derivatives.Derivatives):
         bb = [0.57, -18.56, -3.66]
         return bb[0] + bb[1] * np.log(LL) + bb[2] * np.log(F_m)
 
-derivatives.parameterizations.register('calonne_richter2020', CalonneRichter2020())
+derivatives.parameterizations.register(CalonneRichter2020())
