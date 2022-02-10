@@ -47,7 +47,13 @@ Shot Noise Model (Löwe, 2012)
 SSA & Density (Proksch, 2015)
 -----------------------------
 
-.. automodule:: snowmicropyn.proksch2015
+.. automodule:: snowmicropyn.parameterizations.proksch2015
+   :members:
+
+SSA & Density (Calonne and Richter, 2020)
+-----------------------------------------
+
+.. automodule:: snowmicropyn.parameterizations.calonne_richter2020
    :members:
 
 Under the hood

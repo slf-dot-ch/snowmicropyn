@@ -22,17 +22,17 @@ Implementation
 
 #. Choose your attributes.
 
-   In the class' :meth:`__init__` function you will see a couple of quite
-   self-explanatory variables being initialized, like a name and shortcut for
-   your algorithm. Set these accordingly.
+   In the class' :meth:`__init__` function you will see a couple of variables
+   being initialized, like a name and shortcut for your algorithm.
+   Set these accordingly.
 
 #. Define your density and SSA functions.
 
-   Your class must define the :meth:`density` and :meth:`ssa` functions. These
-   will be passed the higher level SMP properties (median of force, element
-   size, and in case of SSA the density) by the calling chain to process to your
-   liking. You can freely program your functions as long as they return a single
-   float value.
+   Your class must define the :meth:`density` function and may define the
+   :meth:`ssa` function. These will be passed the lower level SMP properties (e. g.
+   median of force, element size, and in case of SSA the density) by the calling
+   chain to process to your liking. You can freely program your functions as long
+   as they return a single float value.
 
 #. Register your parameterization in the GUI.
 
@@ -40,7 +40,7 @@ Implementation
 
    .. code-block:: python
 
-      derivatives.parameterizations.register('custom2022', Custom2022())
+      derivatives.parameterizations.register(Custom2022())
 
    registers your parameterization in the GUI and for a unified API by creating
    an instance of your class. The appropriate menus, save- and export
@@ -51,7 +51,13 @@ Implementation
 
       import snowmicropyn as smp
       pro = smp.Profile.load('../examples/profiles/S37M0876.pnt')
-      c2021 = smp.params['custom2021'].calc(pro.samples)
+      c2021 = smp.params['C2021'].calc(pro.samples)
+
+#. Document your work
+
+   If you started from a template then the documentation can be built from the
+   source code comments. To do this, add your parameterization in
+   :file:`docs/api_reference.rst`.
 
 Colors
 ------
