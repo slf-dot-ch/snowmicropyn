@@ -5,8 +5,8 @@ This module implements the methods to derive density and specific surface area
 `Local-scale variability of snow density on Arctic sea ice
 <https://doi.org/10.5194/tc-14-4323-2020>`_ by King, J., Howell, S.,
 Brady, M., Toose, P., Derksen, C., Haas, C., and Beckers, J., publicised in
-`The Cryosphere
-<https://tc.copernicus.org/articles/14/4323/2020/>`_, 14, 4323–4339, 2020.
+`The Cryosphere, 14
+<https://tc.copernicus.org/articles/14/4323/2020/>`_, 4323–4339, 2020.
 """
 
 from .. import derivatives

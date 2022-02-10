@@ -59,7 +59,7 @@ SSA & Density (Calonne and Richter, 2020)
 SSA & Density (King, 2020)
 -----------------------------------------
 
-.. automodule:: snowmicropyn.parameterizations.king2020a
+.. automodule:: snowmicropyn.parameterizations.king2020
    :members:
 
 Under the hood
