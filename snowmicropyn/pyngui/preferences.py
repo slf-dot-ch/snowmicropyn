@@ -181,7 +181,7 @@ class PreferencesDialog(QDialog):
         self.export_param_combo.setFixedWidth(_COMBOBOX_WIDTH)
         for key, par in parameterizations.items():
             self.export_param_combo.addItem(par.name, userData=key)
-        self.export_samples_checkbox = QCheckBox()
+        self.export_samples_checkbox = QCheckBox("Uncheck this to export only derivatives (no samples)")
 
         buttons = QDialogButtonBox.RestoreDefaults | QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         self.button_box = QDialogButtonBox(buttons)
@@ -208,7 +208,6 @@ class PreferencesDialog(QDialog):
 
         content_layout = QHBoxLayout()
         content_layout.addWidget(self.export_samples_checkbox)
-        self.export_samples_checkbox.setEnabled(False)
         layout.addRow('Export samples', content_layout)
 
         export_box = QGroupBox('Export')

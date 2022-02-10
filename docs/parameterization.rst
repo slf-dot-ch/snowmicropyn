@@ -16,7 +16,7 @@ Implementation
 --------------
 
 #. Copy a fitting template.
-   
+
    Duplicate :file:`parameterizations/proksch2015.py` and rename it as a
    starting point. Give your class a fitting name, here `Custom2022`.
 
@@ -48,7 +48,7 @@ Implementation
    now access your custom algorithm like all the others:
 
    .. code-block:: python
-   
+
       import snowmicropyn as smp
       pro = smp.Profile.load('../examples/profiles/S37M0876.pnt')
       c2021 = smp.params['custom2021'].calc(pro.samples)

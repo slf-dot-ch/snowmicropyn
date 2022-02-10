@@ -33,7 +33,7 @@ class ExportSettings:
         instance.export_stretch_factor = f(EXPORT_STRETCH_FACTOR, EXPORT_STRETCH_FACTOR_DEFAULT, float)
         return instance
 
-    def write(self):
+    def save(self):
         QSettings().setValue(EXPORT_SLOPE_ANGLE, self.export_slope_angle)
         QSettings().setValue(EXPORT_DATA_THINNING, self.export_data_thinning)
         QSettings().setValue(EXPORT_STRETCH_FACTOR, self.export_stretch_factor)

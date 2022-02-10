@@ -410,12 +410,13 @@ class MainWindow(QMainWindow):
         for doc in self.documents:
             p = doc.profile
 
+            if self.preferences.export_samples:
+                samples_file = p.export_samples()
+                files.append(samples_file)
             meta_file = p.export_meta(include_pnt_header=True)
-            samples_file = p.export_samples()
+            files.append(meta_file)
             derivatives_file = p.export_derivatives(parameterization=self.preferences.export_parameterization)
             files.append(derivatives_file)
-            files.append(meta_file)
-            files.append(samples_file)
         self.notify_dialog.notifyFilesWritten(files)
 
     def _export_niviz_triggered(self):
@@ -426,7 +427,7 @@ class MainWindow(QMainWindow):
                 ', thinning=' + str(export_settings.export_data_thinning) + ', stretch=' + \
                 str(export_settings.export_stretch_factor) + ')')
             p = self.current_document.profile
-            export_settings.write()
+            export_settings.save()
             samples_file = p.export_samples_niviz(export_settings)
             self.notify_dialog.notifyFilesWritten([samples_file], False)
 
