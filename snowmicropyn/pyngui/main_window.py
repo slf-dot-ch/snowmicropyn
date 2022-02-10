@@ -15,13 +15,12 @@ from snowmicropyn.pyngui.document import Document
 from snowmicropyn.pyngui.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.pyngui.plot_canvas import PlotCanvas
 from snowmicropyn.pyngui.preferences import Preferences, PreferencesDialog
-from snowmicropyn.pyngui.export_window import ExportDialog
+from snowmicropyn.pyngui.export_window import ExportSettings, ExportDialog
 from snowmicropyn.pyngui.sidebar import SidebarWidget
 from snowmicropyn.pyngui.superpos_canvas import SuperposCanvas
 from snowmicropyn.derivatives import parameterizations
 
 log = logging.getLogger(__name__)
-
 
 class MainWindow(QMainWindow):
     SETTING_LAST_DIRECTORY = 'MainFrame/last_directory'
@@ -420,14 +419,14 @@ class MainWindow(QMainWindow):
         self.notify_dialog.notifyFilesWritten(files)
 
     def _export_niviz_triggered(self):
-        export_settings = lambda : 0 # mimic a 'struct' for default values
-        export_settings.export_slope_angle = 0
-        export_settings.export_data_thinning = 150
-        export_settings.export_stretch_factor = 1
-
+        export_settings = ExportSettings.load()
         perform_export = self.export_dialog.exportForNiviz(export_settings)
         if perform_export:
+            log.info('Exporting CSV for niViz (angle=' + str(export_settings.export_slope_angle) + \
+                ', thinning=' + str(export_settings.export_data_thinning) + ', stretch=' + \
+                str(export_settings.export_stretch_factor) + ')')
             p = self.current_document.profile
+            export_settings.write()
             samples_file = p.export_samples_niviz(export_settings)
             self.notify_dialog.notifyFilesWritten([samples_file], False)
 

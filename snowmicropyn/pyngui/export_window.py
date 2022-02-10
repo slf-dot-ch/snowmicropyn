@@ -10,25 +10,33 @@ log = logging.getLogger(__name__)
 _LINEEDIT_WIDTH = 50
 
 EXPORT_SLOPE_ANGLE = 'Preferences/export_slope_angle'
-EXPORT_SLOPE_ANGLE_DEFAULT = 30
+EXPORT_SLOPE_ANGLE_DEFAULT = 0
+EXPORT_DATA_THINNING = 'Preferences/export_data_thinning'
+EXPORT_DATA_THINNING_DEFAULT = 150
+EXPORT_STRETCH_FACTOR = 'Preferences/export_stretch_factor'
+EXPORT_STRETCH_FACTOR_DEFAULT = 1
 
 class ExportSettings:
 
     def __init__(self):
         self.export_slope_angle = EXPORT_SLOPE_ANGLE_DEFAULT
+        self.export_data_thinning = EXPORT_DATA_THINNING_DEFAULT
+        self.export_stretch_factor = EXPORT_STRETCH_FACTOR_DEFAULT
 
     @staticmethod
     def load():
         instance = ExportSettings()
 
         f = QSettings().value
-        instance.export_slope_angle = f(EXPORT_SLOPE_ANGLE, EXPORT_SLOPE_ANGLE, float)
+        instance.export_slope_angle = f(EXPORT_SLOPE_ANGLE, EXPORT_SLOPE_ANGLE_DEFAULT, float)
+        instance.export_data_thinning = f(EXPORT_DATA_THINNING, EXPORT_DATA_THINNING_DEFAULT, int)
+        instance.export_stretch_factor = f(EXPORT_STRETCH_FACTOR, EXPORT_STRETCH_FACTOR_DEFAULT, float)
         return instance
 
-    def export(self):
-        log.info('Exporting CSV for niViz')
+    def write(self):
         QSettings().setValue(EXPORT_SLOPE_ANGLE, self.export_slope_angle)
-
+        QSettings().setValue(EXPORT_DATA_THINNING, self.export_data_thinning)
+        QSettings().setValue(EXPORT_STRETCH_FACTOR, self.export_stretch_factor)
         QSettings().sync()
 
 
