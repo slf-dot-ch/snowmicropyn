@@ -40,4 +40,19 @@ class King2020a(derivatives.Derivatives):
         aa = [315.61, 46.94, -43.94, -88.15]
         return aa[0] + aa[1] * np.log(F_m) + aa[2] * np.log(F_m) * LL + aa[3] * LL
 
+class King2020b(derivatives.Derivatives):
+    def __init__(self):
+        """Properties of the parameterization."""
+        self.name = 'King 2020b'
+        self.shortname = 'K2020b'
+        self.window_size = 5
+        self.overlap = 50
+
+    def density(self, F_m, LL, lamb, f0, delta):
+        """Calculation of density from median of force and element size."""
+        # Table 2 in publication
+        aa = [312.54, 50.27, -50.26, -85.35]
+        return aa[0] + aa[1] * np.log(F_m) + aa[2] * np.log(F_m) * LL + aa[3] * LL
+
 derivatives.parameterizations.register(King2020a())
+derivatives.parameterizations.register(King2020b())
