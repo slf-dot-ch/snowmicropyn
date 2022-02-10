@@ -84,7 +84,8 @@ class MainWindow(QMainWindow):
         self.plot_ssa_actions = {}
         for key, par in self.params.items():
             self.plot_density_actions[key] = QAction(par.name, self)
-            self.plot_ssa_actions[key] = QAction(par.name, self)
+            if hasattr(par, 'ssa'): # Some parameterizations are only for the density
+                self.plot_ssa_actions[key] = QAction(par.name, self)
 
         self.about_action = QAction('About', self)
         self.quit_action = QAction('Quit', self)
@@ -296,6 +297,8 @@ class MainWindow(QMainWindow):
 
         ssa_menu = menu.addMenu('Plot &SSA')
         for key, par in self.params.items():
+            if not hasattr(par, 'ssa'):
+                continue
             #action.setShortcut('Alt+A,P')
             action = self.plot_ssa_actions[key]
             action.setStatusTip('Show SSA according to ' + par.name)
@@ -353,9 +356,10 @@ class MainWindow(QMainWindow):
         QSettings().setValue(MainWindow.SETTING_PLOT_SURFACE_AND_GROUND, self.plot_surface_and_ground_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_MARKERS, self.plot_markers_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_DRIFT, self.plot_drift_action.isChecked())
-        for key in self.params:
+        for key, par in self.params.items():
             QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_ROOT + key, self.plot_density_actions[key].isChecked())
-            QSettings().setValue(MainWindow.SETTING_PLOT_SSA_ROOT + key, self.plot_ssa_actions[key].isChecked())
+            if hasattr(par, 'ssa'):
+                QSettings().setValue(MainWindow.SETTING_PLOT_SSA_ROOT + key, self.plot_ssa_actions[key].isChecked())
         QSettings().sync()
         # This is the main window. In case it's closed, we close all
         # other windows too which results in quitting the application
@@ -598,10 +602,11 @@ class MainWindow(QMainWindow):
         if label in ('surface', 'ground'):
             doc.recalc_derivatives()
             for key, par in snowmicropyn.params.items():
-                self.plot_canvas.set_plot('ssa', 'ssa_' + key,
-                    (doc.derivatives[key]['distance'], doc.derivatives[key][par.shortname + '_ssa']))
                 self.plot_canvas.set_plot('density', 'density_' + key,
                     (doc.derivatives[key]['distance'], doc.derivatives[key][par.shortname + '_density']))
+                if hasattr(par, 'ssa'):
+                    self.plot_canvas.set_plot('ssa', 'ssa_' + key,
+                        (doc.derivatives[key]['distance'], doc.derivatives[key][par.shortname + '_ssa']))
 
         self.plot_canvas.draw()
 

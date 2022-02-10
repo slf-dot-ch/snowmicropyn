@@ -161,10 +161,11 @@ class PlotCanvas(FigureCanvas):
 
         for key, param in self.main_window.params.items():
             derivs = doc.derivatives[key]
-            values = (derivs['distance'], derivs[param.shortname + '_ssa'])
-            self.set_plot('ssa', 'ssa_' + key, values)
             values = (derivs['distance'], derivs[param.shortname + '_density'])
             self.set_plot('density', 'density_' + key, values)
+            if hasattr(param, 'ssa'):
+                values = (derivs['distance'], derivs[param.shortname + '_ssa'])
+                self.set_plot('ssa', 'ssa_' + key, values)
 
         values = doc._fit_x, doc._fit_y
         self.set_plot('force', 'drift', values)

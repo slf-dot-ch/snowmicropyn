@@ -591,7 +591,7 @@ class Profile(object):
         derivatives = derivatives.rename(columns=with_units)
 
         fmt = '%.{}f'.format(precision)
-        derivatives.to_csv(file, header=True, index=False, float_format=fmt)
+        derivatives.to_csv(file, header=True, index=False, float_format=fmt, na_rep='nan')
         return file
 
     def samples_within_distance(self, begin=None, end=None, relativize=False):

@@ -1,5 +1,6 @@
 import snowmicropyn.windowing
 import pandas as pd
+import numpy as np
 
 class Parameterizations:
     def __init__(self):
@@ -40,7 +41,12 @@ class Derivatives:
 
     def calc_step(self, median_force, element_size):
         density = self.density(median_force, element_size)
-        ssa = self.ssa(density, median_force, element_size)
+        # Calculation of the SSA is optional. We check it this way so that someone
+        # writing a new parameterization does not have to set it to Null or something:
+        if hasattr(self, 'ssa'):
+            ssa = self.ssa(density, median_force, element_size)
+        else:
+            ssa = np.nan
         return density, ssa
 
     def calc_from_loewe2012(self, shotnoise_dataframe):
