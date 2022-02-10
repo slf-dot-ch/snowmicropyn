@@ -39,12 +39,12 @@ class Derivatives:
     color_density = None # will be auto-chosen in Parameterizations.register()
     color_ssa = None
 
-    def calc_step(self, median_force, element_size):
-        density = self.density(median_force, element_size)
+    def calc_step(self, force_median, element_size, lamb, f0, delta):
+        density = self.density(force_median, element_size, lamb, f0, delta)
         # Calculation of the SSA is optional. We check it this way so that someone
         # writing a new parameterization does not have to set it to Null or something:
         if hasattr(self, 'ssa'):
-            ssa = self.ssa(density, median_force, element_size)
+            ssa = self.ssa(density, force_median, element_size, lamb, f0, delta)
         else:
             ssa = np.nan
         return density, ssa
@@ -58,7 +58,8 @@ class Derivatives:
         """
         result = []
         for index, row in shotnoise_dataframe.iterrows():
-            density, ssa = self.calc_step(row.force_median, row.L2012_L)
+            density, ssa = self.calc_step(row.force_median, row.L2012_L, row.L2012_lambda,
+                row.L2012_f0, row.L2012_delta)
             result.append((row.distance, density, ssa))
         return pd.DataFrame(result, columns=['distance', self.shortname + '_density', self.shortname + '_ssa'])
 
@@ -74,7 +75,8 @@ class Derivatives:
         sn = snowmicropyn.loewe2012.calc(samples, self.window_size, self.overlap)
         result = []
         for index, row in sn.iterrows():
-            density, ssa = self.calc_step(row.force_median, row.L2012_L)
+            density, ssa = self.calc_step(row.force_median, row.L2012_L, row.L2012_lambda,
+                row.L2012_f0, row.L2012_delta)
             result.append((row.distance, density, ssa))
         return pd.DataFrame(result, columns=['distance', self.shortname + '_density', self.shortname + '_ssa'])
 

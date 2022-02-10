@@ -80,6 +80,11 @@ def calc(samples, window, overlap):
     :param overlap: Overlap factor in percent.
     :return: Pandas dataframe with the columns 'distance', 'force_median',
              'L2012_lambda', 'L2012_f0', 'L2012_delta', 'L2012_L'.
+             force_median: Median of force in N.
+             lambda: Intensity of point process in mm^-1.
+             f0: Mean rupture force in N.
+             delta: Deflection at rupture in mm.
+             L: Element size in mm.
     """
 
     # Calculate spatial resolution of the distance samples as median of all

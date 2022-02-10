@@ -15,28 +15,41 @@ import numpy as np
 
 class CalonneRichter2020(derivatives.Derivatives):
     def __init__(self):
+        """Properties of the parameterization.
+
+        name: Descriptive long name (used in menus etc.)
+        shortname: Shortcut name (used in file output etc.)
+        window_size: Size of the moving window
+        overlap: Overlap factor in %
+        """
         self.name = 'Calonne and Richter 2020'
         self.shortname = 'CR2020'
         self.window_size = 1
         self.overlap = 50
 
-    def density(self, F_m, LL):
+    def density(self, F_m, LL, lamb, f0, delta):
         """Calculation of density from median of force and element size.
 
         :param F_m: Median of force in N.
         :param LL: Element size in mm.
+        :param lamb: Intensity of point process in mm^-1 (unused in Calonne/Richter).
+        :param f0: Mean rupture force in N (unused in Calonne/Richter).
+        :param delta: Deflection at rupture in mm (unused in Calonne/Richter).
         :return: density in kg/m^3.
         """
         # Equation (1) in publication
         aa = [295.8, 65.1, -43.2, 47.1]
         return aa[0] + aa[1] * np.log(F_m) + aa[2] * np.log(F_m) * LL + aa[3] * LL
 
-    def ssa(self, density, F_m, LL):
+    def ssa(self, density, F_m, LL, lamb, f0, delta):
         """Calculation of SSA from density, median of force and element size.
 
         :param density: Density in kg/m^3
-        :param median_force: Median of force in N.
-        :param element_size: Element size in mm.
+        :param F_m: Median of force in N.
+        :param LL: Element size in mm.
+        :param lamb: Intensity of point process in mm^-1 (unused in Calonne/Richter).
+        :param f0: Mean rupture force in N (unused in Calonne/Richter).
+        :param delta: Deflection at rupture in mm (unused in Calonne/Richter).
         :return: SSA value in m^2/kg.
         """
         # Equation (2) in publication
