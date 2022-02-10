@@ -19,7 +19,7 @@ class Proksch2015(derivatives.Derivatives):
 
         name: Descriptive long name (used in menus etc.)
         shortname: Shortcut name (used in file output etc.)
-        window_size: Size of the moving window
+        window_size: Size of the moving window in mm
         overlap: Overlap factor in %
         """
         self.name = 'Proksch 2015'
