@@ -29,6 +29,7 @@ Table of Content
    pyngui.rst
    parameterization.rst
    develop.rst
+   troubleshooting.rst
 
 Contributors
 ------------
