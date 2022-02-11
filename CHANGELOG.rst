@@ -1,16 +1,39 @@
 snowmicropyn Changelog
 ======================
 
-Version 1.1.0a1
+Version 1.1.0
+---------------
 
-2021-12-15
+2022-02-11
+
+This version brings a thourough refactoring in order to offer a clean
+interface for implementing new parameterizations (density, SSA) by lifting
+the burden of having to deal with the GUI (everything is automatic now).
+Three new parameterizations were added (Calonne/Richter and King x2), as well
+as an export tool for niViz visualizations. The documentation was overhauled
+and a few bugs and usability issues were fixed.
 
 - Added Calonne/Richter parameterizations for density and SSA
-- Changed Proksch SSA units to m^2/kg
+- Added King parameterizations for densities
 - Added export tool for visualization with niViz
+- Changed Proksch SSA units to m^2/kg
+- Removed GUI options for window_size and overlap: these are now
+  constant per individual parameterization untangling much confusion
+  about the display resolution
+- Added setting to output any of the available parameterizations
+- Much improved interface for adding new parameterizations
+  (all GUI stuff is handled on the fly and the required code was minimized)
+- Added setting to skip samples output
+- Added unit test for core parameterization routines
 - Export menu now exports all open profiles
+- Bugfix for constant signals
 - Bugfix for linefeeds
+- Bugfix for overlap factor
 - Minor bugfixes
+- Documentation fixes and enhancements
+- New documentation chapters and examples
+
+*(This version was supported by the Avalanche Warning Service Tyrol)*
 
 Version 1.0.1
 -------------

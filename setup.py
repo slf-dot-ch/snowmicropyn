@@ -19,6 +19,7 @@ with open(readme_rst) as f:
 
 DEPENDENCIES = [
         'pytz',
+        'numpy',
         'scipy >= 1',
         'pandas >= 0.22',
         'matplotlib >= 2',
