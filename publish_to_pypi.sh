@@ -5,7 +5,6 @@ set -e
 
 REPO_URL=https://github.com/slf-dot-ch/snowmicropyn
 
-
 case $# in
 1)
     TAG=$1
@@ -28,7 +27,7 @@ case $# in
     ;;
 esac
 
-read -p "Publishing release with tag ${TAG} to ${SYSTEM} index on PyPI. Press enter to continue"
+read -p "Publishing release with tag ${TAG} to ${SYSTEM} index on PyPI. Press any key to continue." dummy_var
 
 RELEASE_DIR=RELEASE_${TAG}
 
