@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/bash
 
 # Stop script on error
 set -e
@@ -12,7 +12,7 @@ case $# in
     ;;
 2)
     TAG=$1
-    if [ $2 == "LIVE" ]
+    if [[ $2 = "LIVE" ]]
     then
         SYSTEM="LIVE"
     else
