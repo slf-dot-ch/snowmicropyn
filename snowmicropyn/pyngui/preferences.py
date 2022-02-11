@@ -20,7 +20,7 @@ _COMBOBOX_WIDTH = 200
 PREFS_EXPORT_PARAMETERIZATION = 'Preferences/parameterizations'
 PREFS_EXPORT_PARAMETERIZATION_DEFAULT = 'P2015'
 PREFS_EXPORT_SAMPLES = 'Preferences/export_samples'
-PREFS_OVERLAP_DEFAULT = True
+PREFS_EXPORT_SAMPLES_DEFAULT = True
 
 PREFS_DISTANCE_AXIS_FIX = 'Preferences/distance_axis_fix'
 PREFS_DISTANCE_AXIS_FIX_DEFAULT = False
@@ -54,8 +54,8 @@ PREFS_SSA_AXIS_TO_DEFAULT = 42
 class Preferences:
 
     def __init__(self):
-        self.export_parameterization = PREFS_EXPORT_PARAMETERIZATION
-        self.export_samples = PREFS_EXPORT_SAMPLES
+        self.export_parameterization = PREFS_EXPORT_PARAMETERIZATION_DEFAULT
+        self.export_samples = PREFS_EXPORT_SAMPLES_DEFAULT
 
         self.distance_axis_fix = PREFS_DISTANCE_AXIS_FIX_DEFAULT
         self.distance_axis_from = PREFS_DISTANCE_AXIS_FROM_DEFAULT
@@ -284,8 +284,7 @@ class PreferencesDialog(QDialog):
     def _set_values(self, prefs):
         idx = self.export_param_combo.findData(prefs.export_parameterization)
         self.export_param_combo.setCurrentIndex(idx)
-        self.export_param_combo.setCurrentText(prefs.export_parameterization)
-        self.export_samples_checkbox.setChecked(prefs.export_samples)
+        self.export_samples_checkbox.setChecked(bool(prefs.export_samples))
         self.distance_setting.set_values(prefs.distance_axis_fix, prefs.distance_axis_from, prefs.distance_axis_to)
         self.force_setting.set_values(prefs.force_axis_fix, prefs.force_axis_from, prefs.force_axis_to)
         self.density_setting.set_values(prefs.density_axis_fix, prefs.density_axis_from, prefs.density_axis_to)
