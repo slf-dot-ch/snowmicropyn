@@ -103,4 +103,6 @@ def calc(samples, window, overlap):
                                          'L2012_delta', 'L2012_L'])
     if np.isinf(result.L2012_lambda).values.any(): # check only once in the end
         log.warning('Constant signal - could not compute intensity of Poisson process')
+        if len(log.handlers) > 1: # we are in the GUI
+            log.handlers[1].toTop()
     return result
