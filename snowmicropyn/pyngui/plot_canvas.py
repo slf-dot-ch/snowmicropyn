@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QAction, QMenu
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('pyngui')
 
 
 class PlotCanvas(FigureCanvas):

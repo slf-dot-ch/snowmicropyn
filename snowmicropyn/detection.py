@@ -4,7 +4,7 @@ import numpy as np
 
 from .tools import downsample, smooth
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('pyngui')
 
 
 def detect_ground(profile):

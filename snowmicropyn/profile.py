@@ -19,7 +19,7 @@ from .derivatives import parameterizations
 
 from .pnt import Pnt
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('pyngui')
 
 class Profile(object):
     """ Represents a loaded pnt file.

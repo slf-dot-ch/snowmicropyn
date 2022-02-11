@@ -5,7 +5,7 @@ import struct
 from collections import namedtuple
 from enum import Enum
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('pyngui')
 
 pnt_header_entry = namedtuple('pnt_header_field', ['value', 'unit'])
 

@@ -1,6 +1,6 @@
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('pyngui')
 
 _basics = """
 <?xml version="1.0" encoding="UTF-8"?>

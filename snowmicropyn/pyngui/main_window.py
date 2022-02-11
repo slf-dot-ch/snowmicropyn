@@ -20,7 +20,7 @@ from snowmicropyn.pyngui.sidebar import SidebarWidget
 from snowmicropyn.pyngui.superpos_canvas import SuperposCanvas
 from snowmicropyn.derivatives import parameterizations
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('pyngui')
 
 class MainWindow(QMainWindow):
     SETTING_LAST_DIRECTORY = 'MainFrame/last_directory'
@@ -34,11 +34,10 @@ class MainWindow(QMainWindow):
 
     DEFAULT_GEOMETRY = QRect(100, 100, 800, 600)
 
-    def __init__(self, log_window, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWindowTitle(APP_NAME)
 
-        self.log_window = log_window
         self.notify_dialog = NotificationDialog()
         self.marker_dialog = MarkerDialog(self)
         self.prefs_dialog = PreferencesDialog(parameterizations)
@@ -362,6 +361,7 @@ class MainWindow(QMainWindow):
         QSettings().sync()
         # This is the main window. In case it's closed, we close all
         # other windows too which results in quitting the application
+        log.removeHandler(log.handlers[1]) # detach LogWindow to not attempt to close it twice
         QApplication.instance().closeAllWindows()
 
     def _open_triggered(self):
@@ -502,11 +502,6 @@ class MainWindow(QMainWindow):
         self.set_marker('surface', doc.profile.surface)
         self.update()
 
-    def _showlog_triggered(self):
-        self.log_window.show()
-        self.log_window.activateWindow()
-        self.log_window.raise_()
-
     @staticmethod
     def _about_triggered():
         # Read the content of the file about.html located in the same directory
@@ -530,6 +525,11 @@ class MainWindow(QMainWindow):
         dialog.setWindowTitle('About')
         dialog.setLayout(layout)
         dialog.exec_()
+
+    def _showlog_triggered(self):
+        # We must not keep a reference to LogWindow (crashes), so
+        # we find this reference here:
+        log.handlers[1].toTop()
 
     def _kml_triggered(self):
         profile = self.current_document.profile

@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QDoubleValidator
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QLineEdit, QPushButton, QLabel
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('pyngui')
 
 
 class SidebarWidget(QTreeWidget):

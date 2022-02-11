@@ -25,3 +25,8 @@ class LogWindow(QMainWindow, logging.Handler):
 
     def emit(self, record):
         self.text.appendPlainText(self.format(record))
+
+    def toTop(self):
+        self.show()
+        self.activateWindow()
+        self.raise_()

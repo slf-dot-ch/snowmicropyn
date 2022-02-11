@@ -27,6 +27,7 @@ and a few bugs and usability issues were fixed.
 - Added unit test for core parameterization routines
 - Export menu now exports all open profiles
 - Bugfix for constant signals
+- Fix crash on program exit
 - Bugfix for linefeeds
 - Bugfix for overlap factor
 - Minor bugfixes
