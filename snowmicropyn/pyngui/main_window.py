@@ -397,13 +397,15 @@ class MainWindow(QMainWindow):
     def _save_triggered(self):
         self.current_document.profile.save()
         f = self.current_document.profile.ini_file
-        self.notify_dialog.notifyFilesWritten([f])
+        self.notify_dialog.notifyFilesWritten([f],
+            'These files contain only meta data and do not alter the dataset whatsoever.')
 
     def _saveall_triggered(self):
         for doc in self.documents:
             doc.profile.save()
         f = [doc.profile.ini_file for doc in self.documents]
-        self.notify_dialog.notifyFilesWritten(f)
+        self.notify_dialog.notifyFilesWritten(f,
+            'These files contain only meta data and do not alter the dataset whatsoever.')
 
     def _exportall_triggered(self):
         files=[]
@@ -417,7 +419,11 @@ class MainWindow(QMainWindow):
             files.append(meta_file)
             derivatives_file = p.export_derivatives(parameterization=self.preferences.export_parameterization)
             files.append(derivatives_file)
-        self.notify_dialog.notifyFilesWritten(files)
+            par = parameterizations[self.preferences.export_parameterization]
+        self.notify_dialog.notifyFilesWritten(files,
+            'Only the parameterization chosen in your user settings (' + par.name +
+            ') was exported to avoid mixed resolutions (here: window_size=' +
+            str(par.window_size) + ', overlap=' + str(par.overlap) + ').')
 
     def _export_niviz_triggered(self):
         export_settings = ExportSettings.load()
@@ -429,7 +435,8 @@ class MainWindow(QMainWindow):
             p = self.current_document.profile
             export_settings.save()
             samples_file = p.export_samples_niviz(export_settings)
-            self.notify_dialog.notifyFilesWritten([samples_file], False)
+            self.notify_dialog.notifyFilesWritten([samples_file],
+                'Do not forget to enable the SMP measurement in the niViz settings (Settings · Simple Profile · Configure additional parameters · + · "smp")')
 
     @property
     def current_document(self):
@@ -707,15 +714,14 @@ class NotificationDialog(QDialog):
         self.setLayout(layout)
         self.resize(500, 200)
 
-    def notifyFilesWritten(self, files, derivatives_written=True):
+    def notifyFilesWritten(self, files, hint_text=''):
         if isinstance(files, str):
             files = [files]
         self.setWindowTitle('Notification')
         multipe = len(files) > 1
-        hint_text = 'File{} written:'.format('s' if multipe else '')
-        if derivatives_written:
-            hint_text = '<b>NOTE:</b> Only the parameterization chosen in your user settings was exported (due to different resolutions of the respective publications).' \
-            + '<br><br>' + hint_text
+        if hint_text != '':
+            hint_text = '<b>NOTE:</b> ' + hint_text + '<br><br>'
+        hint_text = hint_text + 'File{} written:'.format('s' if multipe else '')
         self.hint_label.setText(hint_text)
         self.content_textedit.setText('\n'.join([str(f) for f in files]))
         self.exec()
