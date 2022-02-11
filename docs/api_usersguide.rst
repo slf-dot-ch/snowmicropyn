@@ -135,6 +135,23 @@ This will print something like:
    Mean SSA within crust: 5.5 m^2/m^3
    Weight above hoar layer: 98 kg/m^2
 
+Using Different Parameterizations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Depending on your SMP device and/or your climatic settings different
+parameterizations to derive observables from the raw SMP measurements may be
+preferable. Have a look at the Parameterizations_ help topic for details on
+what's available.
+
+In the GUI you are able to select them individually, and programmatically
+this is done by giving their short names.
+
+The names are found in the :code:`shortname` property in the respective
+implementations (in the :file:`parameterizations` subdirectory) and can
+be e. g. "P2015", "CR2020", "K2020a" or "K2020b".
+
+.. literalinclude:: ../examples/parameterizations.py
 
 .. _matplotlib: https://www.matplotlib.org/
 .. _Download: https://github.com/slf-dot-ch/snowmicropyn/
+.. _Parameterizations: https://snowmicropyn.readthedocs.io/en/latest/api_reference.html#module-snowmicropyn.parameterizations.proksch2015
