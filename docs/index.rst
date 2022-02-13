@@ -2,7 +2,7 @@
 *snowmicropyn*'s Documentation
 ==============================
 
-A warmly welcome to the documentation of *snowmicropyn*, a python package to
+A warmly welcome to the documentation of *snowmicropyn*, a Python package to
 read, export and post process data (\*.pnt files) recorded by SnowMicroPen_, a
 snow penetration probe for scientifc applications developed at SLF_.
 

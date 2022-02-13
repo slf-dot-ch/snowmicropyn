@@ -1,7 +1,7 @@
-"""Calculation of density and ssa.
+"""Calculation of density.
 
-This module implements the methods to derive density and specific surface area
-(SSA) from SnowMicroPen's signal as described in publication
+This module implements the method to derive the density from
+SnowMicroPen's signal as described in publication
 `Local-scale variability of snow density on Arctic sea ice
 <https://doi.org/10.5194/tc-14-4323-2020>`_ by King, J., Howell, S.,
 Brady, M., Toose, P., Derksen, C., Haas, C., and Beckers, J., publicised in
@@ -34,7 +34,7 @@ class King2020a(derivatives.Derivatives):
         :param lamb: Intensity of point process in mm^-1 (unused in King).
         :param f0: Mean rupture force in N (unused in King).
         :param delta: Deflection at rupture in mm (unused in King).
-        :return: SSA value in m^2/kg.
+        :return: density in kg/m^3.
         """
         # Table 2 in publication
         aa = [315.61, 46.94, -43.94, -88.15]

@@ -56,7 +56,7 @@ SSA & Density (Calonne and Richter, 2020)
 .. automodule:: snowmicropyn.parameterizations.calonne_richter2020
    :members:
 
-SSA & Density (King, 2020)
+Density (King, 2020)
 -----------------------------------------
 
 .. automodule:: snowmicropyn.parameterizations.king2020

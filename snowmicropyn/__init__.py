@@ -26,5 +26,5 @@ log.info('snowmicropyn Version {}, Git Hash {}'.format(__version__, githash()))
 from .profile import Profile
 from .pnt import Pnt
 
-from .derivatives import parameterizations as params
-proksch2015 = params.get('P2015') # backwards compatibility to < v1.1.0
+from .derivatives import parameterizations
+proksch2015 = parameterizations['P2015'] # backwards compatibility to < v1.1.0

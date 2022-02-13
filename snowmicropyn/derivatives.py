@@ -19,6 +19,7 @@ class Parameterizations:
         self._parameterizations = {}
 
     def __getitem__(self, key):
+        """[] operator"""
         return self.get(key)
 
     def register(self, param):
@@ -87,7 +88,8 @@ class Derivatives:
             density, ssa = self.calc_step(row.force_median, row.L2012_L, row.L2012_lambda,
                 row.L2012_f0, row.L2012_delta)
             result.append((row.distance, density, ssa))
-        return pd.DataFrame(result, columns=['distance', self.shortname + '_density', self.shortname + '_ssa'])
+        return pd.DataFrame(result, columns=['distance', self.shortname + '_density',
+            self.shortname + '_ssa'])
 
     def calc(self, samples):
         """Calculate ssa and density from a pandas dataframe containing the samples
@@ -104,6 +106,7 @@ class Derivatives:
             density, ssa = self.calc_step(row.force_median, row.L2012_L, row.L2012_lambda,
                 row.L2012_f0, row.L2012_delta)
             result.append((row.distance, density, ssa))
-        return pd.DataFrame(result, columns=['distance', self.shortname + '_density', self.shortname + '_ssa'])
+        return pd.DataFrame(result, columns=['distance', self.shortname + '_density',
+            self.shortname + '_ssa'])
 
 parameterizations = Parameterizations() # access throughout SMPyn via this

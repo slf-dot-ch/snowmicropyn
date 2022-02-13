@@ -23,7 +23,7 @@ Implementation
 #. Choose your attributes.
 
    In the class' :meth:`__init__` function you will see a couple of variables
-   being initialized, like a name and shortcut for your algorithm.
+   being initialized, like a name and shortcut (here "C2022") for your algorithm.
    Set these accordingly.
 
 #. Define your density and SSA functions.
@@ -51,13 +51,13 @@ Implementation
 
       import snowmicropyn as smp
       pro = smp.Profile.load('../examples/profiles/S37M0876.pnt')
-      c2021 = smp.params['C2021'].calc(pro.samples)
+      c2022 = smp.params['C2022'].calc(pro.samples)
 
 #. Document your work
 
-   If you started from a template then the documentation can be built from the
-   source code comments. To do this, add your parameterization in
-   :file:`docs/api_reference.rst`.
+   Documentation is built from source code, so adhering to commenting standards
+   (or sticking to the template) should ensure easy integration.
+   To insert your module, add it in :file:`docs/api_reference.rst`.
 
 Colors
 ------

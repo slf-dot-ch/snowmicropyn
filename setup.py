@@ -9,7 +9,7 @@ init_py = os.path.join(here, 'snowmicropyn', '__init__.py')
 with open(init_py) as f:
     VERSION = re.search("__version__ = \'(.*?)\'", f.read()).group(1)
 
-DESC = 'A python package to read, export and post process data (*.pnt files) ' \
+DESC = 'A Python package to read, export and post process data (*.pnt files) ' \
        'recorded by SnowMicroPen, a snow penetration probe for scientific ' \
        'applications developed at SLF.'
 

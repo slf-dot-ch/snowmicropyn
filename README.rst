@@ -1,7 +1,7 @@
 snowmicropyn
 ============
 
-A python package to read, export and post process data (``*.pnt`` files)
+A Python package to read, export and post process data (``*.pnt`` files)
 recorded by SnowMicroPen_, a snow penetration probe for scientifc applications
 developed at SLF_.
 

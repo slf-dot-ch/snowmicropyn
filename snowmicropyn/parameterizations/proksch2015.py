@@ -35,7 +35,7 @@ class Proksch2015(derivatives.Derivatives):
         :param lamb: Intensity of point process in mm^-1 (unused in Proksch).
         :param f0: Mean rupture force in N (unused in Proksch).
         :param delta: Deflection at rupture in mm (unused in Proksch).
-        :return: SSA value in m^2/kg.
+        :return: density in kg/m^3.
         """
         # Equation 9 in publication
         aa = [420.47, 102.47, -121.15, -169.96]

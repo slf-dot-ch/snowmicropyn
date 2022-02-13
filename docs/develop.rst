@@ -38,7 +38,7 @@ Compiling Icons Into a Python File
 
 The :program:`pyngui` application requires icons used in menus and toolbar
 buttons. They are stored in the folder :file:`resources`. For easy deployment,
-they are compiled into a python source file using the :command:`pyrcc5` tool,
+they are compiled into a Python source file using the :command:`pyrcc5` tool,
 which comes with the Qt package. Execute the following command when you made
 changes in the resources folder:
 
