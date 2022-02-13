@@ -20,11 +20,11 @@ def githash():
 
 
 # Log version and its git hash when module is imported
-log = logging.getLogger('pyngui')
+log = logging.getLogger('snowmicropyn')
 log.info('snowmicropyn Version {}, Git Hash {}'.format(__version__, githash()))
 
 from .profile import Profile
 from .pnt import Pnt
 
-from .derivatives import parameterizations
-proksch2015 = parameterizations['P2015'] # backwards compatibility to < v1.1.0
+from .derivatives import parameterizations as params # global access to our parameterizations
+proksch2015 = params['P2015'] # backwards compatibility to < v1.1.0

@@ -11,7 +11,7 @@ from PyQt5.QtGui import QDoubleValidator
 from PyQt5.QtWidgets import QWidget, QCheckBox, QComboBox, QLineEdit, QRadioButton, QFormLayout, QHBoxLayout, \
     QVBoxLayout, QButtonGroup, QLabel, QDialogButtonBox, QGroupBox, QDialog
 
-log = logging.getLogger('pyngui')
+log = logging.getLogger('snowmicropyn')
 
 _GAP = 20
 _LINEEDIT_WIDTH = 50

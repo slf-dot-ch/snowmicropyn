@@ -4,7 +4,7 @@ import numpy as np
 
 from .tools import downsample, smooth
 
-log = logging.getLogger('pyngui')
+log = logging.getLogger('snowmicropyn')
 
 
 def detect_ground(profile):

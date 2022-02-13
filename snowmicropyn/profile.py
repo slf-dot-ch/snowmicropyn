@@ -19,7 +19,7 @@ from .derivatives import parameterizations
 
 from .pnt import Pnt
 
-log = logging.getLogger('pyngui')
+log = logging.getLogger('snowmicropyn')
 
 class Profile(object):
     """ Represents a loaded pnt file.

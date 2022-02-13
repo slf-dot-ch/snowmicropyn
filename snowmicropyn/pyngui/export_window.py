@@ -11,7 +11,7 @@ from PyQt5.QtGui import QDoubleValidator, QIntValidator, QDesktopServices
 from PyQt5.QtWidgets import QWidget, QLineEdit, QFormLayout, QHBoxLayout, QVBoxLayout, \
     QLabel, QDialogButtonBox, QDialog, QVBoxLayout
 
-log = logging.getLogger('pyngui')
+log = logging.getLogger('snowmicropyn')
 
 _LINEEDIT_WIDTH = 50
 

@@ -3,7 +3,7 @@ import logging
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-log = logging.getLogger('pyngui')
+log = logging.getLogger('snowmicropyn')
 
 
 class SuperposCanvas(FigureCanvas):

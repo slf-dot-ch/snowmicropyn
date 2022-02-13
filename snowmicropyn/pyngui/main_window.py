@@ -20,7 +20,7 @@ from snowmicropyn.pyngui.sidebar import SidebarWidget
 from snowmicropyn.pyngui.superpos_canvas import SuperposCanvas
 from snowmicropyn.derivatives import parameterizations
 
-log = logging.getLogger('pyngui')
+log = logging.getLogger('snowmicropyn')
 
 class MainWindow(QMainWindow):
     SETTING_LAST_DIRECTORY = 'MainFrame/last_directory'

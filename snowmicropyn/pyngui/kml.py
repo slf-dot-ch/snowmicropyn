@@ -1,6 +1,6 @@
 import logging
 
-log = logging.getLogger('pyngui')
+log = logging.getLogger('snowmicropyn')
 
 _basics = """
 <?xml version="1.0" encoding="UTF-8"?>

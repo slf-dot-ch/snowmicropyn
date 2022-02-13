@@ -21,7 +21,7 @@ def main():
     app.setApplicationName(APP_NAME.replace(' ', '_').lower())
     app.setApplicationVersion(VERSION)
 
-    logger = logging.getLogger('pyngui')
+    logger = logging.getLogger('snowmicropyn')
     logger.setLevel(logging.INFO)
     logger.addHandler(logging.StreamHandler(stream=sys.stdout))
     logger.addHandler(LogWindow()) # do not keep LogWindow in scope manually --> crashes

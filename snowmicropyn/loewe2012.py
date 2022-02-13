@@ -23,7 +23,7 @@ import logging
 
 from .windowing import chunkup
 
-log = logging.getLogger('pyngui')
+log = logging.getLogger('snowmicropyn')
 
 #: Default value for SnowMicroPen's cone diameter im mm.
 SMP_CONE_DIAMETER = 5  # [mm]
