@@ -171,6 +171,14 @@ class SidebarWidget(QTreeWidget):
 
             item.delete_button.clicked.connect(delete_marker)
 
+            def detect_marker(checked):
+                if (label == 'surface'):
+                    self.main_window._detect_surface_triggered()
+                else:
+                    self.main_window._detect_ground_triggered()
+
+            item.detect_button.clicked.connect(detect_marker)
+
             self.marker_items[label] = item
             self.markers_item.addChild(item)
 
@@ -192,9 +200,7 @@ class MarkerTreeItem(QTreeWidgetItem):
 
         self.delete_button = QPushButton()
         self.delete_button.setIcon(QIcon(':/icons/delete.png'))
-
         self.detect_button = QPushButton()
-        self.detect_button.setIcon(QIcon(':/icons/autodetect.png'))
 
         self.lineedit = QLineEdit(self.treeWidget())
         self.lineedit.setValidator(QDoubleValidator())
@@ -203,6 +209,7 @@ class MarkerTreeItem(QTreeWidgetItem):
             self.treeWidget().setItemWidget(self, 1, self.delete_button)
         self.setText(2, name)
         if name in ['surface', 'ground']:
+            self.detect_button.setIcon(QIcon(f':/icons/detect_{name}.png'))
             self.treeWidget().setItemWidget(self, 3, self.detect_button)
         self.treeWidget().setItemWidget(self, 4, self.lineedit)
 
