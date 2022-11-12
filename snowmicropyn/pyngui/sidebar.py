@@ -2,7 +2,7 @@ import logging
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QDoubleValidator
-from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QLineEdit, QPushButton, QLabel
+from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QComboBox, QLineEdit, QPushButton, QLabel
 
 log = logging.getLogger('snowmicropyn')
 
@@ -29,16 +29,19 @@ class SidebarWidget(QTreeWidget):
         self.recording_item = QTreeWidgetItem(('Recording',), QTreeWidgetItem.Type)
         self.smp_item = QTreeWidgetItem(('SnowMicroPen',), QTreeWidgetItem.Type)
         self.markers_item = QTreeWidgetItem(('Markers',), QTreeWidgetItem.Type)
+        self.qa_item = QTreeWidgetItem(('Quality Assurance',), QTreeWidgetItem.Type)
         self.drift_item = QTreeWidgetItem(('Drift, Offset, Noise',), QTreeWidgetItem.Type)
 
         self.addTopLevelItem(self.recording_item)
         self.addTopLevelItem(self.smp_item)
         self.addTopLevelItem(self.markers_item)
+        self.addTopLevelItem(self.qa_item)
         self.addTopLevelItem(self.drift_item)
 
         self.setFirstItemColumnSpanned(self.recording_item, True)
         self.setFirstItemColumnSpanned(self.smp_item, True)
         self.setFirstItemColumnSpanned(self.markers_item, True)
+        self.setFirstItemColumnSpanned(self.qa_item, True)
         self.setFirstItemColumnSpanned(self.drift_item, True)
 
         # recording items
@@ -79,7 +82,15 @@ class SidebarWidget(QTreeWidget):
         self.smp_item.addChild(self.smp_sensor_serial_item)
         self.smp_item.addChild(self.smp_amp_item)
 
+        # quality assurance items
+
+        item = QaFlagTreeItem(self.qa_item, 'quality_flag', False)
+        self.qa_item.addChild(item)
+        item = QaCommentTreeItem(self.qa_item, 'comment', False)
+        self.qa_item.addChild(item)
+
         # drift items
+
         self.drift_begin_item = QTreeWidgetItem((None, None, 'Begin', None, ''))
         self.drift_end_item = QTreeWidgetItem((None, None, 'End', None, ''))
         self.drift_value_item = QTreeWidgetItem((None, None, 'Drift', None, ''))
@@ -159,7 +170,7 @@ class SidebarWidget(QTreeWidget):
             item = MarkerTreeItem(self.markers_item, label)
 
             # This is a bit tricky: We call the methods on main_window which
-            # call this method again...
+            # calls this method again...
 
             def set_marker():
                 self.main_window.set_marker(label, item.lineedit.text())
@@ -211,6 +222,50 @@ class MarkerTreeItem(QTreeWidgetItem):
         if name in ['surface', 'ground']:
             self.detect_button.setIcon(QIcon(f':/icons/detect_{name}.png'))
             self.treeWidget().setItemWidget(self, 3, self.detect_button)
+        self.treeWidget().setItemWidget(self, 4, self.lineedit)
+
+    @property
+    def name(self):
+        return self.text(2)
+
+    @property
+    def value(self):
+        return self.lineedit.value()
+
+    def lineedit_focused(self):
+        pass
+
+class QaFlagTreeItem(QTreeWidgetItem):
+
+    def __init__(self, parent, name, deletable=True):
+        super(QaFlagTreeItem, self).__init__(parent)
+
+        self._flags = {0: "not set", 1: "excellent", 2: "good", 3: "satisfying", 4: "sufficient", 9: "unsatisfactory"}
+        self.dropdown = QComboBox(self.treeWidget())
+        self.dropdown.addItems([f"{item[0]}: {item[1]}" for item in self._flags.items()])
+
+        self.setText(2, name)
+        self.treeWidget().setItemWidget(self, 4, self.dropdown)
+
+    @property
+    def name(self):
+        return self.text(2)
+
+    @property
+    def value(self):
+        return self.lineedit.value()
+
+    def lineedit_focused(self):
+        pass
+
+class QaCommentTreeItem(QTreeWidgetItem):
+
+    def __init__(self, parent, name, deletable=True):
+        super(QaCommentTreeItem, self).__init__(parent)
+
+        self.lineedit = QLineEdit(self.treeWidget())
+
+        self.setText(2, name)
         self.treeWidget().setItemWidget(self, 4, self.lineedit)
 
     @property
