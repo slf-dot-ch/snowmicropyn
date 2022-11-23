@@ -1,8 +1,21 @@
 import logging
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QDoubleValidator
-from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QComboBox, QLineEdit, QPushButton, QLabel
+from PyQt5.QtGui import QIcon, QDoubleValidator, QFontMetrics
+from PyQt5.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSizePolicy,
+    QToolButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget
+)
 
 log = logging.getLogger('snowmicropyn')
 
@@ -84,9 +97,15 @@ class SidebarWidget(QTreeWidget):
 
         # quality assurance items
 
-        item = QaFlagTreeItem(self.qa_item, 'quality_flag', False)
+        item = QaCheckboxTreeItem(self.qa_item, 'usable')
         self.qa_item.addChild(item)
-        item = QaCommentTreeItem(self.qa_item, 'comment', False)
+        item = QaFlagTreeItem(self.qa_item, 'quality_flag')
+        self.qa_item.addChild(item)
+        item = QaCommentTreeItem(self.qa_item, 'comment')
+        self.qa_item.addChild(item)
+        item = QaCommentTreeItem(self.qa_item, 'details')
+        self.qa_item.addChild(item)
+        item = QaCommentTreeItem(self.qa_item, 'experiment')
         self.qa_item.addChild(item)
 
         # drift items
@@ -236,31 +255,14 @@ class MarkerTreeItem(QTreeWidgetItem):
         pass
 
 class QaFlagTreeItem(QTreeWidgetItem):
-
-    def __init__(self, parent, name, deletable=True):
-        super(QaFlagTreeItem, self).__init__(parent)
-
-        self._flags = {0: "not set", 1: "excellent", 2: "good", 3: "satisfying", 4: "sufficient", 9: "unsatisfactory"}
-        self.dropdown = QComboBox(self.treeWidget())
-        self.dropdown.addItems([f"{item[0]}: {item[1]}" for item in self._flags.items()])
-
+    def __init__(self, parent, name):
+        super().__init__(parent)
         self.setText(2, name)
-        self.treeWidget().setItemWidget(self, 4, self.dropdown)
-
-    @property
-    def name(self):
-        return self.text(2)
-
-    @property
-    def value(self):
-        return self.lineedit.value()
-
-    def lineedit_focused(self):
-        pass
+        self.picker = QaPicker(self.treeWidget())
+        self.treeWidget().setItemWidget(self, 4, self.picker)
 
 class QaCommentTreeItem(QTreeWidgetItem):
-
-    def __init__(self, parent, name, deletable=True):
+    def __init__(self, parent, name):
         super(QaCommentTreeItem, self).__init__(parent)
 
         self.lineedit = QLineEdit(self.treeWidget())
@@ -268,13 +270,57 @@ class QaCommentTreeItem(QTreeWidgetItem):
         self.setText(2, name)
         self.treeWidget().setItemWidget(self, 4, self.lineedit)
 
+class QaCheckboxTreeItem(QTreeWidgetItem):
+
+    def __init__(self, parent, name):
+        super(QaCheckboxTreeItem, self).__init__(parent)
+
+        self.checkbox = QCheckBox(self.treeWidget())
+
+        self.setText(2, name)
+        self.treeWidget().setItemWidget(self, 4, self.checkbox)
+
     @property
     def name(self):
         return self.text(2)
 
     @property
     def value(self):
-        return self.lineedit.value()
+        return self.checkbox.value()
 
     def lineedit_focused(self):
         pass
+
+class QaPicker(QWidget):
+    _colors = {0: "black", 1: "green", 2: "#8B8000", 3: "orange", 4: "red", 9: "#630700"}
+    _flags = {0: "not set", 1: "excellent", 2: "good", 3: "satisfying", 4: "sufficient", 9: "unsatisfactory"}
+
+    def __init__(self, parent):
+        super(QaPicker, self).__init__(parent)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        button_layout.setSpacing(0)
+        for idx in self._colors.keys():
+            button = QToolButton()
+            button.setCheckable(True)
+            button.setText(str(idx))
+            button.clicked.connect(lambda state, index=idx: self.on_qa_click(index, state))
+            button.setStyleSheet(f"background-color: {self._colors[idx]}; color: white; font-weight: normal")
+            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            font_height = QFontMetrics(button.font()).height() + 5
+            font_width = QFontMetrics(button.font()).width("X") * 3
+            button.setMinimumSize(font_width, font_height)
+            button_layout.addWidget(button, 0, Qt.AlignLeft)
+        layout.addLayout(button_layout)
+
+        self.qa_label = QLabel()
+        layout.addWidget(self.qa_label)
+        self.setLayout(layout)
+
+    def on_qa_click(self, index, state):
+        self.qa_label.setText(str(index) + ": " + self._flags[index])
+        self.qa_label.setStyleSheet(f"background-color: {self._colors[index]}; color: white")
