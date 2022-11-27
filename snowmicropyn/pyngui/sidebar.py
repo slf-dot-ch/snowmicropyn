@@ -33,6 +33,7 @@ class SidebarWidget(QTreeWidget):
 
         self.doc = None
         self.marker_items = {}
+        self.qa_items = {}
 
         self.setColumnCount(5)
         self.setHeaderHidden(True)
@@ -97,16 +98,16 @@ class SidebarWidget(QTreeWidget):
 
         # quality assurance items
 
-        item = QaCheckboxTreeItem(self.qa_item, 'usable')
-        self.qa_item.addChild(item)
-        item = QaFlagTreeItem(self.qa_item, 'quality_flag')
-        self.qa_item.addChild(item)
-        item = QaCommentTreeItem(self.qa_item, 'comment')
-        self.qa_item.addChild(item)
-        item = QaCommentTreeItem(self.qa_item, 'details')
-        self.qa_item.addChild(item)
-        item = QaCommentTreeItem(self.qa_item, 'experiment')
-        self.qa_item.addChild(item)
+        self.qa_items['usable'] = QaCheckboxTreeItem(self.qa_item, 'usable', self.main_window)
+        self.qa_items['quality_flag'] = QaFlagTreeItem(self.qa_item, 'quality_flag', self.main_window)
+        self.qa_items['comment'] = QaCommentTreeItem(self.qa_item, 'comment', self.main_window)
+        self.qa_items['details'] = QaCommentTreeItem(self.qa_item, 'details', self.main_window)
+        self.qa_items['experiment'] = QaCommentTreeItem(self.qa_item, 'experiment', self.main_window)
+        self.qa_item.addChild(self.qa_items['usable'])
+        self.qa_item.addChild(self.qa_items['quality_flag'])
+        self.qa_item.addChild(self.qa_items['comment'])
+        self.qa_item.addChild(self.qa_items['details'])
+        self.qa_item.addChild(self.qa_items['experiment'])
 
         # drift items
 
@@ -168,13 +169,23 @@ class SidebarWidget(QTreeWidget):
         self.smp_sensor_sensitivity_item.setText(self.TEXT_COLUMN, '{}  pC/N'.format(p.sensor_sensitivity))
         self.smp_amp_item.setText(self.TEXT_COLUMN, p.amplifier_serial)
 
-        # Drop all existing markers
-        for label, item in self.marker_items.items():
+        for label, item in self.marker_items.items(): # drop all existing markers
             self.markers_item.removeChild(item)
         self.marker_items = {}
 
         for label, value in p.markers.items():
             self.set_marker(label, value)
+
+        # Initialize quality flag items:
+        is_usable = p._ini.getboolean('quality assurance', 'usable', fallback=True)
+        self.qa_items['usable'].set_checked(is_usable)
+        qa_flag = p._ini.getint('quality assurance', 'qa_flag', fallback=0)
+        self.qa_items['quality_flag'].set_flag(qa_flag)
+        qa_text_fields = ['comment', 'details', 'experiment']
+        for field in qa_text_fields:
+            cmt = p._ini.get('quality assurance', field, fallback="")
+            self.qa_items[field].setComment(cmt)
+
 
     def set_marker(self, label, value):
         if value is None:
@@ -254,31 +265,50 @@ class MarkerTreeItem(QTreeWidgetItem):
     def lineedit_focused(self):
         pass
 
-class QaFlagTreeItem(QTreeWidgetItem):
-    def __init__(self, parent, name):
-        super().__init__(parent)
-        self.setText(2, name)
-        self.picker = QaPicker(self.treeWidget())
-        self.treeWidget().setItemWidget(self, 4, self.picker)
-
 class QaCommentTreeItem(QTreeWidgetItem):
-    def __init__(self, parent, name):
+    def __init__(self, parent, name, main_win):
         super(QaCommentTreeItem, self).__init__(parent)
 
         self.lineedit = QLineEdit(self.treeWidget())
+        self.lineedit.editingFinished.connect(self.saveComment)
 
         self.setText(2, name)
         self.treeWidget().setItemWidget(self, 4, self.lineedit)
 
-class QaCheckboxTreeItem(QTreeWidgetItem):
+        self.name = name
+        self.main_window = main_win
 
-    def __init__(self, parent, name):
+    def setComment(self, text: str):
+        self.lineedit.setText(text)
+
+    def saveComment(self):
+        config = self.main_window.current_document.profile._ini
+        config.set('quality assurance', self.name, self.value)
+
+    @property
+    def value(self):
+        return self.lineedit.text()
+
+class QaCheckboxTreeItem(QTreeWidgetItem):
+    def __init__(self, parent, name, main_win):
         super(QaCheckboxTreeItem, self).__init__(parent)
 
+        self.main_window = main_win
         self.checkbox = QCheckBox(self.treeWidget())
+        self.checkbox.stateChanged.connect(self.save_usable)
 
         self.setText(2, name)
         self.treeWidget().setItemWidget(self, 4, self.checkbox)
+
+    def value(self):
+        return self.checkbox.isChecked()
+
+    def set_checked(self, checked: bool):
+        self.checkbox.setChecked(checked)
+
+    def save_usable(self):
+        config = self.main_window.current_document.profile._ini
+        config.set('quality assurance', 'usable', str(self.value))
 
     @property
     def name(self):
@@ -286,17 +316,30 @@ class QaCheckboxTreeItem(QTreeWidgetItem):
 
     @property
     def value(self):
-        return self.checkbox.value()
+        return self.checkbox.isChecked()
 
-    def lineedit_focused(self):
-        pass
+class QaFlagTreeItem(QTreeWidgetItem):
+    def __init__(self, parent, name, main_win):
+        super().__init__(parent)
+        self.setText(2, name)
+        self.picker = QaPicker(self.treeWidget(), main_win)
+        self.treeWidget().setItemWidget(self, 4, self.picker)
+
+    def set_flag(self, flag):
+        self.picker.on_qa_click(flag)
+
+    @property
+    def value(self):
+        return self.picker.value
 
 class QaPicker(QWidget):
     _colors = {0: "black", 1: "green", 2: "#8B8000", 3: "orange", 4: "red", 9: "#630700"}
     _flags = {0: "not set", 1: "excellent", 2: "good", 3: "satisfying", 4: "sufficient", 9: "unsatisfactory"}
+    current_flag = 0
 
-    def __init__(self, parent):
+    def __init__(self, parent, main_win):
         super(QaPicker, self).__init__(parent)
+        self.main_window = main_win
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -308,7 +351,7 @@ class QaPicker(QWidget):
             button = QToolButton()
             button.setCheckable(True)
             button.setText(str(idx))
-            button.clicked.connect(lambda state, index=idx: self.on_qa_click(index, state))
+            button.clicked.connect(lambda state, index=idx: self.on_qa_click(index))
             button.setStyleSheet(f"background-color: {self._colors[idx]}; color: white; font-weight: normal")
             button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
             font_height = QFontMetrics(button.font()).height() + 5
@@ -321,6 +364,16 @@ class QaPicker(QWidget):
         layout.addWidget(self.qa_label)
         self.setLayout(layout)
 
-    def on_qa_click(self, index, state):
+    def on_qa_click(self, index):
+        self.current_flag = index
         self.qa_label.setText(str(index) + ": " + self._flags[index])
         self.qa_label.setStyleSheet(f"background-color: {self._colors[index]}; color: white")
+        self.save_flag()
+
+    def save_flag(self):
+        config = self.main_window.current_document.profile._ini
+        config.set('quality assurance', 'qa_flag', str(self.value))
+
+    @property
+    def value(self):
+        return self.current_flag

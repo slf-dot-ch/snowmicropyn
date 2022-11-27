@@ -1,11 +1,10 @@
 import configparser
 import csv
-import logging
-import pathlib
 from datetime import datetime
-import numpy as np
+import logging
 from math import cos, pi
-
+import numpy as np
+import pathlib
 import pandas as pd
 import pytz
 
@@ -141,16 +140,17 @@ class Profile(object):
 
         self._ini = configparser.ConfigParser()
 
-        # Look out for corresponding ini file
-
+        # Look for corresponding ini file
         self._ini_file = self._pnt_file.with_suffix('.ini')
         if self._ini_file.exists():
             log.info('Reading ini file {} for {}'.format(self._ini_file, self))
             self._ini.read(self._ini_file)
 
-        # Ensure a section called 'markers' does exist
+        # Ensure existence of necessary sections
         if not self._ini.has_section('markers'):
             self._ini.add_section('markers')
+        if not self._ini.has_section('quality assurance'):
+            self._ini.add_section('quality assurance')
 
         # Check for invalid values (non floats) in 'markers' section
         for k, v in self._ini.items('markers'):
@@ -404,9 +404,6 @@ class Profile(object):
 
         .. warning::
            An already existing ini file is overwritten with no warning.
-
-        When no markers are set on the profile, the resulting file will be
-        empty.
         """
         with self._ini_file.open('w') as f:
             log.info('Saving ini info of {} to file {}'.format(self, self._ini_file))
@@ -664,3 +661,5 @@ class Profile(object):
         ground = detection.detect_ground(self)
         self.set_marker('ground', ground)
         return ground
+
+
