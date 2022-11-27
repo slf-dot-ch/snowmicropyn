@@ -9,7 +9,6 @@ from matplotlib.figure import Figure
 
 log = logging.getLogger('snowmicropyn')
 
-
 class PlotCanvas(FigureCanvas):
     COLOR_BLUE = 'C0'
     COLOR_ORANGE = 'C1'
@@ -51,7 +50,7 @@ class PlotCanvas(FigureCanvas):
         self.figure = Figure()
         super(PlotCanvas, self).__init__(self.figure)
 
-        # When a context click is done, a menu pops up to select a
+        # When a context click is done, a menu pops up to select
         # which marker to set. The value where the click was performed
         # is stored in this field.
         self._clicked_distance = None
@@ -183,7 +182,7 @@ class PlotCanvas(FigureCanvas):
             if plot_id == 'drift' and self._drift_label:
                 self._drift_label.remove()
                 self._drift_label = None
-        if values is not None:
+        if values:
             color = self.COLORS['plot_' + plot_id]
             x, y = values
             axes = self._axes[axes_id]
@@ -235,19 +234,19 @@ class PlotCanvas(FigureCanvas):
         outward = 60 if visibility['plot_ssa'] and visibility['plot_density'] else 0
         self._axes['density'].spines['right'].set_position(('outward', outward))
 
-        for k, lines in self._plots.items():
-            v = visibility['plot_' + k]
-            for l in lines:
-                l.set_visible(v)
-            if k == 'drift' and self._drift_label:
-                self._drift_label.set_visible(v)
+        for label, lines in self._plots.items():
+            vis = visibility['plot_' + label]
+            for ll in lines:
+                ll.set_visible(vis)
+            if label == 'drift' and self._drift_label:
+                self._drift_label.set_visible(vis)
 
-        for k, (line, text) in self._markers.items():
-            v = visibility['marker_others']
-            if 'marker_' + k in visibility:
-                v = visibility['marker_' + k]
-            line.set_visible(v)
-            text.set_visible(v)
+        for label, (line, text) in self._markers.items():
+            vis = visibility['marker_others']
+            if 'marker_' + label in visibility:
+                vis = visibility['marker_' + label]
+            line.set_visible(vis)
+            text.set_visible(vis)
 
         super(PlotCanvas, self).draw()
 

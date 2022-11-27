@@ -678,7 +678,6 @@ class MainWindow(QMainWindow):
 
 # The NoDocWidget is visible when no document is open. It contains the SLF logo.
 class NoDocWidget(QWidget):
-
     def __init__(self, parent=None):
         # noinspection PyArgumentList
         super(NoDocWidget, self).__init__(parent)
