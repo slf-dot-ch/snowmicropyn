@@ -29,7 +29,6 @@ class SidebarWidget(QTreeWidget):
 
         # Get rid of the ugly focus rectangle and border
         self.setAttribute(Qt.WA_MacShowFocusRect, False)
-        self.setStyleSheet('outline: 0; border: 0;')
 
         self.doc = None
         self.marker_items = {}
@@ -236,15 +235,19 @@ class SidebarWidget(QTreeWidget):
 
 class MarkerTreeItem(QTreeWidgetItem):
 
+    _empty_sheet = 'outline: 0; border: 0;'
     def __init__(self, parent, name, deletable=True):
         super(MarkerTreeItem, self).__init__(parent)
 
         self.delete_button = QPushButton()
         self.delete_button.setIcon(QIcon(':/icons/delete.png'))
         self.detect_button = QPushButton()
+        self.delete_button.setStyleSheet(self._empty_sheet)
+        self.detect_button.setStyleSheet(self._empty_sheet)
 
         self.lineedit = QLineEdit(self.treeWidget())
         self.lineedit.setValidator(QDoubleValidator())
+        self.lineedit.setStyleSheet(self._empty_sheet)
 
         if deletable:
             self.treeWidget().setItemWidget(self, 1, self.delete_button)
@@ -266,11 +269,13 @@ class MarkerTreeItem(QTreeWidgetItem):
         pass
 
 class QaCommentTreeItem(QTreeWidgetItem):
+    _empty_sheet = 'outline: 0; border: 0;'
     def __init__(self, parent, name, main_win):
         super(QaCommentTreeItem, self).__init__(parent)
 
         self.lineedit = QLineEdit(self.treeWidget())
         self.lineedit.editingFinished.connect(self.saveComment)
+        self.lineedit.setStyleSheet(self._empty_sheet)
 
         self.setText(2, name)
         self.treeWidget().setItemWidget(self, 4, self.lineedit)
