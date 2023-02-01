@@ -7,6 +7,7 @@ import numpy as np
 import pathlib
 import pandas as pd
 import pytz
+import xml.etree.ElementTree as ET
 
 from . import windowing
 from . import __version__, githash
@@ -445,6 +446,60 @@ class Profile(object):
             data = samples.rename(columns=with_units)
             data.to_csv(f, header=True, index=False, float_format=fmt)
         return file
+
+    def export_caaml(self, outfile=None, precision=4):
+        ns_caaml = 'caaml'
+        ns_caaml_url = 'http://caaml.org/Schemas/SnowProfileIACS/v6.0.3'
+        ns_gml = 'gml'
+        ns_gml_url = 'http://www.opengis.net/gml'
+
+        prof_id = self._pnt_file.stem
+        location = 'generic'
+
+        root = ET.Element(f'{ns_caaml}:SnowProfile')
+        root.set(f'xmlns:{ns_caaml}', ns_caaml_url)
+        root.set(f'xmlns:{ns_gml}', ns_gml_url)
+        root.set(f'{ns_gml}:id', prof_id)
+
+        meta_data = ET.Element(f'{ns_caaml}:metaData')
+        root.append(meta_data)
+
+        time_ref = ET.Element(f'{ns_caaml}:timeRef')
+        rec_time = ET.SubElement(time_ref, f'{ns_caaml}:recordTime')
+        time_inst = ET.SubElement(rec_time, f'{ns_caaml}:TimeInstant')
+        time_pos = ET.SubElement(time_inst, f'{ns_caaml}:timePosition')
+        time_pos.text = self._timestamp.isoformat()
+        root.append(time_ref)
+
+        src_ref = ET.Element(f'{ns_caaml}:srcRef')
+        src_per = ET.SubElement(src_ref, f'{ns_caaml}:Operation')
+        src_per.set(f'{ns_gml}:id', 'SMP_serial')
+        src_name = ET.SubElement(src_per, f'{ns_caaml}:name')
+        src_name.text = self._smp_serial
+        root.append(src_ref)
+
+        loc_ref = ET.Element(f'{ns_caaml}:locRef')
+        loc_ref.set(f'{ns_gml}:id', 'LOC_ID')
+        loc_name = ET.SubElement(loc_ref, f'{ns_caaml}:name')
+        loc_name.text = location
+        obs_sub = ET.SubElement(loc_ref, f'{ns_caaml}:obsPointSubType')
+        obs_sub.text = 'SMP profile location'
+        root.append(loc_ref)
+
+        snow_prof = ET.Element(f'{ns_caaml}:snowProfileResultsOf')
+        snow_prof_meas = ET.SubElement(snow_prof, f'{ns_caaml}:SnowProfileMeasurements')
+        snow_prof_meas.set('dir', 'top down')
+        root.append(snow_prof)
+
+        tree = ET.ElementTree(root)
+
+        ET.indent(tree, space="\t", level=0)
+        if outfile:
+            outfile = pathlib.Path(outfile)
+        else:
+            outfile = self._pnt_file.with_name(self._pnt_file.stem).with_suffix('.caaml')
+        tree.write(outfile, encoding="UTF-8", xml_declaration=True)
+        return outfile
 
     def export_samples_niviz(self, export_settings, file=None, precision=4):
         """ Export the samples of this profile into a CSV file readable by niViz.
