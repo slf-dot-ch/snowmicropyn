@@ -461,22 +461,19 @@ class Profile(object):
         root.set(f'xmlns:{ns_gml}', ns_gml_url)
         root.set(f'{ns_gml}:id', prof_id)
 
-        meta_data = ET.Element(f'{ns_caaml}:metaData')
-        root.append(meta_data)
+        meta_data = ET.SubElement(root, f'{ns_caaml}:metaData')
 
-        time_ref = ET.Element(f'{ns_caaml}:timeRef')
+        time_ref = ET.SubElement(root, f'{ns_caaml}:timeRef')
         rec_time = ET.SubElement(time_ref, f'{ns_caaml}:recordTime')
         time_inst = ET.SubElement(rec_time, f'{ns_caaml}:TimeInstant')
         time_pos = ET.SubElement(time_inst, f'{ns_caaml}:timePosition')
         time_pos.text = self._timestamp.isoformat()
-        root.append(time_ref)
 
-        src_ref = ET.Element(f'{ns_caaml}:srcRef')
+        src_ref = ET.SubElement(root, f'{ns_caaml}:srcRef')
         src_per = ET.SubElement(src_ref, f'{ns_caaml}:Operation')
         src_per.set(f'{ns_gml}:id', 'SMP_serial')
         src_name = ET.SubElement(src_per, f'{ns_caaml}:name')
         src_name.text = self._smp_serial
-        root.append(src_ref)
 
         loc_ref = ET.Element(f'{ns_caaml}:locRef')
         loc_ref.set(f'{ns_gml}:id', 'LOC_ID')
@@ -485,11 +482,54 @@ class Profile(object):
         obs_sub = ET.SubElement(loc_ref, f'{ns_caaml}:obsPointSubType')
         obs_sub.text = 'SMP profile location'
         root.append(loc_ref)
+        point_loc = ET.SubElement(loc_ref, f'{ns_caaml}:pointLocation')
+        point_pt = ET.SubElement(point_loc, f'{ns_gml}:Point')
+        point_pt.set(f'{ns_gml}:id', 'pointID')
+        point_pt.set(f'srsName', 'urn:ogc:def:crs:OGC:1.3:CRS84')
+        point_pt.set(f'srsDimension', '2')
+        point_pos = ET.SubElement(point_pt, f'{ns_gml}:pos')
+        point_pos.text = f'{self._longitude} {self._latitude}'
 
-        snow_prof = ET.Element(f'{ns_caaml}:snowProfileResultsOf')
+        snow_prof = ET.SubElement(root, f'{ns_caaml}:snowProfileResultsOf')
         snow_prof_meas = ET.SubElement(snow_prof, f'{ns_caaml}:SnowProfileMeasurements')
         snow_prof_meas.set('dir', 'top down')
-        root.append(snow_prof)
+
+        # Prepare samples:
+        samples = self.samples_within_snowpack()
+        mm2cm = lambda mm : mm / 10
+        samples['distance'] = samples['distance'].apply(mm2cm)
+
+        # Stratigraphy profile:
+        strat_prof = ET.SubElement(snow_prof_meas, f'{ns_caaml}:stratProfile')
+        strat_meta = ET.SubElement(strat_prof, f'{ns_caaml}:stratMetaData')
+
+        for idx, row in samples.iterrows():
+            layer = ET.SubElement(strat_prof, f'{ns_caaml}:Layer')
+            depth_top = ET.SubElement(layer, f'{ns_caaml}:depthTop')
+            depth_top.set('uom', 'cm')
+            depth_top.text = str(row['distance'])
+
+        # Hardness profile:
+        hard_prof = ET.SubElement(snow_prof_meas, f'{ns_caaml}:hardnessProfile')
+        hard_meta = ET.SubElement(hard_prof, f'{ns_caaml}:hardnessMetaData')
+        hard_meth = ET.SubElement(hard_meta, f'{ns_caaml}:methodOfMeas')
+        hard_meth.text = "SnowMicroPen"
+        hard_comp = ET.SubElement(hard_prof, f'{ns_caaml}:MeasurementComponents')
+        hard_comp.set('uomDepth', 'cm')
+        hard_comp.set('uomHardness', 'N')
+        hard_depth = ET.SubElement(hard_comp, f'{ns_caaml}:depth')
+        hard_res = ET.SubElement(hard_comp, f'{ns_caaml}:penRes')
+
+        hard_meas = ET.SubElement(hard_prof, f'{ns_caaml}:Measurements')
+        hard_tuple = ET.SubElement(hard_meas, f'{ns_caaml}:tupleList') #??
+
+        for idx, row in samples.iterrows():
+            layer = ET.SubElement(hard_prof, f'{ns_caaml}:Layer')
+            depth_top = ET.SubElement(layer, f'{ns_caaml}:depthTop')
+            depth_top.set('uom', 'cm')
+            depth_top.text = str(row['distance'])
+            hardness = ET.SubElement(layer, f'{ns_caaml}:hardness')
+            hardness.text = str(row['force'])
 
         tree = ET.ElementTree(root)
 
