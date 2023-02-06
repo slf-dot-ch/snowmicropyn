@@ -447,7 +447,37 @@ class Profile(object):
             data.to_csv(f, header=True, index=False, float_format=fmt)
         return file
 
-    def export_caaml(self, outfile=None, precision=4):
+
+    def hand_hardness(self, force):
+        # ICSSG p. 6
+        if force <= 50:
+            return "F"
+        elif force <= 175:
+            return "4F"
+        elif force <= 390:
+            return "1F"
+        elif force <= 715:
+            return "P"
+        elif force <= 1200:
+            return "K"
+        else:
+            return "-"
+
+    def export_caaml(self, outfile=None, parameterization='P2015', precision=4):
+
+        # Prepare samples:
+        samples = self.samples_within_snowpack()
+        mm2cm = lambda mm : mm / 10
+
+        # Prepare derivatives:
+        param = parameterizations[parameterization]
+        loewe2012_df = loewe2012.calc(samples, param.window_size, param.overlap)
+        derivatives = loewe2012_df
+        derivatives = derivatives.merge(param.calc_from_loewe2012(loewe2012_df))
+
+        # After all calculations we can convert to cm (forced by CAAML):
+        samples['distance'] = samples['distance'].apply(mm2cm)
+
         ns_caaml = 'caaml'
         ns_caaml_url = 'http://caaml.org/Schemas/SnowProfileIACS/v6.0.3'
         ns_gml = 'gml'
@@ -494,11 +524,6 @@ class Profile(object):
         snow_prof_meas = ET.SubElement(snow_prof, f'{ns_caaml}:SnowProfileMeasurements')
         snow_prof_meas.set('dir', 'top down')
 
-        # Prepare samples:
-        samples = self.samples_within_snowpack()
-        mm2cm = lambda mm : mm / 10
-        samples['distance'] = samples['distance'].apply(mm2cm)
-
         # Stratigraphy profile:
         strat_prof = ET.SubElement(snow_prof_meas, f'{ns_caaml}:stratProfile')
         strat_meta = ET.SubElement(strat_prof, f'{ns_caaml}:stratMetaData')
@@ -508,6 +533,34 @@ class Profile(object):
             depth_top = ET.SubElement(layer, f'{ns_caaml}:depthTop')
             depth_top.set('uom', 'cm')
             depth_top.text = str(row['distance'])
+            grain_primary = ET.SubElement(layer, f'{ns_caaml}:grainFormPrimary')
+            grain_primary.text = 'PPgp'
+            grain_size = ET.SubElement(layer, f'{ns_caaml}:grainSize')
+            grain_size.set('uom', 'mm')
+            grain_components = ET.SubElement(grain_size, f'{ns_caaml}:Components')
+            grain_sz_avg = ET.SubElement(grain_components, f'{ns_caaml}:avg')
+            grain_sz_avg.text = "1"
+            grain_hardness = ET.SubElement(layer, f'{ns_caaml}:hardness')
+            grain_hardness.set('uom', '')
+            grain_hardness.text = self.hand_hardness(row['force'])
+
+        # Specific surface area profile:
+        ssa_prof = ET.SubElement(snow_prof_meas, f'{ns_caaml}:specSurfAreaProfile')
+        ssa_meta = ET.SubElement(ssa_prof, f'{ns_caaml}:specSurfAreaMetaData')
+        ssa_meth = ET.SubElement(ssa_meta, f'{ns_caaml}:methodOfMeas')
+        ssa_meth.text = "other"
+        ssa_comp = ET.SubElement(ssa_prof, f'{ns_caaml}:MeasurementComponents')
+        ssa_comp.set('uomDepth', 'cm')
+        ssa_comp.set('uomSpecSurfArea', 'm2kg-1')
+        ssa_depth = ET.SubElement(ssa_comp, f'{ns_caaml}:depth')
+        ssa_res = ET.SubElement(ssa_comp, f'{ns_caaml}:specSurfArea')
+        ssa_meas = ET.SubElement(ssa_prof, f'{ns_caaml}:Measurements')
+        ssa_tuple = ET.SubElement(ssa_meas, f'{ns_caaml}:tupleList')
+
+        tuple_list = ''
+        for idx, row in derivatives.iterrows():
+            tuple_list = tuple_list + str(row['distance']) + "," + str(row[f'{parameterization}_ssa']) + " "
+        ssa_tuple.text = tuple_list
 
         # Hardness profile:
         hard_prof = ET.SubElement(snow_prof_meas, f'{ns_caaml}:hardnessProfile')
@@ -519,17 +572,34 @@ class Profile(object):
         hard_comp.set('uomHardness', 'N')
         hard_depth = ET.SubElement(hard_comp, f'{ns_caaml}:depth')
         hard_res = ET.SubElement(hard_comp, f'{ns_caaml}:penRes')
-
         hard_meas = ET.SubElement(hard_prof, f'{ns_caaml}:Measurements')
-        hard_tuple = ET.SubElement(hard_meas, f'{ns_caaml}:tupleList') #??
+        hard_tuple = ET.SubElement(hard_meas, f'{ns_caaml}:tupleList')
 
+        tuple_list = ''
         for idx, row in samples.iterrows():
-            layer = ET.SubElement(hard_prof, f'{ns_caaml}:Layer')
-            depth_top = ET.SubElement(layer, f'{ns_caaml}:depthTop')
-            depth_top.set('uom', 'cm')
-            depth_top.text = str(row['distance'])
-            hardness = ET.SubElement(layer, f'{ns_caaml}:hardness')
-            hardness.text = str(row['force'])
+            tuple_list = tuple_list + str(row['distance']) + "," + str(row['force']) + " "
+        hard_tuple.text = tuple_list
+
+## The following is an alternative method of specifying SMP data in CAAML which works
+## analogous to the stratigraphy profile, but which niViz can't read.
+#        hard_prof = ET.SubElement(snow_prof_meas, f'{ns_caaml}:hardnessProfile')
+#        hard_meta = ET.SubElement(hard_prof, f'{ns_caaml}:hardnessMetaData')
+#        hard_meth = ET.SubElement(hard_meta, f'{ns_caaml}:methodOfMeas')
+#        hard_meth.text = "SnowMicroPen"
+#        negative_counter = 0
+#        for idx, row in samples.iterrows():
+#            layer = ET.SubElement(hard_prof, f'{ns_caaml}:Layer')
+#            depth_top = ET.SubElement(layer, f'{ns_caaml}:depthTop')
+#            depth_top.set('uom', 'cm')
+#            depth_top.text = str(row['distance'])
+#            hardness = ET.SubElement(layer, f'{ns_caaml}:hardness')
+#            hardness.set('uom', 'N')
+#            hardness_val = row['force']
+#            if hardness_val < 0:
+#                hardness_val = 0
+#                negative_counter = negative_counter + 1
+#            hardness.text = str(hardness_val)
+#        log.info(f'Set {negative_counter} negative values to zero.')
 
         tree = ET.ElementTree(root)
 
@@ -539,6 +609,7 @@ class Profile(object):
         else:
             outfile = self._pnt_file.with_name(self._pnt_file.stem).with_suffix('.caaml')
         tree.write(outfile, encoding="UTF-8", xml_declaration=True)
+
         return outfile
 
     def export_samples_niviz(self, export_settings, file=None, precision=4):
