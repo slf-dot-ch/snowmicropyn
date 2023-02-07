@@ -461,7 +461,7 @@ class Profile(object):
         elif force <= 1200:
             return "K"
         else:
-            return "-"
+            return "I"
 
     def export_caaml(self, outfile=None, parameterization='P2015', precision=4):
 
@@ -486,6 +486,7 @@ class Profile(object):
         prof_id = self._pnt_file.stem
         location = 'generic'
 
+        # Meta data:
         root = ET.Element(f'{ns_caaml}:SnowProfile')
         root.set(f'xmlns:{ns_caaml}', ns_caaml_url)
         root.set(f'xmlns:{ns_gml}', ns_gml_url)
@@ -520,11 +521,10 @@ class Profile(object):
         point_pos = ET.SubElement(point_pt, f'{ns_gml}:pos')
         point_pos.text = f'{self._longitude} {self._latitude}'
 
+        # Stratigraphy profile:
         snow_prof = ET.SubElement(root, f'{ns_caaml}:snowProfileResultsOf')
         snow_prof_meas = ET.SubElement(snow_prof, f'{ns_caaml}:SnowProfileMeasurements')
         snow_prof_meas.set('dir', 'top down')
-
-        # Stratigraphy profile:
         strat_prof = ET.SubElement(snow_prof_meas, f'{ns_caaml}:stratProfile')
         strat_meta = ET.SubElement(strat_prof, f'{ns_caaml}:stratMetaData')
 
@@ -543,6 +543,22 @@ class Profile(object):
             grain_hardness = ET.SubElement(layer, f'{ns_caaml}:hardness')
             grain_hardness.set('uom', '')
             grain_hardness.text = self.hand_hardness(row['force'])
+
+        # Density profile:
+        dens_prof = ET.SubElement(snow_prof_meas, f'{ns_caaml}:densityProfile')
+        dens_meta = ET.SubElement(dens_prof, f'{ns_caaml}:densityMetaData')
+        dens_meth = ET.SubElement(dens_meta, f'{ns_caaml}:methodOfMeas')
+        dens_meth.text = "other"
+
+        for idx, row in derivatives.iterrows():
+            layer = ET.SubElement(dens_prof, f'{ns_caaml}:Layer')
+            depth_top = ET.SubElement(layer, f'{ns_caaml}:depthTop')
+            depth_top.set('uom', 'cm')
+            depth_top.text = str(mm2cm(row['distance']))
+            density = ET.SubElement(layer, f'{ns_caaml}:density')
+            density.set('uom', 'kgm-3')
+            density_val = row[f'{parameterization}_density']
+            density.text = str(density_val)
 
         # Specific surface area profile:
         ssa_prof = ET.SubElement(snow_prof_meas, f'{ns_caaml}:specSurfAreaProfile')
