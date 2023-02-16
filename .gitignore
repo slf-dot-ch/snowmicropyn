@@ -46,6 +46,12 @@ coverage.xml
 *.cover
 .hypothesis/
 
+# Test data
+tests/*.csv
+!tests/*_ref.csv
+tests/test_caaml.caaml
+tests/CAAMLv6_SnowProfileIACS.xsd
+
 # Translations
 *.mo
 *.pot
@@ -111,10 +117,6 @@ venv.bak/
 
 # Release folders
 RELEASE_*
-
-# Test data
-tests/*.csv
-!tests/*_ref.csv
 
 # Example derivatives
 examples/profiles/*.csv

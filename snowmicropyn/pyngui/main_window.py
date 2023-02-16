@@ -92,7 +92,8 @@ class MainWindow(QMainWindow):
         self.save_action = QAction('&Save', self)
         self.saveall_action = QAction('Save &All', self)
         self.drop_action = QAction('&Drop', self)
-        self.exportall_action = QAction('&Export &All', self)
+        self.exportall_action = QAction('&Export All', self)
+        self.export_caaml_action = QAction('Export &CAAML', self)
         self.export_niviz_action = QAction('Export for niViz...', self)
         self.next_action = QAction('Next Profile', self)
         self.previous_action = QAction('Previous Profile', self)
@@ -163,6 +164,12 @@ class MainWindow(QMainWindow):
         action.setShortcut('Ctrl+X')
         action.setStatusTip('Drop Profile')
         action.triggered.connect(self._drop_triggered)
+
+        action = self.export_caaml_action
+        action.setIcon(QIcon(':/icons/csv.png'))
+        action.setShortcut('Ctrl+C')
+        action.setStatusTip('Export All Profiles to CAAML')
+        action.triggered.connect(self._export_caaml_triggered)
 
         action = self.exportall_action
         action.setIcon(QIcon(':/icons/csv.png'))
@@ -279,6 +286,7 @@ class MainWindow(QMainWindow):
         menu.addAction(self.saveall_action)
         menu.addSeparator()
         menu.addAction(self.exportall_action)
+        menu.addAction(self.export_caaml_action)
         menu.addAction(self.export_niviz_action)
         menu.addSeparator()
         menu.addAction(self.drop_action)
@@ -433,6 +441,20 @@ class MainWindow(QMainWindow):
             ') was exported to avoid mixed resolutions (here: window_size=' +
             str(par.window_size) + ', overlap=' + str(par.overlap) + ').')
 
+    def _export_caaml_triggered(self):
+        files=[]
+        for doc in self.documents:
+            p = doc.profile
+
+            if self.preferences.export_samples:
+                samples_file = p.export_caaml()
+                files.append(samples_file)
+            par = parameterizations[self.preferences.export_parameterization]
+        self.notify_dialog.notifyFilesWritten(files,
+            'Only the parameterization chosen in your user settings (' + par.name +
+            ') was exported to avoid mixed resolutions (here: window_size=' +
+            str(par.window_size) + ', overlap=' + str(par.overlap) + ').')
+
     def _export_niviz_triggered(self):
         export_settings = ExportSettings.load()
         perform_export = self.export_dialog.exportForNiviz(export_settings)
@@ -575,6 +597,7 @@ class MainWindow(QMainWindow):
         self.save_action.setEnabled(at_least_one)
         self.saveall_action.setEnabled(at_least_one)
         self.exportall_action.setEnabled(at_least_one)
+        self.export_caaml_action.setEnabled(at_least_one)
         self.export_niviz_action.setEnabled(at_least_one)
         self.detect_surface_action.setEnabled(at_least_one)
         self.detect_ground_action.setEnabled(at_least_one)
