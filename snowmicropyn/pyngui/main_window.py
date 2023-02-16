@@ -106,6 +106,7 @@ class MainWindow(QMainWindow):
         self.kml_action = QAction('Export to KML', self)
         self.show_log_action = QAction('Show Log', self)
         self.superpos_action = QAction('Superposition', self)
+        self.airgap_action = QAction('Remove air gap', self)
 
         self.profile_combobox = QComboBox(self)
         self.profile_combobox.setSizeAdjustPolicy(QComboBox.AdjustToContents)
@@ -256,6 +257,12 @@ class MainWindow(QMainWindow):
         action.setStatusTip('Show Log Window')
         action.triggered.connect(self._showlog_triggered)
 
+        action = self.airgap_action
+        action.setIcon(QIcon(':/icons/air_gap.png'))
+        action.setStatusTip('Remove air gap')
+        action.triggered.connect(self._air_gap)
+        action.setCheckable(True)
+
         action = self.superpos_action
         action.setIcon(QIcon(':/icons/superpos.png'))
         action.setStatusTip('Show Superposition')
@@ -343,6 +350,7 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
         toolbar.addAction(self.kml_action)
         toolbar.addAction(self.saveall_action)
+        toolbar.addAction(self.airgap_action)
         toolbar.addAction(self.superpos_action)
         toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
 
@@ -580,7 +588,7 @@ class MainWindow(QMainWindow):
         if doc is not None:
             self.calc_drift()
 
-        self.plot_canvas.set_document(doc)
+        self.plot_canvas.set_document(doc, self.airgap_action.isChecked())
         self.plot_canvas.draw()
         # Reset toolbar history
         self.plot_toolbar.update()
@@ -627,7 +635,7 @@ class MainWindow(QMainWindow):
             begin = p.marker('drift_begin')
             begin_label = 'Marker drift_begin'
         except KeyError:
-            # Skip the first few values of profile fo drift calculation
+            # Skip the first few values of profile for drift calculation
             begin = p.samples.distance.iloc[10]
             begin_label = 'Begin of Profile'
 
@@ -669,6 +677,13 @@ class MainWindow(QMainWindow):
 
         self.superpos_toolbar.setVisible(checked)
         self.plot_toolbar.setVisible(not checked)
+
+    def _air_gap(self, checked):
+        self.plot_canvas.set_document(self.current_document, checked)
+        self.plot_canvas.draw()
+
+        log.info('Remove air gap: {}'.format(checked))
+
 
     def all_marker_labels(self):
         labels = set()

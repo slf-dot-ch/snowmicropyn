@@ -36,6 +36,8 @@
     <file>detect_surface@2x.png</file>
     <file>marker_add.png</file>
     <file>marker_add@2x.png</file>
+    <file>air_gap.png</file>
+    <file>air_gap@2x.png</file>
     <file>superpos.png</file>
     <file>superpos@2x.png</file>
   </qresource>

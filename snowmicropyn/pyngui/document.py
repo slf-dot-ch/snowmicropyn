@@ -19,13 +19,8 @@ class Document:
     def derivatives(self):
         return self._derivatives
 
-    def recalc_derivatives(self):
-        samples = self.profile.samples
-
-        surface = self.profile.marker('surface', samples.distance.iloc[0])
-        ground = self.profile.marker('ground', samples.distance.iloc[-1])
-
-        samples = samples[samples.distance.between(surface, ground)]
+    def recalc_derivatives(self, relativize=False):
+        samples = self.profile.samples_within_snowpack(relativize)
 
         # A dictionary is built with the parameterization's shortname as the key,
         # and a pandas dataframe containing the (distance, parameters) datapoints

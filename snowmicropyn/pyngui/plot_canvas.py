@@ -113,7 +113,7 @@ class PlotCanvas(FigureCanvas):
     def clicked_distance(self):
         return self._clicked_distance
 
-    def set_document(self, doc):
+    def set_document(self, doc, remove_air_gap=False):
         self.figure.clear()
 
         self._axes.clear()
@@ -155,22 +155,33 @@ class PlotCanvas(FigureCanvas):
         if doc is None:
             return
 
-        values = (doc.profile.samples.distance, doc.profile.samples.force)
+        samples = doc.profile.samples
+        surface_offset = 0
+        if remove_air_gap:
+            surface_offset = doc.profile.marker('surface') * -1
+            samples = doc.profile.samples_within_snowpack()
+        values = (samples.distance, samples.force)
         self.set_plot('force', 'force', values)
 
         for key, param in self.main_window.params.items():  # run through all available parameterizations
             derivs = doc.derivatives[key] # these were already calculated with the creation of doc
-            values = (derivs['distance'], derivs[param.shortname + '_density'])
+            values = (derivs['distance'] + surface_offset, derivs[param.shortname + '_density'])
             self.set_plot('density', 'density_' + key, values)
             if hasattr(param, 'ssa'):
-                values = (derivs['distance'], derivs[param.shortname + '_ssa'])
+                values = (derivs['distance'] + surface_offset, derivs[param.shortname + '_ssa'])
                 self.set_plot('ssa', 'ssa_' + key, values)
 
-        values = doc._fit_x, doc._fit_y
-        self.set_plot('force', 'drift', values)
+        val_x = doc._fit_x + surface_offset
+        val_y = doc._fit_y
+        val_y = val_y.where(val_x >= 0)
+        val_x = val_x.where(val_x >= 0)
+        
+        if not val_x.isnull().all():
+            self.set_plot('force', 'drift', (val_x, val_y))
 
         for label, value in doc.profile.markers.items():
-            self.set_marker(label, value)
+            if value + surface_offset >= 0:
+                 self.set_marker(label, value + surface_offset)
 
         self.set_limits()
 
