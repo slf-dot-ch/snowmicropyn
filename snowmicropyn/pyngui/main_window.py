@@ -2,7 +2,7 @@ import logging
 from os.path import expanduser, dirname, abspath, join
 from string import Template
 
-from PyQt5.QtCore import QRect, Qt, QSettings, QSize
+from PyQt5.QtCore import QLocale, QRect, Qt, QSettings, QSize
 from PyQt5.QtGui import QIcon, QDoubleValidator, QValidator
 from PyQt5.QtWidgets import *
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
@@ -695,18 +695,13 @@ class MainWindow(QMainWindow):
         self.plot_canvas.draw()
 
     def _show_superpos(self, checked):
-        log.info('Show superposition view: {}'.format(checked))
         self.plot_stacked_widget.setCurrentIndex(1 if checked else 0)
-
         self.superpos_toolbar.setVisible(checked)
         self.plot_toolbar.setVisible(not checked)
 
     def _air_gap(self, checked):
         self.plot_canvas.set_document(self.current_document, checked)
         self.plot_canvas.draw()
-
-        log.info('Remove air gap: {}'.format(checked))
-
 
     def all_marker_labels(self):
         labels = set()
@@ -775,18 +770,18 @@ class MarkerDialog(QDialog):
         self.value_lineedit = QLineEdit()
         self.value_lineedit.setMinimumWidth(150)
         self.validator = QDoubleValidator()
+        self.validator.setLocale(QLocale("en_US")) #don't falsely force commas on German layouts
+
         self.value_lineedit.setValidator(self.validator)
         ok_and_cancel = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         self.button_box = QDialogButtonBox(ok_and_cancel)
 
         def check():
-            log.info('Checking for already existing marker labels')
             ok_button = self.button_box.button(QDialogButtonBox.Ok)
             name = self.label_editline.text()
             existing_markers = [k for k, v in self.mainwin.current_document.profile.markers.items()]
             valid_name = bool(name) and (name not in existing_markers)
-            valid_value = self.validator.validate(self.value_lineedit.text(), 0)[
-                              0] == QValidator.Acceptable
+            valid_value = self.validator.validate(self.value_lineedit.text(), 0)[0] == QValidator.Acceptable
             ok_button.setEnabled(valid_name and valid_value)
 
         self.label_editline.textChanged.connect(check)
