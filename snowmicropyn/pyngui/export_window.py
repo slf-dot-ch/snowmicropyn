@@ -1,75 +1,43 @@
-"""niViz export settings dialog.
+"""CAAML export settings dialog.
 
-This file handles showing an export to niViz dialog, as well as
-remembering these settings.
 """
 
 import logging
 
-from PyQt5.QtCore import QSettings, Qt, QUrl
-from PyQt5.QtGui import QDoubleValidator, QIntValidator, QDesktopServices
-from PyQt5.QtWidgets import QWidget, QLineEdit, QFormLayout, QHBoxLayout, QVBoxLayout, \
-    QLabel, QDialogButtonBox, QDialog, QVBoxLayout
+from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtGui import QDoubleValidator, QDesktopServices
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QGroupBox, QHBoxLayout, QLabel, QLineEdit, \
+    QTabWidget, QVBoxLayout, QWidget
 
 log = logging.getLogger('snowmicropyn')
 
-_LINEEDIT_WIDTH = 50
-
-# settings file keys
-EXPORT_SLOPE_ANGLE = 'Preferences/export_slope_angle'
-EXPORT_SLOPE_ANGLE_DEFAULT = 0
-EXPORT_DATA_THINNING = 'Preferences/export_data_thinning'
-EXPORT_DATA_THINNING_DEFAULT = 150
-EXPORT_STRETCH_FACTOR = 'Preferences/export_stretch_factor'
-EXPORT_STRETCH_FACTOR_DEFAULT = 1
-
-class ExportSettings:
-    """Set of properties for niViz export."""
-    def __init__(self):
-        self.export_slope_angle = EXPORT_SLOPE_ANGLE_DEFAULT
-        self.export_data_thinning = EXPORT_DATA_THINNING_DEFAULT
-        self.export_stretch_factor = EXPORT_STRETCH_FACTOR_DEFAULT
-
-    @staticmethod
-    def load():
-        """Create a niViz export settings object.
-
-        Read values from the user settings, or set to defaults.
-        """
-        instance = ExportSettings()
-
-        f = QSettings().value
-        instance.export_slope_angle = f(EXPORT_SLOPE_ANGLE, EXPORT_SLOPE_ANGLE_DEFAULT, float)
-        instance.export_data_thinning = f(EXPORT_DATA_THINNING, EXPORT_DATA_THINNING_DEFAULT, int)
-        instance.export_stretch_factor = f(EXPORT_STRETCH_FACTOR, EXPORT_STRETCH_FACTOR_DEFAULT, float)
-        return instance
-
-    def save(self):
-        """Remember niViz output settings."""
-        QSettings().setValue(EXPORT_SLOPE_ANGLE, self.export_slope_angle)
-        QSettings().setValue(EXPORT_DATA_THINNING, self.export_data_thinning)
-        QSettings().setValue(EXPORT_STRETCH_FACTOR, self.export_stretch_factor)
-        QSettings().sync()
-
+_MIN_WIDTH = 600
 
 class ExportDialog(QDialog):
     def __init__(self):
         super().__init__()
+        self._init_widgets()
+        self._init_ui()
 
-        self.setWindowTitle('Export for niViz')
+    def _init_widgets(self):
+        
+        widget_width = lambda : int(_MIN_WIDTH / 5)
 
+        self.station_name_lineedit = QLineEdit()
+        self.station_name_lineedit.setFixedWidth(widget_width())
+        self.station_name_lineedit.setAlignment(Qt.AlignRight)
+        self.station_height_lineedit = QLineEdit()
+        self.station_height_lineedit.setFixedWidth(widget_width())
+        self.station_height_lineedit.setValidator(QDoubleValidator())
+        self.station_height_lineedit.setAlignment(Qt.AlignRight)
         self.slope_angle_lineedit = QLineEdit()
-        self.slope_angle_lineedit.setFixedWidth(_LINEEDIT_WIDTH)
+        self.slope_angle_lineedit.setFixedWidth(widget_width())
         self.slope_angle_lineedit.setValidator(QDoubleValidator())
         self.slope_angle_lineedit.setAlignment(Qt.AlignRight)
-        self.data_thinning_lineedit = QLineEdit()
-        self.data_thinning_lineedit.setFixedWidth(_LINEEDIT_WIDTH)
-        self.data_thinning_lineedit.setValidator(QIntValidator())
-        self.data_thinning_lineedit.setAlignment(Qt.AlignRight)
-        self.stretch_factor_lineedit = QLineEdit()
-        self.stretch_factor_lineedit.setFixedWidth(_LINEEDIT_WIDTH)
-        self.stretch_factor_lineedit.setValidator(QDoubleValidator())
-        self.stretch_factor_lineedit.setAlignment(Qt.AlignRight)
+        self.aggregation_lineedit = QLineEdit()
+        self.aggregation_lineedit.setFixedWidth(widget_width())
+        self.aggregation_lineedit.setValidator(QDoubleValidator())
+        self.aggregation_lineedit.setAlignment(Qt.AlignRight)
 
         buttons = QDialogButtonBox.Help | QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         self.button_box = QDialogButtonBox(buttons)
@@ -79,50 +47,60 @@ class ExportDialog(QDialog):
         self.button_box.helpRequested.connect(lambda: QDesktopServices.openUrl(
             QUrl('https://snowmicropyn.readthedocs.io/en/latest/api_reference.html#snowmicropyn.Profile.export_samples_niviz')))
 
-        self.setMinimumWidth(500)
-        self.init_ui()
 
-    def init_ui(self):
+    def _init_ui(self):
+        # Window settings
+        self.setWindowTitle('CAAML export')
+        self.setMinimumWidth(_MIN_WIDTH)
+        caaml_layout = QVBoxLayout()
+
+        # Metadata settings
+        metadata_layout = QVBoxLayout()
+        item_layout = QHBoxLayout()
+        item_layout.addWidget(QLabel('Station name:'))
+        item_layout.addWidget(self.station_name_lineedit)
+        item_layout.addWidget(QLabel(''))
+        metadata_layout.addLayout(item_layout)
+        item_layout = QHBoxLayout()
+        item_layout.addWidget(QLabel('Station height:'))
+        item_layout.addWidget(self.station_height_lineedit)
+        item_layout.addWidget(QLabel('m'))
+        metadata_layout.addLayout(item_layout)
+        item_layout = QHBoxLayout()
+        item_layout.addWidget(QLabel('Slope angle:'))
+        item_layout.addWidget(self.slope_angle_lineedit)
+        item_layout.addWidget(QLabel('°'))
+        metadata_layout.addLayout(item_layout)
+        meta_frame = QGroupBox(self) 
+        meta_frame.setTitle('Metadata')
+        meta_frame.setLayout(metadata_layout)
+        caaml_layout.addWidget(meta_frame)
+
+        # Data aggregation
+        aggregation_layout = QVBoxLayout()
+        item_layout = QHBoxLayout()
+        item_layout.addWidget(QLabel('Keep % of data (approx.):'))
+        item_layout.addWidget(self.aggregation_lineedit)
+        item_layout.addWidget(QLabel('%'))
+        aggregation_layout.addLayout(item_layout)
+        aggregation_frame = QGroupBox(self) 
+        aggregation_frame.setTitle('Data aggregation')
+        aggregation_frame.setLayout(aggregation_layout)
+        caaml_layout.addWidget(aggregation_frame)
+
+        # Tabs and main layout
+        tabs = QTabWidget()
+        tab_caaml = QWidget()
+        tab_ai = QWidget()
+        tab_caaml.setLayout(caaml_layout)
+        tabs.addTab(tab_caaml, 'CAAML')
+        tabs.addTab(tab_ai, 'Grain shape')
+
         main_layout = QVBoxLayout()
-
-        layout = QFormLayout()
-        layout.setHorizontalSpacing(20)
-
-        content_layout = QHBoxLayout()
-        content_layout.addWidget(self.slope_angle_lineedit)
-        content_layout.addWidget(QLabel('°'))
-        layout.addRow('Slope angle:', content_layout)
-
-        content_layout = QHBoxLayout()
-        content_layout.addWidget(self.data_thinning_lineedit)
-        layout.addRow('Thinning:', content_layout)
-
-        content_layout = QHBoxLayout()
-        content_layout.addWidget(self.stretch_factor_lineedit)
-        layout.addRow('Stretch factor:', content_layout)
-
-        layout.addWidget(self.button_box)
-
-        main_layout.addWidget(QLabel('Export profile as CSV directly readable by \
-            <b><a href="https://run.niviz.org">niViz</a></b>:'))
-
-        main_layout.addLayout(layout)
+        main_layout.addWidget(tabs)
+        main_layout.addWidget(self.button_box)
         self.setLayout(main_layout)
 
-    def exportForNiviz(self, export_settings):
-        self._set_values(export_settings)
+    def confirmExportCAAML(self):
         result = self.exec()
-        if result == QDialog.Accepted:
-            export_settings.export_slope_angle = 0 if not self.slope_angle_lineedit.text() \
-                    else float(self.slope_angle_lineedit.text())
-            export_settings.export_data_thinning = 1 if not self.data_thinning_lineedit.text() \
-                    else int(self.data_thinning_lineedit.text())
-            export_settings.export_stretch_factor = 1 if not self.stretch_factor_lineedit.text() \
-                    else float(self.stretch_factor_lineedit.text())
-            return True
-        return False
-
-    def _set_values(self, export_settings):
-        self.slope_angle_lineedit.setText(str(export_settings.export_slope_angle))
-        self.data_thinning_lineedit.setText(str(export_settings.export_data_thinning))
-        self.stretch_factor_lineedit.setText(str(export_settings.export_stretch_factor))
+        return (result == QDialog.Accepted)

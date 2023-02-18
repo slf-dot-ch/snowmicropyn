@@ -15,7 +15,8 @@ from snowmicropyn.pyngui.document import Document
 from snowmicropyn.pyngui.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.pyngui.plot_canvas import PlotCanvas
 from snowmicropyn.pyngui.preferences import Preferences, PreferencesDialog
-from snowmicropyn.pyngui.export_window import ExportSettings, ExportDialog
+from snowmicropyn.pyngui.export_window_niviz import ExportSettings, ExportDialogNiviz
+from snowmicropyn.pyngui.export_window import ExportDialog
 from snowmicropyn.pyngui.sidebar import SidebarWidget
 from snowmicropyn.pyngui.superpos_canvas import SuperposCanvas
 from snowmicropyn.derivatives import parameterizations
@@ -42,6 +43,7 @@ class MainWindow(QMainWindow):
         self.marker_dialog = MarkerDialog(self)
         self.prefs_dialog = PreferencesDialog(parameterizations)
         self.export_dialog = ExportDialog()
+        self.export_dialog_niviz = ExportDialogNiviz()
 
         self.documents = []
         self.preferences = Preferences.load()
@@ -442,22 +444,18 @@ class MainWindow(QMainWindow):
             str(par.window_size) + ', overlap=' + str(par.overlap) + ').')
 
     def _export_caaml_triggered(self):
-        files=[]
-        for doc in self.documents:
-            p = doc.profile
-
-            if self.preferences.export_samples:
-                samples_file = p.export_caaml()
+        perform_export = self.export_dialog.confirmExportCAAML()
+        if perform_export:
+            files=[]
+            for doc in self.documents:
+                pro = doc.profile
+                samples_file = pro.export_caaml()
                 files.append(samples_file)
-            par = parameterizations[self.preferences.export_parameterization]
-        self.notify_dialog.notifyFilesWritten(files,
-            'Only the parameterization chosen in your user settings (' + par.name +
-            ') was exported to avoid mixed resolutions (here: window_size=' +
-            str(par.window_size) + ', overlap=' + str(par.overlap) + ').')
+            self.notify_dialog.notifyFilesWritten(files)
 
     def _export_niviz_triggered(self):
         export_settings = ExportSettings.load()
-        perform_export = self.export_dialog.exportForNiviz(export_settings)
+        perform_export = self.export_dialog_niviz.exportForNiviz(export_settings)
         if perform_export:
             log.info('Exporting CSV for niViz (angle=' + str(export_settings.export_slope_angle) + \
                 ', thinning=' + str(export_settings.export_data_thinning) + ', stretch=' + \

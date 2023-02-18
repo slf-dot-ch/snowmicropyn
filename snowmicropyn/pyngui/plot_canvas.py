@@ -175,7 +175,7 @@ class PlotCanvas(FigureCanvas):
         val_y = doc._fit_y
         val_y = val_y.where(val_x >= 0)
         val_x = val_x.where(val_x >= 0)
-        
+
         if not val_x.isnull().all():
             self.set_plot('force', 'drift', (val_x, val_y))
 
