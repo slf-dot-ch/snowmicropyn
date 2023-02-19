@@ -30,7 +30,6 @@ SMP_CONE_DIAMETER = 5  # [mm]
 #: Default value for SnowMicroPen's projected cone area, depends on :const:`SMP_CONE_DIAMETER`.
 SMP_CONE_AREA = (SMP_CONE_DIAMETER / 2.) ** 2 * math.pi  # [mm^2]
 
-
 def calc_step(spatial_res, forces, cone_area=SMP_CONE_AREA):
     """Calculate shot noise parameters for a segment of a profile.
 

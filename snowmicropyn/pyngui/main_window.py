@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
         self.kml_action = QAction('Export to KML', self)
         self.show_log_action = QAction('Show Log', self)
         self.superpos_action = QAction('Superposition', self)
-        self.airgap_action = QAction('Remove air gap', self)
+        self.airgap_action = QAction('Hide air gap', self)
 
         self.profile_combobox = QComboBox(self)
         self.profile_combobox.setSizeAdjustPolicy(QComboBox.AdjustToContents)
