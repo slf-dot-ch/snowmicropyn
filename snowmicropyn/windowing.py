@@ -7,8 +7,8 @@ def chunkup(samples, window, overlap):
     :param window: size of moving window in mm
     :param overlap: overlap factor in percent
     """
-    if not 0 < overlap <= 100:
-        raise ValueError('overlap value {} invalid, must be a value between 0 and 100 [%]'.format(overlap))
+    if not 0 <= overlap < 100:
+        raise ValueError('overlap value {} invalid, must be a value >= 0 and < 100 [%]'.format(overlap))
 
     first = samples.distance.iloc[0] if not samples.empty else 0
     last = samples.distance.iloc[-1] if not samples.empty else 0
