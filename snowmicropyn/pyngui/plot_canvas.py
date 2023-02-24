@@ -158,7 +158,7 @@ class PlotCanvas(FigureCanvas):
         samples = doc.profile.samples
         surface_offset = 0
         if remove_air_gap:
-            surface_offset = doc.profile.marker('surface') * -1
+            surface_offset = doc.profile.marker('surface', fallback=0) * -1
             samples = doc.profile.samples_within_snowpack()
         values = (samples.distance, samples.force)
         self.set_plot('force', 'force', values)

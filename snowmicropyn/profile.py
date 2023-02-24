@@ -619,7 +619,7 @@ class Profile(object):
 
         tree = ET.ElementTree(root)
 
-        ET.indent(tree, space="\t", level=0)
+        ET.indent(tree, space="\t", level=0) # human-readable CAAML
         if outfile:
             outfile = pathlib.Path(outfile)
         else:
@@ -843,5 +843,3 @@ class Profile(object):
         ground = detection.detect_ground(self)
         self.set_marker('ground', ground)
         return ground
-
-

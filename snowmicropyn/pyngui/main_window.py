@@ -768,7 +768,7 @@ class MarkerDialog(QDialog):
         self.value_lineedit = QLineEdit()
         self.value_lineedit.setMinimumWidth(150)
         self.validator = QDoubleValidator()
-        self.validator.setLocale(QLocale("en_US")) #don't falsely force commas on German layouts
+        self.validator.setLocale(QLocale('en_US')) #don't falsely force commas on German layouts
 
         self.value_lineedit.setValidator(self.validator)
         ok_and_cancel = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
