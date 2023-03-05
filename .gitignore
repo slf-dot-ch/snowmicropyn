@@ -121,6 +121,9 @@ RELEASE_*
 # Example derivatives
 examples/profiles/*.csv
 
+# Sample files may be downloaded here
+data
+
 # Editor files
 *.swp
 *.swo
