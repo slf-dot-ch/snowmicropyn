@@ -1,9 +1,5 @@
 import numpy as np
 
-def merge_profiles(profiles):
-    raise NotImplementedError('merge_profiles not implemented yet')
-
-
 def downsample(x, n=2):
     if n < 1:
         raise ValueError('n must be bigger or equal 1')
@@ -11,7 +7,6 @@ def downsample(x, n=2):
     i = np.mod(len(x), n)
     x = x[:len(x) - i].reshape(-1, n).mean(axis=1)
     return x
-
 
 def smooth(x, window_len=11, window='hanning'):
     """Smooth the data using a window with requested size"""
@@ -38,8 +33,8 @@ def smooth(x, window_len=11, window='hanning'):
     return y
 
 
-# This function is used to calculate offset, drift and noise.
 def lin_fit(x, y):
+    """ This function is used to calculate offset, drift and noise. """
     m, c = np.polyfit(x, y, 1)
     y_fit = x * m + c
     std = np.std(y - y_fit)
