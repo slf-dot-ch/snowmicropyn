@@ -12,7 +12,7 @@ def match_layers_strict(samples, shapes):
             if idx < len(shapes.depthTop) - 1:
                 idx = idx + 1
         shape_list.append(shapes.grainFormPrimary[idx])
-    
+
     data["grain_shape"] = shape_list
     return data
 
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     from snowmicropyn import Profile
     caaml_file = "../data/rhossa/TraditionalProfiles/20151130/5wj-20151130_niViz6_81339.caaml"
     pnt_file = "../data/rhossa/SnowMicroPen/20151130/S36M0029.pnt"
-    pro = Profile.load(pnt_file) 
+    pro = Profile.load(pnt_file)
     data = assimilate_grainshape(pro, caaml_file)
     print(data)
 
