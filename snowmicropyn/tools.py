@@ -34,7 +34,7 @@ def smooth(x, window_len=11, window='hanning'):
 
 
 def lin_fit(x, y):
-    """ This function is used to calculate offset, drift and noise. """
+    """This function is used to calculate offset, drift and noise."""
     m, c = np.polyfit(x, y, 1)
     y_fit = x * m + c
     std = np.std(y - y_fit)
