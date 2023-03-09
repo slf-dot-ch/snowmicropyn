@@ -3,6 +3,7 @@ from snowmicropyn.match import assimilate_grainshape
 from snowmicropyn.parameterizations.proksch2015 import Proksch2015
 import pandas as pd
 import pathlib
+import pickle
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
@@ -29,11 +30,12 @@ class grain_classifier:
     # properties:
     _score = None
 
-    def __init__(self, user_settings: dict):
+    def __init__(self, user_settings: dict, init=True):
         self._set = user_settings
-        self._data = self.build_training_data(self._set['training_folder'])
-        self._index_codes, self._index_uniques = pd.factorize(self._data.grain_shape)
-        self.make_pipeline()
+        if init:
+            self._data = self.build_training_data(self._set['training_folder'])
+            self._index_codes, self._index_uniques = pd.factorize(self._data.grain_shape)
+            self.make_pipeline()
 
     def _numeric_data(self, numeric=True):
         """Convert grain shape column between string and index indentifiers.
@@ -108,6 +110,17 @@ class grain_classifier:
         self._make_scaler()
         self._make_model()
         self._pipe = Pipeline([self._scaler, self._model])
+
+    def save(self, model_file):
+        """Save current state of pipeline (trained or not) to file system."""
+        pickle.dump(self._pipe, open(model_file, 'wb'))
+
+    def load(self, model_file):
+        self._pipe = pickle.load(open(model_file, 'rb'))
+
+    @property
+    def ready(self):
+        return self._pipe is not None
 
     @property
     def score(self, recalc=False):
