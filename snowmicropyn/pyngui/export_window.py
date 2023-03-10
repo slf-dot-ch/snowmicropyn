@@ -14,11 +14,7 @@ log = logging.getLogger('snowmicropyn')
 _window_min_width = 600
 _widget_width = int(_window_min_width / 5)
 _spacer_width = int(_window_min_width / 20)
-
-class Spacer(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setFixedWidth(_spacer_width)
+_spacer_height = _spacer_width
 
 class LabelText(QWidget):
     _lineedit = None
@@ -30,7 +26,7 @@ class LabelText(QWidget):
         self._lineedit = QLineEdit()
         main_layout = QHBoxLayout()
         if indent:
-            main_layout.addWidget(Spacer())
+            main_layout.addSpacing(_spacer_width)
         main_layout.addWidget(QLabel(label))
         main_layout.addWidget(self._lineedit)
         self.setLayout(main_layout)
@@ -56,7 +52,7 @@ class FilePicker(QWidget):
         self._button = QPushButton('...')
         main_layout = QHBoxLayout()
         if indent:
-            main_layout.addWidget(Spacer())
+            main_layout.addSpacing(_spacer_width)
         main_layout.addWidget(QLabel(label))
         main_layout.addWidget(self._lineedit)
         main_layout.addWidget(self._button)
@@ -107,6 +103,16 @@ class ExportDialog(QDialog):
         self._inputs['training_data_folder'] = FilePicker('Training data folder:')
         self._inputs['save_model'] = QCheckBox('Save trained model state')
         self._inputs['model_output_path'] = FilePicker('Path:', indent=True)
+
+        # Preprocessing tab:
+        self._inputs['remove_negative_forces'] = QCheckBox('Remove negative forces')
+        self._inputs['remove_noise'] = QCheckBox('Noise threshold:')
+        self._inputs['noise_threshold'] = QLineEdit()
+        self._inputs['noise_threshold'].setFixedWidth(_widget_width)
+        self._inputs['discard_thin_layers'] = QCheckBox('Discard layers thinner than:')
+        self._inputs['discard_layer_thickness'] = QLineEdit()
+        self._inputs['discard_layer_thickness'].setFixedWidth(_widget_width)
+        self._inputs['exclude_samples_boundaries'] = QCheckBox('Exclude samples at layer boundaries')
 
         # Model specific inputs:
         self._inputs['svc_gamma'] = LabelText('Gamma:', small=True, indent=True)
@@ -194,6 +200,29 @@ class ExportDialog(QDialog):
         training_frame.setLayout(training_layout)
         grainshape_layout.addWidget(training_frame)
 
+        # Preprocessing:
+        preprocessing_layout = QVBoxLayout()
+        preprocessing_layout.addWidget(self._inputs['remove_negative_forces'])
+        item_layout = QHBoxLayout()
+        item_layout.addWidget(self._inputs['remove_noise'])
+        item_layout.addWidget(self._inputs['noise_threshold'])
+        item_layout.addWidget(QLabel('N'))
+        preprocessing_layout.addLayout(item_layout)
+        item_layout = QHBoxLayout()
+        item_layout.addWidget(self._inputs['discard_thin_layers'])
+        item_layout.addWidget(self._inputs['discard_layer_thickness'])
+        item_layout.addWidget(QLabel('mm'))
+        preprocessing_layout.addLayout(item_layout)
+
+        # Preprocessing specific to training data:
+        pre_training_layout = QVBoxLayout()
+        pre_training_layout.addWidget(self._inputs['exclude_samples_boundaries'])
+        pre_training_frame = QGroupBox(self)
+        pre_training_frame.setTitle('Preprocessing of training data')
+        pre_training_frame.setLayout(pre_training_layout)
+        preprocessing_layout.addSpacing(_spacer_height)
+        preprocessing_layout.addWidget(pre_training_frame)
+
         # Tabs:
         tabs = QTabWidget()
         tab_caaml = QWidget()
@@ -207,6 +236,9 @@ class ExportDialog(QDialog):
         tabs.addTab(tab_preprocessing, 'Preprocessing')
 
         # Main layout:
+        caaml_layout.addStretch() # align all widgets to top
+        grainshape_layout.addStretch()
+        preprocessing_layout.addStretch()
         main_layout = QVBoxLayout()
         main_layout.addWidget(tabs)
         main_layout.addWidget(self.button_box)
