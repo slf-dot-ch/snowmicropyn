@@ -91,7 +91,7 @@ class grain_classifier:
     def _make_model(self):
         if self._set['model'] == 'svc':
             try:
-                svc_gamma = self._set['svc_gamma']
+                svc_gamma = self._set['model_svc_gamma']
             except KeyError:
                 svc_gamma = 'auto'
             self._model = ('svc', SVC(gamma=svc_gamma))
@@ -102,7 +102,7 @@ class grain_classifier:
             self._model = ('gaussiannb', GaussianNB())
         elif self._set['model'] == 'multinomialnb':
             try:
-                multi_alpha = self._set['multinomialnb_alpha']
+                multi_alpha = self._set['model_multinomialnb_alpha']
             except KeyError:
                 multi_alpha = 1 # default in sklearn
             self._model = ('multinomialnb', MultinomialNB(alpha=multi_alpha))

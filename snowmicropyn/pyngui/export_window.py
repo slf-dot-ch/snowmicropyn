@@ -95,14 +95,21 @@ class ExportDialog(QDialog):
         self._inputs['aggregation'].setAlignment(Qt.AlignRight)
 
         # Grain shape tab:
-        self._inputs['export_grainshape'] = QCheckBox('Export grainshape estimation')
-        self._inputs['use_pretrained_model'] = QCheckBox('Use pretrained model')
-        self._inputs['model_input_path'] = FilePicker('Path:', indent=True)
+        self._inputs['export_grainshape'] = QCheckBox('Export grain shape estimation')
+        self._inputs['use_pretrained_model'] = QCheckBox('Use pre-trained model')
+        self._inputs['training_input_path'] = FilePicker('Path:', indent=True)
         self._inputs['scaler'] = QComboBox()
+        self._inputs['scaler'].addItem('Standard Scaler', 'standard')
+        self._inputs['scaler'].addItem('Min/Max Scaler', 'minmax')
         self._inputs['model'] = QComboBox()
+        self._inputs['model'].addItem('Support Vector Machine', 'svc')
+        self._inputs['model'].addItem('Linear Regression', 'lr')
+        self._inputs['model'].addItem('Gaussian Naive Bayes', 'gaussiannb')
+        self._inputs['model'].addItem('Multinomial Naive Bayes', 'multinomialnb')
+        self._inputs['model'].currentIndexChanged.connect(self._on_model_changed)
         self._inputs['training_data_folder'] = FilePicker('Training data folder:')
         self._inputs['save_model'] = QCheckBox('Save trained model state')
-        self._inputs['model_output_path'] = FilePicker('Path:', indent=True)
+        self._inputs['training_output_path'] = FilePicker('Path:', indent=True)
 
         # Preprocessing tab:
         self._inputs['remove_negative_forces'] = QCheckBox('Remove negative forces')
@@ -115,8 +122,9 @@ class ExportDialog(QDialog):
         self._inputs['exclude_samples_boundaries'] = QCheckBox('Exclude samples at layer boundaries')
 
         # Model specific inputs:
-        self._inputs['svc_gamma'] = LabelText('Gamma:', small=True, indent=True)
-        self._inputs['multinomialnb_alpha'] = LabelText('Alpha:', small=True, indent=True)
+        self._inputs['model_svc_gamma'] = LabelText('Gamma:', small=True, indent=True)
+        self._inputs['model_multinomialnb_alpha'] = LabelText('Alpha:', small=True, indent=True)
+        self._on_model_changed(0) # show/hide appropriate widgets
 
         # Buttons:
         buttons = QDialogButtonBox.Help | QDialogButtonBox.Ok | QDialogButtonBox.Cancel
@@ -175,10 +183,22 @@ class ExportDialog(QDialog):
         aggregation_frame.setLayout(aggregation_layout)
         caaml_layout.addWidget(aggregation_frame)
 
-        # Grain shape estimation:
-        grainshape_layout.addWidget(self._inputs['export_grainshape'])
-        grainshape_layout.addWidget(self._inputs['use_pretrained_model'])
-        grainshape_layout.addWidget(self._inputs['model_input_path'])
+        # Grain shape export:
+        grain_export_layout = QVBoxLayout()
+        grain_export_layout.addWidget(self._inputs['export_grainshape'])
+        grain_export_frame = QGroupBox(self)
+        grain_export_frame.setTitle('Grain shape')
+        grain_export_frame.setLayout(grain_export_layout)
+        caaml_layout.addWidget(grain_export_frame)
+
+        # Pre-trained model file:
+        pretrained_layout = QVBoxLayout()
+        pretrained_layout.addWidget(self._inputs['use_pretrained_model'])
+        pretrained_layout.addWidget(self._inputs['training_input_path'])
+        pretrained_frame = QGroupBox(self)
+        pretrained_frame.setTitle('Pre-trained data')
+        pretrained_frame.setLayout(pretrained_layout)
+        grainshape_layout.addWidget(pretrained_frame)
 
         # Grain shape training:
         training_layout = QVBoxLayout()
@@ -190,11 +210,11 @@ class ExportDialog(QDialog):
         item_layout.addWidget(QLabel('Model:'))
         item_layout.addWidget(self._inputs['model'])
         training_layout.addLayout(item_layout)
-        training_layout.addWidget(self._inputs['svc_gamma'])
-        training_layout.addWidget(self._inputs['multinomialnb_alpha'])
+        training_layout.addWidget(self._inputs['model_svc_gamma'])
+        training_layout.addWidget(self._inputs['model_multinomialnb_alpha'])
         training_layout.addWidget(self._inputs['training_data_folder'])
         training_layout.addWidget(self._inputs['save_model'])
-        training_layout.addWidget(self._inputs['model_output_path'])
+        training_layout.addWidget(self._inputs['training_output_path'])
         training_frame = QGroupBox(self)
         training_frame.setTitle('Model training')
         training_frame.setLayout(training_layout)
@@ -202,17 +222,22 @@ class ExportDialog(QDialog):
 
         # Preprocessing:
         preprocessing_layout = QVBoxLayout()
-        preprocessing_layout.addWidget(self._inputs['remove_negative_forces'])
+        pre_smp_layout = QVBoxLayout()
+        pre_smp_layout.addWidget(self._inputs['remove_negative_forces'])
         item_layout = QHBoxLayout()
         item_layout.addWidget(self._inputs['remove_noise'])
         item_layout.addWidget(self._inputs['noise_threshold'])
         item_layout.addWidget(QLabel('N'))
-        preprocessing_layout.addLayout(item_layout)
+        pre_smp_layout.addLayout(item_layout)
         item_layout = QHBoxLayout()
         item_layout.addWidget(self._inputs['discard_thin_layers'])
         item_layout.addWidget(self._inputs['discard_layer_thickness'])
         item_layout.addWidget(QLabel('mm'))
-        preprocessing_layout.addLayout(item_layout)
+        pre_smp_layout.addLayout(item_layout)
+        pre_smp_frame = QGroupBox(self)
+        pre_smp_frame.setTitle('Preprocessing of SMP data')
+        pre_smp_frame.setLayout(pre_smp_layout)
+        preprocessing_layout.addWidget(pre_smp_frame)
 
         # Preprocessing specific to training data:
         pre_training_layout = QVBoxLayout()
@@ -220,7 +245,6 @@ class ExportDialog(QDialog):
         pre_training_frame = QGroupBox(self)
         pre_training_frame.setTitle('Preprocessing of training data')
         pre_training_frame.setLayout(pre_training_layout)
-        preprocessing_layout.addSpacing(_spacer_height)
         preprocessing_layout.addWidget(pre_training_frame)
 
         # Tabs:
@@ -247,3 +271,10 @@ class ExportDialog(QDialog):
     def confirmExportCAAML(self):
         result = self.exec()
         return (result == QDialog.Accepted)
+
+    def _on_model_changed(self, value):
+        model_str = self._inputs['model'].itemData(value)
+        for key, wid in self._inputs.items():
+            if not key.startswith('model_'):
+                continue
+            wid.setVisible(key.startswith(f'model_{model_str}'))
