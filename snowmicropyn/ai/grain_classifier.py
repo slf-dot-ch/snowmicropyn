@@ -91,7 +91,7 @@ class grain_classifier:
     def _make_model(self):
         if self._set['model'] == 'svc':
             try:
-                svc_gamma = self._set['lr_gamma']
+                svc_gamma = self._set['svc_gamma']
             except KeyError:
                 svc_gamma = 'auto'
             self._model = ('svc', SVC(gamma=svc_gamma))
