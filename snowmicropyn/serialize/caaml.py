@@ -20,7 +20,8 @@ def hand_hardness(force):
     else:
         return 'I'
 
-def export(settings, samples, derivatives, parameterization, location, prof_id, timestamp, smp_serial, longitude, latitude, outfile):
+def export(settings, samples, derivatives, grain_shapes, parameterization,
+    location, prof_id, timestamp, smp_serial, longitude, latitude, outfile):
 
     mm2cm = lambda mm : mm / 10
 
@@ -66,13 +67,14 @@ def export(settings, samples, derivatives, parameterization, location, prof_id, 
     strat_prof = ET.SubElement(snow_prof_meas, f'{_ns_caaml}:stratProfile')
     strat_meta = ET.SubElement(strat_prof, f'{_ns_caaml}:stratMetaData')
 
-    for idx, row in samples.iterrows():
+    for idx, row in derivatives.iterrows():
         layer = ET.SubElement(strat_prof, f'{_ns_caaml}:Layer')
         depth_top = ET.SubElement(layer, f'{_ns_caaml}:depthTop')
         depth_top.set('uom', 'cm')
         depth_top.text = str(row['distance'])
-        grain_primary = ET.SubElement(layer, f'{_ns_caaml}:grainFormPrimary')
-        grain_primary.text = 'PPgp'
+        if len(grain_shapes) > 0:
+            grain_primary = ET.SubElement(layer, f'{_ns_caaml}:grainFormPrimary')
+            grain_primary.text = grain_shapes[idx]
         grain_size = ET.SubElement(layer, f'{_ns_caaml}:grainSize')
         grain_size.set('uom', 'mm')
         grain_components = ET.SubElement(grain_size, f'{_ns_caaml}:Components')
@@ -80,7 +82,7 @@ def export(settings, samples, derivatives, parameterization, location, prof_id, 
         grain_sz_avg.text = "1"
         grain_hardness = ET.SubElement(layer, f'{_ns_caaml}:hardness')
         grain_hardness.set('uom', '')
-        grain_hardness.text = hand_hardness(row['force'])
+        grain_hardness.text = hand_hardness(row['force_median'])
 
     # Density profile:
     dens_prof = ET.SubElement(snow_prof_meas, f'{_ns_caaml}:densityProfile')

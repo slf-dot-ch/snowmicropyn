@@ -17,7 +17,6 @@ from .parameterizations import *
 from .derivatives import parameterizations
 
 from .pnt import Pnt
-from .serialize import caaml
 
 log = logging.getLogger('snowmicropyn')
 
@@ -446,30 +445,6 @@ class Profile(object):
             data = samples.rename(columns=with_units)
             data.to_csv(f, header=True, index=False, float_format=fmt)
         return file
-
-
-    def export_caaml(self, outfile=None, parameterization='P2015', export_settings={}):
-
-        # Prepare samples:
-        samples = self.samples_within_snowpack()
-        mm2cm = lambda mm : mm / 10
-
-        # Prepare derivatives:
-        param = parameterizations[parameterization]
-        loewe2012_df = loewe2012.calc(samples, param.window_size, param.overlap)
-        derivatives = loewe2012_df
-        derivatives = derivatives.merge(param.calc_from_loewe2012(loewe2012_df))
-
-        # After all calculations we can convert to cm (forced by CAAML):
-        samples['distance'] = samples['distance'].apply(mm2cm)
-        if outfile:
-            outfile = pathlib.Path(outfile)
-        else:
-            outfile = self._pnt_file.with_name(self._pnt_file.stem).with_suffix('.caaml')
-
-        caaml.export(export_settings, samples, derivatives, parameterization, 'generic',
-            self._pnt_file.stem, self._timestamp, self._smp_serial, self._longitude, self._latitude, outfile)
-        return outfile
 
     def export_samples_niviz(self, export_settings, file=None, precision=4):
         """ Export the samples of this profile into a CSV file readable by niViz.

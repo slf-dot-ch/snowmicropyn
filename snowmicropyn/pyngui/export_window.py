@@ -6,7 +6,7 @@ import logging
 
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtGui import QDoubleValidator, QDesktopServices
-from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QGroupBox, \
+from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog, QGroupBox, \
     QHBoxLayout, QLabel, QLineEdit, QPushButton, QTabWidget, QVBoxLayout, QWidget
 
 log = logging.getLogger('snowmicropyn')
@@ -16,29 +16,25 @@ _widget_width = int(_window_min_width / 5)
 _spacer_width = int(_window_min_width / 20)
 _spacer_height = _spacer_width
 
-class LabelText(QWidget):
-    _lineedit = None
+class LabelNumber(QWidget):
+    _spinbox = None
     def __init__(self, label, small=False, indent=False):
         super().__init__()
         self._init_ui(label, small, indent)
 
     def _init_ui(self, label, small, indent):
-        self._lineedit = QLineEdit()
+        self._spinbox = QDoubleSpinBox()
         main_layout = QHBoxLayout()
         if indent:
             main_layout.addSpacing(_spacer_width)
         main_layout.addWidget(QLabel(label))
-        main_layout.addWidget(self._lineedit)
+        main_layout.addWidget(self._spinbox)
         self.setLayout(main_layout)
-        if small:
-            self._lineedit.setFixedWidth(_widget_width)
-            self._lineedit.setAlignment(Qt.AlignRight)
         self.setContentsMargins(0, 0, 0, 0)
         main_layout.setContentsMargins(0,0,0,0)
 
-    @property
-    def text(self):
-        return self._lineedit.text
+    def value(self):
+        return self._spinbox.value()
 
 class FilePicker(QWidget):
     _lineedit = None
@@ -77,9 +73,8 @@ class FilePicker(QWidget):
         if fname:
             self._lineedit.setText(fname)
 
-    @property
     def text(self):
-        return self._lineedit.text
+        return self._lineedit.text()
 
 class ExportDialog(QDialog):
     def __init__(self):
@@ -114,7 +109,7 @@ class ExportDialog(QDialog):
         # Grain shape tab:
         self._inputs['export_grainshape'] = QCheckBox('Export grain shape estimation')
         self._inputs['use_pretrained_model'] = QCheckBox('Use pre-trained model')
-        self._inputs['training_input_path'] = FilePicker('Path:', indent=True)
+        self._inputs['trained_input_path'] = FilePicker('Path:', indent=True)
         self._inputs['scaler'] = QComboBox()
         self._inputs['scaler'].addItem('Standard Scaler', 'standard')
         self._inputs['scaler'].addItem('Min/Max Scaler', 'minmax')
@@ -126,7 +121,7 @@ class ExportDialog(QDialog):
         self._inputs['model'].currentIndexChanged.connect(self._on_model_changed)
         self._inputs['training_data_folder'] = FilePicker('Training data folder:', directory=True)
         self._inputs['save_model'] = QCheckBox('Save trained model state')
-        self._inputs['training_output_path'] = FilePicker('Path:', save_mode=True, indent=True)
+        self._inputs['trained_output_path'] = FilePicker('Path:', save_mode=True, indent=True)
 
         # Preprocessing tab:
         self._inputs['remove_negative_forces'] = QCheckBox('Remove negative forces')
@@ -139,8 +134,8 @@ class ExportDialog(QDialog):
         self._inputs['exclude_samples_boundaries'] = QCheckBox('Exclude samples at layer boundaries')
 
         # Model specific inputs:
-        self._inputs['model_svc_gamma'] = LabelText('Gamma:', small=True, indent=True)
-        self._inputs['model_multinomialnb_alpha'] = LabelText('Alpha:', small=True, indent=True)
+        self._inputs['model_svc_gamma'] = LabelNumber('Gamma:', small=True, indent=True)
+        self._inputs['model_multinomialnb_alpha'] = LabelNumber('Alpha:', small=True, indent=True)
         self._on_model_changed(0) # show/hide appropriate widgets
 
         # Buttons:
@@ -211,7 +206,7 @@ class ExportDialog(QDialog):
         # Pre-trained model file:
         pretrained_layout = QVBoxLayout()
         pretrained_layout.addWidget(self._inputs['use_pretrained_model'])
-        pretrained_layout.addWidget(self._inputs['training_input_path'])
+        pretrained_layout.addWidget(self._inputs['trained_input_path'])
         pretrained_frame = QGroupBox(self)
         pretrained_frame.setTitle('Pre-trained data')
         pretrained_frame.setLayout(pretrained_layout)
@@ -231,7 +226,7 @@ class ExportDialog(QDialog):
         training_layout.addWidget(self._inputs['model_multinomialnb_alpha'])
         training_layout.addWidget(self._inputs['training_data_folder'])
         training_layout.addWidget(self._inputs['save_model'])
-        training_layout.addWidget(self._inputs['training_output_path'])
+        training_layout.addWidget(self._inputs['trained_output_path'])
         training_frame = QGroupBox(self)
         training_frame.setTitle('Model training')
         training_frame.setLayout(training_layout)
@@ -298,9 +293,11 @@ class ExportDialog(QDialog):
             if isinstance(panel, QCheckBox):
                settings[key] = panel.isChecked()
             elif isinstance(panel, QComboBox):
-                settings[key] = panel.currentText()
-            else: # line edit, custom panels
-               settings[key] = panel.text
+                settings[key] = panel.itemData(panel.currentIndex())
+            elif isinstance(panel, LabelNumber):
+                settings[key] = panel.value()
+            else: # line edit, FilePicker
+                settings[key] = panel.text()
         return settings
 
     def confirmExportCAAML(self):

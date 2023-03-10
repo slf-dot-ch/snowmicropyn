@@ -448,8 +448,7 @@ class MainWindow(QMainWindow):
         if user_settings:
             files=[]
             for doc in self.documents:
-                pro = doc.profile
-                samples_file = pro.export_caaml(export_settings=user_settings)
+                samples_file = doc.export_caaml(export_settings=user_settings)
                 files.append(samples_file)
             self.notify_dialog.notifyFilesWritten(files)
 

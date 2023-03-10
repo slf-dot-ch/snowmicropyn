@@ -34,10 +34,10 @@ class grain_classifier:
     def __init__(self, user_settings: dict):
         self._set = user_settings
         if self._set['use_pretrained_model']:
-            self.load(self._set['training_input_path'])
+            self.load(self._set['trained_input_path'])
             self._init_from_pickle = True # no training data must be needed in this mode
         else:
-            self._training_data = self.build_training_data(self._set['training_folder'])
+            self._training_data = self.build_training_data(self._set['training_data_folder'])
             self._index_codes, self._index_labels = pd.factorize(self._training_data.grain_shape)
             self.make_pipeline()
             self.train()
@@ -86,7 +86,7 @@ class grain_classifier:
         elif self._set['scaler'] == 'minmax':
             self._scaler = ('scaler', MinMaxScaler())
         else:
-            raise ValueError('Grain classification: the selected scaler is not available.')
+            raise ValueError(f"Grain classification: the selected scaler {self._set['scaler']} is not available.")
 
     def _make_model(self):
         if self._set['model'] == 'svc':
@@ -150,7 +150,7 @@ class grain_classifier:
 if __name__ == '__main__':
     # training
     _export_settings = {}
-    _export_settings['training_folder'] = '../../data/rhossa'
+    _export_settings['training_data_folder'] = '../../data/rhossa'
     _export_settings['scaler'] = 'standard'
     _export_settings['model'] = 'svc'
     _export_settings['svc_gamma'] = 100
