@@ -285,13 +285,26 @@ class ExportDialog(QDialog):
         main_layout.addWidget(self.button_box)
         self.setLayout(main_layout)
 
-    def confirmExportCAAML(self):
-        result = self.exec()
-        return (result == QDialog.Accepted)
-
     def _on_model_changed(self, value):
         model_str = self._inputs['model'].itemData(value)
         for key, wid in self._inputs.items():
             if not key.startswith('model_'):
                 continue
             wid.setVisible(key.startswith(f'model_{model_str}'))
+
+    def _collect_settings(self):
+        settings = {}
+        for key, panel in self._inputs.items():
+            if isinstance(panel, QCheckBox):
+               settings[key] = panel.isChecked()
+            elif isinstance(panel, QComboBox):
+                settings[key] = panel.currentText()
+            else: # line edit, custom panels
+               settings[key] = panel.text
+        return settings
+
+    def confirmExportCAAML(self):
+        result = self.exec()
+        if result != QDialog.Accepted:
+            return False
+        return self._collect_settings()

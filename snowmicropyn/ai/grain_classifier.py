@@ -31,10 +31,10 @@ class grain_classifier:
     # properties:
     _score = None # cache for the score calculation
 
-    def __init__(self, user_settings: dict, model_file=None):
+    def __init__(self, user_settings: dict):
         self._set = user_settings
-        if model_file:
-            self.load(model_file)
+        if self._set['use_pretrained_model']:
+            self.load(self._set['training_input_path'])
             self._init_from_pickle = True # no training data must be needed in this mode
         else:
             self._training_data = self.build_training_data(self._set['training_folder'])

@@ -20,7 +20,7 @@ def hand_hardness(force):
     else:
         return 'I'
 
-def export(samples, derivatives, parameterization, location, prof_id, timestamp, smp_serial, longitude, latitude, outfile):
+def export(settings, samples, derivatives, parameterization, location, prof_id, timestamp, smp_serial, longitude, latitude, outfile):
 
     mm2cm = lambda mm : mm / 10
 

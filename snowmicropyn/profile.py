@@ -448,7 +448,7 @@ class Profile(object):
         return file
 
 
-    def export_caaml(self, outfile=None, parameterization='P2015'):
+    def export_caaml(self, outfile=None, parameterization='P2015', export_settings={}):
 
         # Prepare samples:
         samples = self.samples_within_snowpack()
@@ -467,8 +467,8 @@ class Profile(object):
         else:
             outfile = self._pnt_file.with_name(self._pnt_file.stem).with_suffix('.caaml')
 
-        caaml.export(samples, derivatives, parameterization, 'generic', self._pnt_file.stem, self._timestamp,
-            self._smp_serial, self._longitude, self._latitude, outfile)
+        caaml.export(export_settings, samples, derivatives, parameterization, 'generic',
+            self._pnt_file.stem, self._timestamp, self._smp_serial, self._longitude, self._latitude, outfile)
         return outfile
 
     def export_samples_niviz(self, export_settings, file=None, precision=4):
