@@ -12,6 +12,61 @@ from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QDialogButtonBox, QGr
 log = logging.getLogger('snowmicropyn')
 
 _window_min_width = 600
+_widget_width = int(_window_min_width / 5)
+_spacer_width = int(_window_min_width / 20)
+
+class Spacer(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setFixedWidth(_spacer_width)
+
+class LabelText(QWidget):
+    _lineedit = None
+    def __init__(self, label, small=False, indent=False):
+        super().__init__()
+        self._init_ui(label, small, indent)
+
+    def _init_ui(self, label, small, indent):
+        self._lineedit = QLineEdit()
+        main_layout = QHBoxLayout()
+        if indent:
+            main_layout.addWidget(Spacer())
+        main_layout.addWidget(QLabel(label))
+        main_layout.addWidget(self._lineedit)
+        self.setLayout(main_layout)
+        if small:
+            self._lineedit.setFixedWidth(_widget_width)
+            self._lineedit.setAlignment(Qt.AlignRight)
+        self.setContentsMargins(0, 0, 0, 0)
+        main_layout.setContentsMargins(0,0,0,0)
+
+    @property
+    def text(self):
+        return self._lineedit.text
+
+class FilePicker(QWidget):
+    _lineedit = None
+    _button = None
+    def __init__(self, label, indent=False):
+        super().__init__()
+        self._init_ui(label, indent)
+
+    def _init_ui(self, label, indent):
+        self._lineedit = QLineEdit()
+        self._button = QPushButton('...')
+        main_layout = QHBoxLayout()
+        if indent:
+            main_layout.addWidget(Spacer())
+        main_layout.addWidget(QLabel(label))
+        main_layout.addWidget(self._lineedit)
+        main_layout.addWidget(self._button)
+        self.setLayout(main_layout)
+        self.setContentsMargins(0, 0, 0, 0)
+        main_layout.setContentsMargins(0,0,0,0)
+
+    @property
+    def text(self):
+        return self._lineedit.text
 
 class ExportDialog(QDialog):
     def __init__(self):
@@ -21,40 +76,41 @@ class ExportDialog(QDialog):
         self._init_ui()
 
     def _init_widgets(self):
-        
-        widget_width = lambda : int(_window_min_width / 5)
 
         # CAAML tab
         self._inputs['location_name'] = QLineEdit()
-        self._inputs['location_name'].setFixedWidth(widget_width())
+        self._inputs['location_name'].setFixedWidth(_widget_width)
         self._inputs['location_name'].setAlignment(Qt.AlignRight)
         self._inputs['altitude'] = QLineEdit()
-        self._inputs['altitude'].setFixedWidth(widget_width())
+        self._inputs['altitude'].setFixedWidth(_widget_width)
         self._inputs['altitude'].setValidator(QDoubleValidator())
         self._inputs['altitude'].setAlignment(Qt.AlignRight)
         self._inputs['slope_angle'] = QLineEdit()
-        self._inputs['slope_angle'].setFixedWidth(widget_width())
+        self._inputs['slope_angle'].setFixedWidth(_widget_width)
         self._inputs['slope_angle'].setValidator(QDoubleValidator())
         self._inputs['slope_angle'].setAlignment(Qt.AlignRight)
         self._inputs['slope_exposition'] = QLineEdit()
-        self._inputs['slope_exposition'].setFixedWidth(widget_width())
+        self._inputs['slope_exposition'].setFixedWidth(_widget_width)
         self._inputs['slope_exposition'].setValidator(QDoubleValidator())
         self._inputs['slope_exposition'].setAlignment(Qt.AlignRight)
         self._inputs['aggregation'] = QLineEdit()
-        self._inputs['aggregation'].setFixedWidth(widget_width())
+        self._inputs['aggregation'].setFixedWidth(_widget_width)
         self._inputs['aggregation'].setValidator(QDoubleValidator())
         self._inputs['aggregation'].setAlignment(Qt.AlignRight)
 
         # Grain shape tab:
         self._inputs['export_grainshape'] = QCheckBox('Export grainshape estimation')
         self._inputs['use_pretrained_model'] = QCheckBox('Use pretrained model')
-        self._inputs['model_input_path'] = QLineEdit()
+        self._inputs['model_input_path'] = FilePicker('Path:', indent=True)
         self._inputs['scaler'] = QComboBox()
         self._inputs['model'] = QComboBox()
-        self._inputs['svc_gamma'] = QLineEdit()
-        self._inputs['training_data_folder'] = QLineEdit()
+        self._inputs['training_data_folder'] = FilePicker('Training data folder:')
         self._inputs['save_model'] = QCheckBox('Save trained model state')
-        self._inputs['model_output_path'] = QLineEdit()
+        self._inputs['model_output_path'] = FilePicker('Path:', indent=True)
+
+        # Model specific inputs:
+        self._inputs['svc_gamma'] = LabelText('Gamma:', small=True, indent=True)
+        self._inputs['multinomialnb_alpha'] = LabelText('Alpha:', small=True, indent=True)
 
         # Buttons:
         buttons = QDialogButtonBox.Help | QDialogButtonBox.Ok | QDialogButtonBox.Cancel
@@ -116,11 +172,7 @@ class ExportDialog(QDialog):
         # Grain shape estimation:
         grainshape_layout.addWidget(self._inputs['export_grainshape'])
         grainshape_layout.addWidget(self._inputs['use_pretrained_model'])
-        item_layout = QHBoxLayout()
-        item_layout.addWidget(QLabel('Path:'))
-        item_layout.addWidget(self._inputs['model_input_path'])
-        item_layout.addWidget(QPushButton("..."))
-        grainshape_layout.addLayout(item_layout)
+        grainshape_layout.addWidget(self._inputs['model_input_path'])
 
         # Grain shape training:
         training_layout = QVBoxLayout()
@@ -132,15 +184,11 @@ class ExportDialog(QDialog):
         item_layout.addWidget(QLabel('Model:'))
         item_layout.addWidget(self._inputs['model'])
         training_layout.addLayout(item_layout)
-        item_layout = QHBoxLayout()
-        item_layout.addWidget(QLabel('Training data folder:'))
-        item_layout.addWidget(self._inputs['training_data_folder'])
-        training_layout.addLayout(item_layout)
+        training_layout.addWidget(self._inputs['svc_gamma'])
+        training_layout.addWidget(self._inputs['multinomialnb_alpha'])
+        training_layout.addWidget(self._inputs['training_data_folder'])
         training_layout.addWidget(self._inputs['save_model'])
-        item_layout = QHBoxLayout()
-        item_layout.addWidget(QLabel('Path:'))
-        item_layout.addWidget(self._inputs['model_output_path'])
-        training_layout.addLayout(item_layout)
+        training_layout.addWidget(self._inputs['model_output_path'])
         training_frame = QGroupBox(self)
         training_frame.setTitle('Model training')
         training_frame.setLayout(training_layout)
