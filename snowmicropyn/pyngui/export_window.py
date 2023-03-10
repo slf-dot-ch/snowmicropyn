@@ -6,7 +6,7 @@ import logging
 
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtGui import QDoubleValidator, QDesktopServices
-from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QDialogButtonBox, QGroupBox, \
+from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QGroupBox, \
     QHBoxLayout, QLabel, QLineEdit, QPushButton, QTabWidget, QVBoxLayout, QWidget
 
 log = logging.getLogger('snowmicropyn')
@@ -43,13 +43,19 @@ class LabelText(QWidget):
 class FilePicker(QWidget):
     _lineedit = None
     _button = None
-    def __init__(self, label, indent=False):
+    _directory = False
+    _save_mode = False
+
+    def __init__(self, label, directory=False, save_mode=False, indent=False):
         super().__init__()
+        self._directory = directory
+        self._save_mode = save_mode
         self._init_ui(label, indent)
 
     def _init_ui(self, label, indent):
         self._lineedit = QLineEdit()
         self._button = QPushButton('...')
+        self._button.clicked.connect(self.on_button_click)
         main_layout = QHBoxLayout()
         if indent:
             main_layout.addSpacing(_spacer_width)
@@ -59,6 +65,17 @@ class FilePicker(QWidget):
         self.setLayout(main_layout)
         self.setContentsMargins(0, 0, 0, 0)
         main_layout.setContentsMargins(0,0,0,0)
+
+    def on_button_click(self):
+        if self._directory:
+            fname = QFileDialog.getExistingDirectory(self, 'Open folder', '.')
+        else:
+            if self._save_mode:
+                fname, _ = QFileDialog.getSaveFileName(self, 'Save file', '.')
+            else:
+                fname, _ = QFileDialog.getOpenFileName(self, 'Open file', '.')
+        if fname:
+            self._lineedit.setText(fname)
 
     @property
     def text(self):
@@ -107,9 +124,9 @@ class ExportDialog(QDialog):
         self._inputs['model'].addItem('Gaussian Naive Bayes', 'gaussiannb')
         self._inputs['model'].addItem('Multinomial Naive Bayes', 'multinomialnb')
         self._inputs['model'].currentIndexChanged.connect(self._on_model_changed)
-        self._inputs['training_data_folder'] = FilePicker('Training data folder:')
+        self._inputs['training_data_folder'] = FilePicker('Training data folder:', directory=True)
         self._inputs['save_model'] = QCheckBox('Save trained model state')
-        self._inputs['training_output_path'] = FilePicker('Path:', indent=True)
+        self._inputs['training_output_path'] = FilePicker('Path:', save_mode=True, indent=True)
 
         # Preprocessing tab:
         self._inputs['remove_negative_forces'] = QCheckBox('Remove negative forces')
