@@ -50,7 +50,8 @@ class Document:
         if outfile:
             outfile = pathlib.Path(outfile)
         else:
-            outfile = self._profile._pnt_file.with_name(self._profile._pnt_file.stem).with_suffix('.caaml')
+            # add _smp flag to file name in order to (hopefully) not overwrite hand profiles:
+            outfile = self._profile._pnt_file.with_name(f'{self._profile._pnt_file.stem}_smp').with_suffix('.caaml')
 
         grain_shapes = {}
         if export_settings['export_grainshape']:

@@ -3,11 +3,11 @@
 """
 
 import logging
-
-from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtCore import QSettings, Qt, QUrl
 from PyQt5.QtGui import QDoubleValidator, QDesktopServices
 from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog, QGroupBox, \
     QHBoxLayout, QLabel, QLineEdit, QPushButton, QTabWidget, QVBoxLayout, QWidget
+import sys
 
 log = logging.getLogger('snowmicropyn')
 
@@ -18,12 +18,15 @@ _spacer_height = _spacer_width
 
 class LabelNumber(QWidget):
     _spinbox = None
+
     def __init__(self, label, small=False, indent=False):
         super().__init__()
         self._init_ui(label, small, indent)
 
     def _init_ui(self, label, small, indent):
         self._spinbox = QDoubleSpinBox()
+        self._spinbox.setMinimum(sys.float_info.min)
+        self._spinbox.setMaximum(sys.float_info.max)
         main_layout = QHBoxLayout()
         if indent:
             main_layout.addSpacing(_spacer_width)
@@ -32,6 +35,9 @@ class LabelNumber(QWidget):
         self.setLayout(main_layout)
         self.setContentsMargins(0, 0, 0, 0)
         main_layout.setContentsMargins(0,0,0,0)
+
+    def setValue(self, value):
+        self._spinbox.setValue(value)
 
     def value(self):
         return self._spinbox.value()
@@ -73,15 +79,22 @@ class FilePicker(QWidget):
         if fname:
             self._lineedit.setText(fname)
 
+    def setText(self, text):
+        self._lineedit.setText(text)
+
     def text(self):
         return self._lineedit.text()
 
 class ExportDialog(QDialog):
+
+    _settings_root = 'export/caaml'
+
     def __init__(self):
         super().__init__()
         self._inputs = {}
         self._init_widgets()
         self._init_ui()
+        self._fill_from_settings()
 
     def _init_widgets(self):
 
@@ -128,6 +141,7 @@ class ExportDialog(QDialog):
         self._inputs['remove_noise'] = QCheckBox('Noise threshold:')
         self._inputs['noise_threshold'] = QLineEdit()
         self._inputs['noise_threshold'].setFixedWidth(_widget_width)
+        self._inputs['merge_layers'] = QCheckBox('Merge layers')
         self._inputs['discard_thin_layers'] = QCheckBox('Discard layers thinner than:')
         self._inputs['discard_layer_thickness'] = QLineEdit()
         self._inputs['discard_layer_thickness'].setFixedWidth(_widget_width)
@@ -241,6 +255,7 @@ class ExportDialog(QDialog):
         item_layout.addWidget(self._inputs['noise_threshold'])
         item_layout.addWidget(QLabel('N'))
         pre_smp_layout.addLayout(item_layout)
+        pre_smp_layout.addWidget(self._inputs['merge_layers'])
         item_layout = QHBoxLayout()
         item_layout.addWidget(self._inputs['discard_thin_layers'])
         item_layout.addWidget(self._inputs['discard_layer_thickness'])
@@ -300,8 +315,32 @@ class ExportDialog(QDialog):
                 settings[key] = panel.text()
         return settings
 
+    def _fill_from_settings(self):
+        for key, panel in self._inputs.items():
+            value = QSettings().value(f'{self._settings_root}/{key}')
+            if not value:
+                continue
+            if isinstance(panel, QCheckBox):
+                panel.setChecked(value == 'true')
+            elif isinstance(panel, QComboBox):
+                for idx in range(panel.count()):
+                    if panel.itemData(idx) == value:
+                        panel.setCurrentIndex(idx)
+                        break
+            elif isinstance(panel, LabelNumber):
+                panel.setValue(float(value))
+            else: # line edit, FilePicker
+                panel.setText(str(value))
+
+    def _save_export_settings(self):
+        settings = self._collect_settings()
+        for key, value in settings.items():
+            QSettings().setValue(f'{self._settings_root}/{key}', value)
+        QSettings().sync()
+
     def confirmExportCAAML(self):
         result = self.exec()
         if result != QDialog.Accepted:
             return False
+        self._save_export_settings()
         return self._collect_settings()
