@@ -1,4 +1,5 @@
 import pandas as pd
+from scipy.ndimage import gaussian_filter
 import xml.etree.ElementTree as ET
 
 _ns_caaml = 'caaml'
@@ -20,10 +21,79 @@ def hand_hardness(force):
     else:
         return 'I'
 
+def force_smoothing(samples, sigma):
+    samples.force = gaussian_filter(samples.force, sigma=sigma)
+
+def noise_threshold(samples, thresh):
+    samples = samples[samples.force < thresh]
+
+def _chunkup_derivs(derivatives, grain_shapes, similarity_percent):
+    chunks = []
+    shapes = []
+    layer_start = 0
+    for idx, row in derivatives.iterrows():
+        new = False
+        if idx == 0:
+            continue
+        if grain_shapes[idx] != grain_shapes[idx - 1]:
+            new = True
+        if not new and derivatives['L2012_delta'][idx] < (derivatives['L2012_delta'][idx - 1] * (100 - similarity_percent) / 100):
+            new = True
+        if not new and derivatives['L2012_delta'][idx] > (derivatives['L2012_delta'][idx - 1] * (100 + similarity_percent) / 100):
+            new = True
+        if new:
+            chunks.append(derivatives.iloc[layer_start:idx])
+            shapes.append(grain_shapes[idx - 1])
+            layer_start = idx
+    return chunks, shapes
+
+def merge_layers(derivatives, grain_shapes, similarity_percent):
+    chunks, shapes = _chunkup_derivs(derivatives, grain_shapes, similarity_percent)
+    merged = pd.DataFrame()
+    for chunk in chunks:
+        top = chunk.iloc[0].distance
+        mean = chunk.mean()
+        mean.distance = top
+        merged = pd.concat([merged, mean.to_frame().T], ignore_index=True)
+    bottom = chunks[-1].iloc[-1].distance
+    return merged, shapes, bottom
+
+def discard_thin_layers(derivatives, grain_shapes, profile_bottom, min_thickness):
+    update_bottom = False
+    drop_indices = []
+    for idx, row in derivatives.iterrows():
+        if idx == len(derivatives) - 1:
+            thickness = profile_bottom - row.distance
+            update_bottom = True
+        else:
+            thickness = derivatives['distance'][idx + 1] - row.distance
+        if thickness < min_thickness:
+            if update_bottom:
+                profile_bottom = row.distance
+            drop_indices.append(idx)
+    derivatives.drop(drop_indices, inplace=True)
+    derivatives.reset_index(inplace=True)
+    return derivatives, grain_shapes, profile_bottom
+
+def preprocess(samples, derivatives, grain_shapes, export_settings, sigma=0.5):
+    profile_bottom = None
+    if export_settings['smoothing']:
+        force_smoothing(samples, sigma)
+    if export_settings['remove_noise'] and export_settings['noise_threshold']:
+        noise_threshold(samples, float(export_settings['noise_threshold']))
+    if export_settings['remove_negative_forces']:
+        noise_threshold(samples, 0)
+    if export_settings['merge_layers']:
+        derivatives, shapes, profile_bottom = merge_layers(derivatives, grain_shapes, 500)
+    if export_settings['discard_thin_layers'] and export_settings['discard_layer_thickness']:
+        derivatives, grain_shapes, profile_bottom = discard_thin_layers(derivatives, grain_shapes, profile_bottom, float(export_settings['discard_layer_thickness']))
+    return samples, derivatives, shapes, profile_bottom
+
 def export(settings, samples, derivatives, grain_shapes, parameterization,
     location, prof_id, timestamp, smp_serial, longitude, latitude, outfile):
 
     mm2cm = lambda mm : mm / 10
+    samples, processed_derivs, grain_shapes, profile_bottom = preprocess(samples, derivatives, grain_shapes, settings)
 
     # Meta data:
     root = ET.Element(f'{_ns_caaml}:SnowProfile')
@@ -67,11 +137,18 @@ def export(settings, samples, derivatives, grain_shapes, parameterization,
     strat_prof = ET.SubElement(snow_prof_meas, f'{_ns_caaml}:stratProfile')
     strat_meta = ET.SubElement(strat_prof, f'{_ns_caaml}:stratMetaData')
 
-    for idx, row in derivatives.iterrows():
+    for idx, row in processed_derivs.iterrows():
         layer = ET.SubElement(strat_prof, f'{_ns_caaml}:Layer')
         depth_top = ET.SubElement(layer, f'{_ns_caaml}:depthTop')
         depth_top.set('uom', 'cm')
-        depth_top.text = str(row['distance'])
+        depth_top.text = str(mm2cm(row['distance']))
+        thickness = ET.SubElement(layer, f'{_ns_caaml}:thickness')
+        thickness.set('uom', 'cm')
+        if idx == len(processed_derivs) - 1:
+            layer_thickness = profile_bottom - row.distance
+        else:
+            layer_thickness = processed_derivs.distance[idx + 1] - row.distance
+        thickness.text = str(mm2cm(layer_thickness))
         if len(grain_shapes) > 0:
             grain_primary = ET.SubElement(layer, f'{_ns_caaml}:grainFormPrimary')
             grain_primary.text = grain_shapes[idx]
@@ -90,7 +167,7 @@ def export(settings, samples, derivatives, grain_shapes, parameterization,
     dens_meth = ET.SubElement(dens_meta, f'{_ns_caaml}:methodOfMeas')
     dens_meth.text = "other"
 
-    for idx, row in derivatives.iterrows():
+    for _, row in derivatives.iterrows():
         layer = ET.SubElement(dens_prof, f'{_ns_caaml}:Layer')
         depth_top = ET.SubElement(layer, f'{_ns_caaml}:depthTop')
         depth_top.set('uom', 'cm')
@@ -114,8 +191,8 @@ def export(settings, samples, derivatives, grain_shapes, parameterization,
     ssa_tuple = ET.SubElement(ssa_meas, f'{_ns_caaml}:tupleList')
 
     tuple_list = ''
-    for idx, row in derivatives.iterrows():
-        tuple_list = tuple_list + str(row['distance']) + "," + str(row[f'{parameterization}_ssa']) + " "
+    for _, row in derivatives.iterrows():
+        tuple_list = tuple_list + str(mm2cm(row['distance'])) + "," + str(row[f'{parameterization}_ssa']) + " "
     ssa_tuple.text = tuple_list
 
     # Hardness profile:
@@ -132,8 +209,8 @@ def export(settings, samples, derivatives, grain_shapes, parameterization,
     hard_tuple = ET.SubElement(hard_meas, f'{_ns_caaml}:tupleList')
 
     tuple_list = ''
-    for idx, row in samples.iterrows():
-        tuple_list = tuple_list + str(row['distance']) + "," + str(row['force']) + " "
+    for _, row in derivatives.iterrows():
+        tuple_list = tuple_list + str(mm2cm(row['distance'])) + "," + str(mm2cm(row['force_median'])) + " "
     hard_tuple.text = tuple_list
 
 ## The following is an alternative method of specifying SMP data in CAAML which works
@@ -147,7 +224,7 @@ def export(settings, samples, derivatives, grain_shapes, parameterization,
 #            layer = ET.SubElement(hard_prof, f'{_ns_caaml}:Layer')
 #            depth_top = ET.SubElement(layer, f'{_ns_caaml}:depthTop')
 #            depth_top.set('uom', 'cm')
-#            depth_top.text = str(row['distance'])
+#            depth_top.text = str(mm2cm(row['distance')])
 #            hardness = ET.SubElement(layer, f'{_ns_caaml}:hardness')
 #            hardness.set('uom', 'N')
 #            hardness_val = row['force']

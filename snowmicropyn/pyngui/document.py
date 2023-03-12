@@ -37,7 +37,6 @@ class Document:
 
         # Prepare samples:
         samples = self._profile.samples_within_snowpack()
-        mm2cm = lambda mm : mm / 10
 
         # Prepare derivatives:
         param = params[parameterization]
@@ -45,8 +44,6 @@ class Document:
         derivatives = loewe2012_df
         derivatives = derivatives.merge(param.calc_from_loewe2012(loewe2012_df))
 
-        # After all calculations we can convert to cm (forced by CAAML):
-        samples['distance'] = samples['distance'].apply(mm2cm)
         if outfile:
             outfile = pathlib.Path(outfile)
         else:
