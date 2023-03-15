@@ -21,11 +21,19 @@ def hand_hardness(force):
     else:
         return 'I'
 
-def force_smoothing(samples, sigma):
-    samples.force = gaussian_filter(samples.force, sigma=sigma)
+def force_smoothing(derivatives, sigma):
+    derivatives.force_median = gaussian_filter(derivatives.force_median, sigma=sigma)
+    return derivatives
 
-def noise_threshold(samples, thresh):
-    samples = samples[samples.force < thresh]
+def noise_threshold(derivatives, thresh):
+    derivatives = derivatives[derivatives.force_median > thresh]
+    return derivatives
+
+def remove_negatives(derivatives, parameterization):
+    derivatives = derivatives[(derivatives['force_median'] > 0) &
+        (derivatives[f'{parameterization}_density'] > 0) & (derivatives[f'{parameterization}_ssa'] > 0)]
+    derivatives.reset_index(inplace=True)
+    return derivatives
 
 def _chunkup_derivs(derivatives, grain_shapes, similarity_percent):
     chunks = []
@@ -75,25 +83,29 @@ def discard_thin_layers(derivatives, grain_shapes, profile_bottom, min_thickness
     derivatives.reset_index(inplace=True)
     return derivatives, grain_shapes, profile_bottom
 
-def preprocess(samples, derivatives, grain_shapes, export_settings, sigma=0.5):
-    profile_bottom = derivatives.iloc[-1].distance
-    if export_settings['smoothing']:
-        force_smoothing(samples, sigma)
-    if export_settings['remove_noise'] and export_settings['noise_threshold']:
-        noise_threshold(samples, float(export_settings['noise_threshold']))
-    if export_settings['remove_negative_forces']:
-        noise_threshold(samples, 0)
-    if export_settings['merge_layers']:
-        derivatives, shapes, profile_bottom = merge_layers(derivatives, grain_shapes, 500)
-    if export_settings['discard_thin_layers'] and export_settings['discard_layer_thickness']:
-        derivatives, grain_shapes, profile_bottom = discard_thin_layers(derivatives, grain_shapes, profile_bottom, float(export_settings['discard_layer_thickness']))
-    return samples, derivatives, grain_shapes, profile_bottom
+def preprocess_lowlevel(derivatives, parameterization, export_settings):
+    if export_settings.get('smoothing', False):
+        derivatives = force_smoothing(derivatives, sigma=0.5)
+    if export_settings.get('remove_noise', False) and export_settings['noise_threshold']:
+        derivatives = noise_threshold(derivatives, float(export_settings['noise_threshold']))
+    if export_settings.get('remove_negative_forces', False):
+        derivatives = remove_negatives(derivatives, parameterization)
+    return derivatives
 
-def export(settings, samples, derivatives, grain_shapes, parameterization,
+def preprocess_layers(derivatives, parameterization, grain_shapes, export_settings):
+    profile_bottom = derivatives.iloc[-1].distance
+    if export_settings.get('merge_layers', False):
+        derivatives, shapes, profile_bottom = merge_layers(derivatives, grain_shapes, 500)
+    if export_settings.get('discard_thin_layers', False) and export_settings['discard_layer_thickness']:
+        derivatives, grain_shapes, profile_bottom = discard_thin_layers(derivatives, grain_shapes, profile_bottom, float(export_settings['discard_layer_thickness']))
+    return derivatives, grain_shapes, profile_bottom
+
+def export(settings, derivatives, grain_shapes, parameterization,
     prof_id, timestamp, smp_serial, longitude, latitude, outfile):
 
     mm2cm = lambda mm : mm / 10
-    samples, processed_derivs, grain_shapes, profile_bottom = preprocess(samples, derivatives, grain_shapes, settings)
+    derivatives = preprocess_lowlevel(derivatives, parameterization, settings)
+    layer_derivatives, grain_shapes, profile_bottom = preprocess_layers(derivatives, parameterization, grain_shapes, settings)
 
     # Meta data:
     root = ET.Element(f'{_ns_caaml}:SnowProfile')
@@ -121,12 +133,23 @@ def export(settings, samples, derivatives, grain_shapes, parameterization,
     loc_name.text = settings.get('location_name', 'SMP observation point')
     obs_sub = ET.SubElement(loc_ref, f'{_ns_caaml}:obsPointSubType')
     obs_sub.text = 'SMP profile location'
+    altitude = settings.get('altitude')
+    if altitude:
+        valid_elevation = ET.SubElement(loc_ref, f'{_ns_caaml}:validElevation')
+        val_el_pos = ET.SubElement(valid_elevation, f'{_ns_caaml}:ElevationPosition')
+        val_el_pos.set('uom', 'm')
+        caaml_position = ET.SubElement(val_el_pos, f'{_ns_caaml}:position')
+        caaml_position.text = str(altitude)
+    valid_aspect = ET.SubElement(loc_ref, f'{_ns_caaml}:validAspect')
+    aspect_pos = ET.SubElement(valid_aspect, f'{_ns_caaml}:AspectPosition')
+    caaml_aspect = ET.SubElement(aspect_pos, f'{_ns_caaml}:position')
+    caaml_aspect.text = str(settings.get('slope_exposition', 0))
 
-    valid_elevation = ET.SubElement(loc_ref, f'{_ns_caaml}:validElevation')
-    val_el_pos = ET.SubElement(valid_elevation, f'{_ns_caaml}:elevationPosition')
-    val_el_pos.set('uom', 'm')
-    caaml_position = ET.SubElement(val_el_pos, f'{_ns_caaml}:position')
-    caaml_position.text = str(settings.get('altitude', -999))
+    valid_slope_angle = ET.SubElement(loc_ref, f'{_ns_caaml}:validSlopeAngle')
+    valid_slope_angle = ET.SubElement(valid_slope_angle, f'{_ns_caaml}:SlopeAnglePosition')
+    valid_slope_angle.set('uom', 'deg')
+    caaml_angle = ET.SubElement(valid_slope_angle, f'{_ns_caaml}:position')
+    caaml_angle.text = str(settings.get('slope_angle', 0))
 
     point_loc = ET.SubElement(loc_ref, f'{_ns_caaml}:pointLocation')
     point_pt = ET.SubElement(point_loc, f'{_ns_gml}:Point')
@@ -143,17 +166,17 @@ def export(settings, samples, derivatives, grain_shapes, parameterization,
     strat_prof = ET.SubElement(snow_prof_meas, f'{_ns_caaml}:stratProfile')
     strat_meta = ET.SubElement(strat_prof, f'{_ns_caaml}:stratMetaData')
 
-    for idx, row in processed_derivs.iterrows():
+    for idx, row in layer_derivatives.iterrows():
         layer = ET.SubElement(strat_prof, f'{_ns_caaml}:Layer')
         depth_top = ET.SubElement(layer, f'{_ns_caaml}:depthTop')
         depth_top.set('uom', 'cm')
         depth_top.text = str(mm2cm(row['distance']))
         thickness = ET.SubElement(layer, f'{_ns_caaml}:thickness')
         thickness.set('uom', 'cm')
-        if idx == len(processed_derivs) - 1:
+        if idx == len(layer_derivatives) - 1:
             layer_thickness = profile_bottom - row.distance
         else:
-            layer_thickness = processed_derivs.distance[idx + 1] - row.distance
+            layer_thickness = layer_derivatives.distance[idx + 1] - row.distance
         thickness.text = str(mm2cm(layer_thickness))
         if len(grain_shapes) > 0:
             grain_primary = ET.SubElement(layer, f'{_ns_caaml}:grainFormPrimary')

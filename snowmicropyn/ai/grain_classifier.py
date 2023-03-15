@@ -40,6 +40,8 @@ class grain_classifier:
             self.load(self._set['trained_input_path'])
             self._init_from_pickle = True # no training data must be needed in this mode
         else:
+            if not 'training_data_folder' in self._set:
+                raise ValueError('Grain classification: To train a model you must supply a training data location.')
             self._training_data = self.build_training_data(self._set['training_data_folder'])
             self._index_codes, self._index_labels = pd.factorize(self._training_data.grain_shape)
             self.make_pipeline()

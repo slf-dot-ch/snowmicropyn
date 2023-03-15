@@ -3,6 +3,7 @@ from snowmicropyn.ai.grain_classifier import grain_classifier
 from snowmicropyn.derivatives import parameterizations as params
 from snowmicropyn.parameterizations.proksch2015 import Proksch2015
 from snowmicropyn.serialize import caaml
+import pathlib
 
 class Document:
 
@@ -51,11 +52,11 @@ class Document:
             outfile = self._profile._pnt_file.with_name(f'{self._profile._pnt_file.stem}_smp').with_suffix('.caaml')
 
         grain_shapes = {}
-        if export_settings['export_grainshape']:
+        if export_settings.get('export_grainshape', False):
             classifier = grain_classifier(export_settings)
             grain_shapes = classifier.predict(loewe2012_df)
 
-        caaml.export(export_settings, samples, derivatives, grain_shapes, parameterization,
+        caaml.export(export_settings, derivatives, grain_shapes, parameterization,
             self._profile._pnt_file.stem, self._profile._timestamp, self._profile._smp_serial,
             self._profile._longitude, self._profile._latitude, outfile)
         return outfile
