@@ -292,13 +292,14 @@ class ExportDialog(QDialog):
         settings = {}
         for key, panel in self._inputs.items():
             if isinstance(panel, QCheckBox):
-               settings[key] = panel.isChecked()
+                settings[key] = panel.isChecked()
             elif isinstance(panel, QComboBox):
                 settings[key] = panel.itemData(panel.currentIndex())
             elif isinstance(panel, LabelNumber):
                 settings[key] = panel.value()
             else: # line edit, FilePicker
-                settings[key] = panel.text()
+                if not panel.text() == '':
+                    settings[key] = panel.text()
         return settings
 
     def _fill_from_settings(self):

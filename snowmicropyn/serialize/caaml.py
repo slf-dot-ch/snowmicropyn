@@ -76,7 +76,7 @@ def discard_thin_layers(derivatives, grain_shapes, profile_bottom, min_thickness
     return derivatives, grain_shapes, profile_bottom
 
 def preprocess(samples, derivatives, grain_shapes, export_settings, sigma=0.5):
-    profile_bottom = None
+    profile_bottom = derivatives.iloc[-1].distance
     if export_settings['smoothing']:
         force_smoothing(samples, sigma)
     if export_settings['remove_noise'] and export_settings['noise_threshold']:
@@ -87,10 +87,10 @@ def preprocess(samples, derivatives, grain_shapes, export_settings, sigma=0.5):
         derivatives, shapes, profile_bottom = merge_layers(derivatives, grain_shapes, 500)
     if export_settings['discard_thin_layers'] and export_settings['discard_layer_thickness']:
         derivatives, grain_shapes, profile_bottom = discard_thin_layers(derivatives, grain_shapes, profile_bottom, float(export_settings['discard_layer_thickness']))
-    return samples, derivatives, shapes, profile_bottom
+    return samples, derivatives, grain_shapes, profile_bottom
 
 def export(settings, samples, derivatives, grain_shapes, parameterization,
-    location, prof_id, timestamp, smp_serial, longitude, latitude, outfile):
+    prof_id, timestamp, smp_serial, longitude, latitude, outfile):
 
     mm2cm = lambda mm : mm / 10
     samples, processed_derivs, grain_shapes, profile_bottom = preprocess(samples, derivatives, grain_shapes, settings)
@@ -115,18 +115,24 @@ def export(settings, samples, derivatives, grain_shapes, parameterization,
     src_name = ET.SubElement(src_per, f'{_ns_caaml}:name')
     src_name.text = smp_serial
 
-    loc_ref = ET.Element(f'{_ns_caaml}:locRef')
+    loc_ref = ET.SubElement(root, f'{_ns_caaml}:locRef')
     loc_ref.set(f'{_ns_gml}:id', 'LOC_ID')
     loc_name = ET.SubElement(loc_ref, f'{_ns_caaml}:name')
-    loc_name.text = location
+    loc_name.text = settings.get('location_name', 'SMP observation point')
     obs_sub = ET.SubElement(loc_ref, f'{_ns_caaml}:obsPointSubType')
     obs_sub.text = 'SMP profile location'
-    root.append(loc_ref)
+
+    valid_elevation = ET.SubElement(loc_ref, f'{_ns_caaml}:validElevation')
+    val_el_pos = ET.SubElement(valid_elevation, f'{_ns_caaml}:elevationPosition')
+    val_el_pos.set('uom', 'm')
+    caaml_position = ET.SubElement(val_el_pos, f'{_ns_caaml}:position')
+    caaml_position.text = str(settings.get('altitude', -999))
+
     point_loc = ET.SubElement(loc_ref, f'{_ns_caaml}:pointLocation')
     point_pt = ET.SubElement(point_loc, f'{_ns_gml}:Point')
     point_pt.set(f'{_ns_gml}:id', 'pointID')
-    point_pt.set(f'srsName', 'urn:ogc:def:crs:OGC:1.3:CRS84')
-    point_pt.set(f'srsDimension', '2')
+    point_pt.set('srsName', 'urn:ogc:def:crs:OGC:1.3:CRS84')
+    point_pt.set('srsDimension', '2')
     point_pos = ET.SubElement(point_pt, f'{_ns_gml}:pos')
     point_pos.text = f'{longitude} {latitude}'
 
@@ -212,27 +218,6 @@ def export(settings, samples, derivatives, grain_shapes, parameterization,
     for _, row in derivatives.iterrows():
         tuple_list = tuple_list + str(mm2cm(row['distance'])) + "," + str(mm2cm(row['force_median'])) + " "
     hard_tuple.text = tuple_list
-
-## The following is an alternative method of specifying SMP data in CAAML which works
-## analogous to the stratigraphy profile, but which niViz can't read.
-#        hard_prof = ET.SubElement(snow_prof_meas, f'{_ns_caaml}:hardnessProfile')
-#        hard_meta = ET.SubElement(hard_prof, f'{_ns_caaml}:hardnessMetaData')
-#        hard_meth = ET.SubElement(hard_meta, f'{_ns_caaml}:methodOfMeas')
-#        hard_meth.text = "SnowMicroPen"
-#        negative_counter = 0
-#        for idx, row in samples.iterrows():
-#            layer = ET.SubElement(hard_prof, f'{_ns_caaml}:Layer')
-#            depth_top = ET.SubElement(layer, f'{_ns_caaml}:depthTop')
-#            depth_top.set('uom', 'cm')
-#            depth_top.text = str(mm2cm(row['distance')])
-#            hardness = ET.SubElement(layer, f'{_ns_caaml}:hardness')
-#            hardness.set('uom', 'N')
-#            hardness_val = row['force']
-#            if hardness_val < 0:
-#                hardness_val = 0
-#                negative_counter = negative_counter + 1
-#            hardness.text = str(hardness_val)
-#        log.info(f'Set {negative_counter} negative values to zero.')
 
     tree = ET.ElementTree(root)
     ET.indent(tree, space="\t", level=0) # human-readable CAAML
