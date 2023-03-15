@@ -1,59 +1,104 @@
+"""This file handles data serialization to the CAAML format. It packs measured SMP
+forces and derived quantities to an XML. It also handles the calculations and
+parameterizations necessary to build a CAAML stratigraphy profile."""
+
 import pandas as pd
 from scipy.ndimage import gaussian_filter
 import xml.etree.ElementTree as ET
 
-_ns_caaml = 'caaml'
+_ns_caaml = 'caaml' # XML namespaces
 _ns_gml = 'gml'
 _ns = {_ns_caaml: 'http://caaml.org/Schemas/SnowProfileIACS/v6.0.3', _ns_gml: 'http://www.opengis.net/gml'}
 
-def hand_hardness(force):
-    # ICSSG p. 6
-    if force <= 50:
-        return 'F'
-    elif force <= 175:
-        return '4F'
-    elif force <= 390:
-        return '1F'
-    elif force <= 715:
-        return 'P'
-    elif force <= 1200:
-        return 'K'
+def hand_hardness(smp_force):
+    """Parameterization of the measured SMP forces to manual hand hardness values.
+
+    param smp_force: Penetration force as measured by the SMP in N.
+    returns: Hand hardness as a text label.
+    """
+    if smp_force <= 50: # ICSSG p. 6,
+        return 'F' # fist
+    elif smp_force <= 175:
+        return '4F' # 4 fingers
+    elif smp_force <= 390:
+        return '1F' # 1 finger
+    elif smp_force <= 715:
+        return 'P' # pencil
+    elif smp_force <= 1200:
+        return 'K' # knife
     else:
-        return 'I'
+        return 'I' # ice (sometimes "-")
 
 def optical_thickness(ssa):
-    """
+    """Calculation of a snow grain's diameter via the specific surface area as explained in
     `Representation of a nonspherical ice particle by a collection of independent spheres for
     scattering and absorption of radiation <https://doi.org/10.1029/1999JD900496>`_ by
     Thomas C. Grenfell and Stephen G. Warren publicised in `Journal of Geophysical
     Research <https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/1999JD900496>`_,
     Volume 104, 1999.
+
+    param ssa: Specific surface area in m^2/kg.
+    returns: Optical thickness ("diameter") of particle.
     """
     DENSITY_ICE = 917.
     d_eff = 6 / (DENSITY_ICE * ssa) # r_eff=3V/A ==> d_eff=6/(rho_ice*SSA)
     return d_eff
 
 def force_smoothing(derivatives, sigma):
+    """Signal smoothing for the measured forces.
+
+    param derivatives: Pandas dataframe with derived SMP quantities (including the
+    median force).
+    param sigma: Standard deviation for Gaussian kernel.
+    returns: Pandas dataframe with derivatives where the force values were smoothed.
+    """
     derivatives.force_median = gaussian_filter(derivatives.force_median, sigma=sigma)
     return derivatives
 
 def noise_threshold(derivatives, thresh):
+    """Signal cutoff for the measured forces. Be aware that low-density snow types can have
+    a poor signal to noise ratio.
+
+    param derivatives: Pandas dataframe with derived SMP quantities.
+    thresh: Threshold below which data is dropped in N.
+    returns: Pandas dataframe with derivatives where low force values were removed.
+    """
     derivatives = derivatives[derivatives.force_median > thresh]
     return derivatives
 
 def remove_negatives(derivatives, parameterization):
-    derivatives = derivatives[(derivatives['force_median'] > 0) &
-        (derivatives[f'{parameterization}_density'] > 0) & (derivatives[f'{parameterization}_ssa'] > 0)]
+    """Remove measurements that contain negative values. This concerns parameters that we
+    output which would not fit the CAAML standard if negative (force, density, SSA).
+
+    param derivatives: Pandas dataframe with derived SMP quantities.
+    param parameterization: The short name for the used parameterization (e. g. 'P2015')
+    returns: Pandas dataframe with rows removed where certain observables are negative.
+    """
+    derivatives = derivatives[(derivatives['force_median'] >= 0) &
+        (derivatives[f'{parameterization}_density'] >= 0) & (derivatives[f'{parameterization}_ssa'] >= 0)]
     derivatives.reset_index(inplace=True)
     return derivatives
 
 def _chunkup_derivs(derivatives, grain_shapes, similarity_percent):
+    """Split up SMP data into regions where we can make a guess that the snow type is the same.
+    Data rows are deemed to belong to the same layer if a) the grain shape is the same and
+    b) low-level derivatives do not differ too greatly.
+
+    param derivatives: Pandas dataframe with derived SMP quantities.
+    param grain_shapes: List of grain shapes (one entry per SMP data row).
+    param similarity_percent: The quantities that are compared may be +/- this many percent
+    compared to the previous data row in order to belong to the same layer.
+    returns:
+      - List of pandas dataframes where each entry represents a layer in the stratigraphy
+        profile and contains a block of the original derivatives.
+      - List of grain shapes associated with each layer.
+    """
     chunks = []
     shapes = []
     layer_start = 0
     for idx, row in derivatives.iterrows():
         new = False
-        if idx == 0:
+        if idx == 0: # 1st row is always in 1st layer
             continue
         if grain_shapes[idx] != grain_shapes[idx - 1]:
             new = True
@@ -62,63 +107,140 @@ def _chunkup_derivs(derivatives, grain_shapes, similarity_percent):
         if not new and derivatives['L2012_delta'][idx] > (derivatives['L2012_delta'][idx - 1] * (100 + similarity_percent) / 100):
             new = True
         if new:
-            chunks.append(derivatives.iloc[layer_start:idx])
-            shapes.append(grain_shapes[idx - 1])
-            layer_start = idx
+            chunks.append(derivatives.iloc[layer_start:idx]) # start of last layer to previous element
+            shapes.append(grain_shapes[idx - 1]) # keep one list entry for the grain shape for each layer
+            layer_start = idx # current element is start of new layer
     return chunks, shapes
 
 def merge_layers(derivatives, grain_shapes, similarity_percent):
+    """Merge multiple SMP data rows to single snow profile layers.
+    Data rows are deemed to belong to the same layer if a) the grain shape is the same and
+    b) low-level derivatives do not differ too greatly.
+
+    param derivatives: Pandas dataframe with derived SMP quantities.
+    param grain_shapes: List of grain shapes (one entry per SMP data row).
+    param similarity_percent: The quantities that are compared may be +/- this many percent
+    returns:
+      - Pandas dataframe in the shape of the original derivatives, but resampled via
+        averaging over each separate layer.
+      - List of grain shapes associated with each layer.
+      - Penetration depth at the end of the profile (in order to be able to calculate the
+        thickness of the last layer).
+    """
     chunks, shapes = _chunkup_derivs(derivatives, grain_shapes, similarity_percent)
     merged = pd.DataFrame()
     for chunk in chunks:
         top = chunk.iloc[0].distance
-        mean = chunk.mean()
-        mean.distance = top
-        merged = pd.concat([merged, mean.to_frame().T], ignore_index=True)
-    bottom = chunks[-1].iloc[-1].distance
+        mean = chunk.mean() # average all measured values...
+        mean.distance = top # ... except for the distance, which will now represent "top of layer"
+        merged = pd.concat([merged, mean.to_frame().T], ignore_index=True) # rebuild single data frame
+    bottom = chunks[-1].iloc[-1].distance # throw away chunks but remember the full profile depth
     return merged, shapes, bottom
 
 def discard_thin_layers(derivatives, grain_shapes, profile_bottom, min_thickness):
-    update_bottom = False
-    drop_indices = []
+    """Exclude layers below a certain thickness.
+
+    param derivatives: Pandas dataframe with derived SMP quantities.
+    param grain_shapes: List of grain shapes (one entry per SMP data row).
+    param profile_bottom: Depth of last SMP measurement (which may now me merged into some layer).
+    param min_thickness: Minimal allowed thickness of the layer.
+    returns:
+      - Pandas dataframe with the derivatives excluding thin layers.
+      - List of grain shapes associated with each layer.
+      - Depth at the end of the profile (bottom layers may have been merged/removed).
+    """
+    drop_indices = [] # list of indices to drop in the end
+    update_bottom = False # can only become True in last iteration
     for idx, row in derivatives.iterrows():
-        if idx == len(derivatives) - 1:
+        if idx == len(derivatives) - 1: # last layer
             thickness = profile_bottom - row.distance
-            update_bottom = True
+            update_bottom = True # if the layer is removed we will move the bottom
         else:
             thickness = derivatives['distance'][idx + 1] - row.distance
         if thickness < min_thickness:
-            if update_bottom:
-                profile_bottom = row.distance
             drop_indices.append(idx)
+            if update_bottom:
+                profile_bottom = row.distance # it was the last layer
     derivatives.drop(drop_indices, inplace=True)
     derivatives.reset_index(inplace=True)
     return derivatives, grain_shapes, profile_bottom
 
 def preprocess_lowlevel(derivatives, parameterization, export_settings):
-    if export_settings.get('smoothing', False):
-        derivatives = force_smoothing(derivatives, sigma=0.5)
-    if export_settings.get('remove_noise', False) and export_settings['noise_threshold']:
-        derivatives = noise_threshold(derivatives, float(export_settings['noise_threshold']))
+    """Basic signal pre-processing before layer merging. Depending on the export settings
+    this can be to remove negative forces and derivatives, set a noise threshold, or
+    perform data smoothing.
+
+    param derivatives: Pandas dataframe with derived SMP quantities.
+    param parameterization: The short name for the used parameterization (e. g. 'P2015')
+    param export_settings: Dictionary with export settings. Relevant to this routine are
+    the settings/dictionary keys 'remove_negative_forces' (bool), 'remove_noise', (bool)
+    'noise_threshold' (float) and 'smoothing' (bool).
+    returns: Pandas dataframe with the pre-processed derivatives.
+    """
     if export_settings.get('remove_negative_forces', False):
         derivatives = remove_negatives(derivatives, parameterization)
+    if export_settings.get('remove_noise', False) and export_settings['noise_threshold']:
+        derivatives = noise_threshold(derivatives, float(export_settings['noise_threshold']))
+    if export_settings.get('smoothing', False):
+        derivatives = force_smoothing(derivatives, sigma=0.5)
     return derivatives
 
 def preprocess_layers(derivatives, parameterization, grain_shapes, export_settings):
-    profile_bottom = derivatives.iloc[-1].distance
+    """Advanced signal pre-processing based on layer identification. Depending on the export
+    settings this can be to merge layers, or to remove thin layers.
+
+    param derivatives: Pandas dataframe with derived SMP quantities.
+    param parameterization: The short name for the used parameterization (e. g. 'P2015')
+    param grain_shapes: List of grain shapes (one entry per SMP data row).
+    param export_settings: Dictionary with export settings. Relevant to this routine are
+    the settings 'merge_layers' (bool), 'discard_thin_layers' (bool)
+    and 'discard_layer_thickness' (float).
+    returns:
+      - Pandas dataframe with the pre-processed derivatives.
+      - List of grain shapes associated with each layer.
+      - Depth at the end of the profile (bottom layers may have been merged/removed).
+    """
+    profile_bottom = derivatives.iloc[-1].distance # if nothing is merged/removed this will be the bottom
     if export_settings.get('merge_layers', False):
-        derivatives, shapes, profile_bottom = merge_layers(derivatives, grain_shapes, 500)
+        derivatives, shapes, profile_bottom = merge_layers(derivatives, grain_shapes, 100)
     if export_settings.get('discard_thin_layers', False) and export_settings['discard_layer_thickness']:
-        derivatives, grain_shapes, profile_bottom = discard_thin_layers(derivatives, grain_shapes, profile_bottom, float(export_settings['discard_layer_thickness']))
+        derivatives, grain_shapes, profile_bottom = discard_thin_layers(derivatives, grain_shapes,
+            profile_bottom, float(export_settings['discard_layer_thickness']))
     return derivatives, grain_shapes, profile_bottom
 
-def export(settings, derivatives, grain_shapes, parameterization,
-    prof_id, timestamp, smp_serial, longitude, latitude, outfile):
+def export(settings, derivatives, grain_shapes, parameterization, prof_id, timestamp,
+    smp_serial, longitude, latitude, outfile):
+    """CAAML export of an SMP snow profile with forces and derived values. This routing writes
+    a CAAML XML file containing:
+      - A stratigraphy profile with layers as would be contained in a manual snow profile.
+        The observables in here are parameterized by means of regressions and artificial intelligence.
+      - A density profile. The values are parameterized from a shot noise model for the SMP forces.
+      - A specific surface are profile. The values are parameterized from a shot noise model for the
+        SMP forces.
+      - A hardness profile. These are the directly measured SMP forces (but resampled and pre-processed).
 
+    param settings: Dictionary with export settings. Relevant to this routine are the settings/dictionary
+    keys 'location_name', 'altitude', 'slope_exposition' and 'slope_angle'. In addition, please have a
+    look at the subroutines that are called.
+    param derivatives: Pandas dataframe with derived SMP quantities.
+    param grain_shapes: List of grain shapes (one entry per SMP data row).
+    param parameterization: The short name for the used parameterization (e. g. 'P2015')
+    param prof_id: Profile id which will be written in the 'id' attribute.
+    param timestamp: Date and time of measurement.
+    param smp_serial: Serial number of the SMP device.
+    param longitude: Longitude of point of measurement.
+    param latitude: Latitude of point of measurement.
+    param outfile: Filename to save to.
+    """
     mm2cm = lambda mm : mm / 10
     m2mm = lambda m : m * 1000
+
+    # We keep two sets of derivatives: one for the stratigraphy profile with merged layers and
+    # one with only basic pre-processing for the embedded density, SSA and hardness profiles
+    # (because we don't want only 1 data point per thick layer for the embedded profiles):
     derivatives = preprocess_lowlevel(derivatives, parameterization, settings)
-    layer_derivatives, grain_shapes, profile_bottom = preprocess_layers(derivatives, parameterization, grain_shapes, settings)
+    layer_derivatives, grain_shapes, profile_bottom = preprocess_layers(derivatives, parameterization,
+        grain_shapes, settings)
 
     # Meta data:
     root = ET.Element(f'{_ns_caaml}:SnowProfile')
@@ -157,7 +279,6 @@ def export(settings, derivatives, grain_shapes, parameterization,
     aspect_pos = ET.SubElement(valid_aspect, f'{_ns_caaml}:AspectPosition')
     caaml_aspect = ET.SubElement(aspect_pos, f'{_ns_caaml}:position')
     caaml_aspect.text = str(settings.get('slope_exposition', 0))
-
     valid_slope_angle = ET.SubElement(loc_ref, f'{_ns_caaml}:validSlopeAngle')
     valid_slope_angle = ET.SubElement(valid_slope_angle, f'{_ns_caaml}:SlopeAnglePosition')
     valid_slope_angle.set('uom', 'deg')
@@ -191,7 +312,7 @@ def export(settings, derivatives, grain_shapes, parameterization,
         else:
             layer_thickness = layer_derivatives.distance[idx + 1] - row.distance
         thickness.text = str(mm2cm(layer_thickness))
-        if len(grain_shapes) > 0:
+        if len(grain_shapes) > 0: # we have grain classification available
             grain_primary = ET.SubElement(layer, f'{_ns_caaml}:grainFormPrimary')
             grain_primary.text = grain_shapes[idx]
         grain_size = ET.SubElement(layer, f'{_ns_caaml}:grainSize')
@@ -260,6 +381,12 @@ def export(settings, derivatives, grain_shapes, parameterization,
     tree.write(outfile, encoding="UTF-8", xml_declaration=True)
 
 def parse_grainshape(caaml_file: str):
+    """Get the layers entered in a (manual) CAAML snow profile.
+
+    param caaml_file: Path to the CAAML file to parse.
+    returns: List of layers. Each item is itself a list containing information about
+    the depth and thickness of the layer as well as its grain shape.
+    """
     tree = ET.parse(caaml_file)
     root = tree.getroot()
     strat = root.find(f"{_ns_caaml}:snowProfileResultsOf", _ns)
@@ -268,12 +395,12 @@ def parse_grainshape(caaml_file: str):
 
     extract_list = ["depthTop", "thickness", "grainFormPrimary"]
     layer_list = []
-    for layer in strat.findall(f"{_ns_caaml}:Layer", _ns):
+    for layer in strat.findall(f"{_ns_caaml}:Layer", _ns): # iterate through each snow layer
         attr_list = []
         for attr in extract_list:
             val = layer.find(f"{_ns_caaml}:{attr}", _ns).text
             try:
-                val = float(val)
+                val = float(val) # store as float if it's a number
             except:
                 pass
             attr_list.append(val)
@@ -281,7 +408,3 @@ def parse_grainshape(caaml_file: str):
 
     return pd.DataFrame(layer_list, columns=extract_list)
 
-if __name__ == "__main__":
-    caaml_file = "../../data/rhossa/TraditionalProfiles/20151130/5wj-20151130_niViz6_81339.caaml"
-    grain_samples = parse_grainshape(caaml_file)
-    print(grain_samples)
