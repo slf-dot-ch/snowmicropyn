@@ -10,6 +10,8 @@ from snowmicropyn.parameterizations.proksch2015 import Proksch2015
 from snowmicropyn.serialize.caaml import preprocess_lowlevel
 import logging
 import pandas as pd
+from pandas.api.types import is_string_dtype
+from pandas.api.types import is_numeric_dtype
 import pathlib
 import pickle
 from sklearn.linear_model import LinearRegression
@@ -84,17 +86,12 @@ class grain_classifier:
         :param numeric: After this function call, should 'grain_size' be numeric (default: True)?
         """
         if numeric:
-            if column.dtype == 'int64' or column.dtype == 'float64':
-                pass # nothing to do
-            else:
+            if not is_numeric_dtype(column.dtype):
                 column = self._index_codes
-            return column
         else: # make sure it's a string
-            if column.dtype == 'object':
-                return column # already done
-            else:
+            if not is_string_dtype(column.dtype):
                 column = self._index_labels[[int(col) for col in column]]
-            return column
+        return column
 
     @staticmethod
     def build_training_data(data_folder: str):
@@ -160,7 +157,7 @@ class grain_classifier:
                 multi_alpha = self._set['model_multinomialnb_alpha']
             except KeyError:
                 multi_alpha = 1 # default in sklearn
-            self._model = ('multinomialnb', MultinomialNB(alpha=multi_alpha))
+            self._model = ('multinomialnb', MultinomialNB(alpha=multi_alpha, force_alpha=True))
         else:
             raise ValueError('Grain classification: the selected model is not available.')
 
