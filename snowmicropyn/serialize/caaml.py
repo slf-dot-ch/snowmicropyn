@@ -213,7 +213,7 @@ def export(settings, derivatives, grain_shapes, parameterization, prof_id, times
     """CAAML export of an SMP snow profile with forces and derived values. This routing writes
     a CAAML XML file containing:
       - A stratigraphy profile with layers as would be contained in a manual snow profile.
-        The observables in here are parameterized by means of regressions and artificial intelligence.
+        The observables in here are parameterized by means of regressions and machine learning.
       - A density profile. The values are parameterized from a shot noise model for the SMP forces.
       - A specific surface are profile. The values are parameterized from a shot noise model for the
         SMP forces.
