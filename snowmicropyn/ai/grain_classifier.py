@@ -7,6 +7,7 @@ the grain shapes at each data point.
 from snowmicropyn import loewe2012, derivatives, Profile
 from snowmicropyn.match import assimilate_grainshape
 from snowmicropyn.parameterizations.proksch2015 import Proksch2015
+from snowmicropyn.serialize.caaml import preprocess_lowlevel
 import logging
 import pandas as pd
 import pathlib
@@ -34,6 +35,7 @@ class grain_classifier:
     _grain_id = 'grain_shape' # name of grain shape column in samles
     _set = {} # user export settings
     _training_data = pd.DataFrame()
+    _numeric_target = False # convert grain shape string representations to indices
     _index_codes = None # for when numeric indices must be used for the grain shape
     _index_labels = None
     _init_from_pickle = False # flag for how the class was initialized / which info we have
@@ -55,7 +57,7 @@ class grain_classifier:
         param user_settings: Dictionary with module settings as key/value pairs.
         """
         self._set = user_settings
-        if self._set['use_pretrained_model']: # load pickled Pipeline object
+        if self._set.get('use_pretrained_model', False): # load pickled Pipeline object
             self.load(self._set['trained_input_path'])
             self._init_from_pickle = True # no training data must be needed in this mode
         else: # fit model on the fly
@@ -63,15 +65,16 @@ class grain_classifier:
                 raise ValueError('Grain classification: To fit a model you must supply a training data location.')
             # Combine SMP measurements with external information about the involved grain shapes:
             self._training_data = self.build_training_data(self._set['training_data_folder'])
+            self._training_data = preprocess_lowlevel(self._training_data, self._set)
             # Some models (like linear regression) expect numeric values for the parameter to estimate. Create a lookup:
             self._index_codes, self._index_labels = pd.factorize(self._training_data.grain_shape)
 
             self.make_pipeline() # no fitting yet
             self.train() # now we fit
-            if user_settings['save_model'] and user_settings['trained_output_path']:
-                self.save(user_settings['trained_output_path'])
+            if self._set.get('save_model', False) and self._set['trained_output_path']:
+                self.save(self._set['trained_output_path'])
 
-    def _numeric_data(self, numeric=True):
+    def _numeric_data(self, column, numeric=True):
         """Convert grain shape column between string and index indentifiers.
 
         Some models require the prediction observable to be numeric. This function takes
@@ -81,15 +84,17 @@ class grain_classifier:
         :param numeric: After this function call, should 'grain_size' be numeric (default: True)?
         """
         if numeric:
-            if self._training_data[self._grain_id].dtype == 'int64':
-                return # nothing to do
+            if column.dtype == 'int64' or column.dtype == 'float64':
+                pass # nothing to do
             else:
-                self._training_data[self._grain_id] = self._index_codes
+                column = self._index_codes
+            return column
         else: # make sure it's a string
-            if self._training_data[self._grain_id].dtype == 'object':
-                return # already done
+            if column.dtype == 'object':
+                return column # already done
             else:
-                self._training_data[self._grain_id] = self._index_labels[self._training_data[self._grain_id]]
+                column = self._index_labels[[int(col) for col in column]]
+            return column
 
     @staticmethod
     def build_training_data(data_folder: str):
@@ -117,6 +122,8 @@ class grain_classifier:
         """
         XX = self._training_data.drop([self._grain_id], axis=1)
         yy = self._training_data[self._grain_id]
+        if self._numeric_target:
+            yy = self._numeric_data(yy)
         return XX, yy
 
     def _make_scaler(self):
@@ -144,7 +151,7 @@ class grain_classifier:
                 svc_gamma = 'auto' # default
             self._model = ('svc', SVC(gamma=svc_gamma))
         elif self._set['model'] == 'lr':
-            self._numeric_data(True)
+            self._numeric_target = True
             self._model = ('LR', LinearRegression())
         elif self._set['model'] == 'gaussiannb':
             self._model = ('gaussiannb', GaussianNB())
@@ -191,12 +198,12 @@ class grain_classifier:
         """Check if a pipe has already been built, i. e. if the module is ready to predict."""
         return self._pipe is not None
 
-    @property
-    def score(self, recalc=False):
+    def score(self, percent=False, recalc=False):
         """Use the supplied training data not to fit the model but to perform a test score on the data.
         This function excludes part of the training data to afterwards check the prediction against this
         ground truth. The percentage of correct guesses is saved in the _score property of this class.
 
+        param percent: Convert to percent and round for pretty printing (bool)?
         param recalc: Boolean to force recalculation of the score even if this was previously already done.
         """
         if self._init_from_pickle:
@@ -206,7 +213,11 @@ class grain_classifier:
             XX_train, XX_test, yy_train, yy_test = train_test_split(XX, yy)
             self._pipe.fit(XX_train, yy_train)
             self._score = self._pipe.score(XX_test, yy_test)
-        return self._score
+
+        fscore = self._score
+        if percent:
+            fscore = round(self._score * 100)
+        return fscore
 
     def train(self):
         """Fits the model. This function uses the full dataset for training and therefore does not provide
@@ -221,27 +232,8 @@ class grain_classifier:
         param samples: Pandas dataframe with SMP measurements. Usually this will be the derivatives
         and not the raw samples.
         """
+        samples = preprocess_lowlevel(samples, self._set)
         yy = self._pipe.predict(samples)
+        yy = self._numeric_data(yy, numeric=False) # convert back to string representation (if necessary)
         return yy
 
-if __name__ == '__main__':
-    # training
-    _export_settings = {}
-    _export_settings['training_data_folder'] = '../../data/rhossa'
-    _export_settings['scaler'] = 'standard'
-    _export_settings['model'] = 'svc'
-    _export_settings['svc_gamma'] = 100
-    classifier = grain_classifier(_export_settings)
-    model_file = './trained_model.dat'
-    classifier.save(model_file)
-    print(f'Score: {classifier.score}')
-
-    # prediction
-    pro = Profile.load('../../examples/profiles/S37M0876.pnt')
-    proksch = Proksch2015()
-    derivs = loewe2012.calc(pro._samples, proksch.window_size, proksch.overlap)
-    grain_shapes = classifier.predict(derivs)
-
-    # use saved model state
-    classifier_two = grain_classifier(_export_settings, model_file)
-    shapes_two = classifier_two.predict(derivs)

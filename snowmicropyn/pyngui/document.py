@@ -56,7 +56,7 @@ class Document:
             classifier = grain_classifier(export_settings)
             grain_shapes = classifier.predict(loewe2012_df)
 
-        caaml.export(export_settings, derivatives, grain_shapes, parameterization,
+        caaml.export(export_settings, derivatives, grain_shapes,
             self._profile._pnt_file.stem, self._profile._timestamp, self._profile._smp_serial,
             self._profile._longitude, self._profile._latitude, outfile)
         return outfile

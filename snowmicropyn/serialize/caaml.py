@@ -10,6 +10,21 @@ _ns_caaml = 'caaml' # XML namespaces
 _ns_gml = 'gml'
 _ns = {_ns_caaml: 'http://caaml.org/Schemas/SnowProfileIACS/v6.0.3', _ns_gml: 'http://www.opengis.net/gml'}
 
+def _get_parameterization_name(derivatives):
+    """Check the column names of a data frame to deduce which parameterization
+    was used for the calculation.
+
+    param derivatives: Pandas dataframe with derived SMP quantities.
+    returns: Short name of the used parameterization (e. g. 'P2015').
+    """
+    flag = '_density'
+    _, ax = derivatives.axes
+    for col in ax:
+        if len(col) > len(flag):
+            if col[-len(flag):] == flag:
+                return col[:-len(flag)]
+    return None
+
 def hand_hardness(smp_force):
     """Parameterization of the measured SMP forces to manual hand hardness values.
 
@@ -66,17 +81,24 @@ def noise_threshold(derivatives, thresh):
     derivatives = derivatives[derivatives.force_median > thresh]
     return derivatives
 
-def remove_negatives(derivatives, parameterization):
+def remove_negatives(derivatives):
     """Remove measurements that contain negative values. This concerns parameters that we
     output which would not fit the CAAML standard if negative (force, density, SSA).
 
     param derivatives: Pandas dataframe with derived SMP quantities.
-    param parameterization: The short name for the used parameterization (e. g. 'P2015')
-    returns: Pandas dataframe with rows removed where certain observables are negative.
+    returns: Pandas dataframe with rows removed where any observable is negative.
     """
-    derivatives = derivatives[(derivatives['force_median'] >= 0) &
-        (derivatives[f'{parameterization}_density'] >= 0) & (derivatives[f'{parameterization}_ssa'] >= 0)]
-    derivatives.reset_index(inplace=True)
+    grain_col = pd.Series(dtype=float)
+    if 'grain_shape' in derivatives:
+        grain_col = derivatives.grain_shape
+        derivatives = derivatives.drop('grain_shape', axis=1)
+    valid_pos = (derivatives >= 0).all(axis = 1)
+    derivatives = derivatives[valid_pos]
+    derivatives.reset_index(drop=True, inplace=True)
+    if len(grain_col) > 0:
+        grain_col = grain_col[valid_pos]
+        grain_col.reset_index(drop=True, inplace=True)
+        derivatives = pd.concat([derivatives, grain_col.to_frame()], axis=1)
     return derivatives
 
 def _chunkup_derivs(derivatives, grain_shapes, similarity_percent):
@@ -165,32 +187,30 @@ def discard_thin_layers(derivatives, grain_shapes, profile_bottom, min_thickness
     derivatives.reset_index(inplace=True)
     return derivatives, grain_shapes, profile_bottom
 
-def preprocess_lowlevel(derivatives, parameterization, export_settings):
+def preprocess_lowlevel(derivatives, export_settings):
     """Basic signal pre-processing before layer merging. Depending on the export settings
     this can be to remove negative forces and derivatives, set a noise threshold, or
     perform data smoothing.
 
     param derivatives: Pandas dataframe with derived SMP quantities.
-    param parameterization: The short name for the used parameterization (e. g. 'P2015')
     param export_settings: Dictionary with export settings. Relevant to this routine are
     the settings/dictionary keys 'remove_negative_forces' (bool), 'remove_noise', (bool)
     'noise_threshold' (float) and 'smoothing' (bool).
     returns: Pandas dataframe with the pre-processed derivatives.
     """
     if export_settings.get('remove_negative_forces', False):
-        derivatives = remove_negatives(derivatives, parameterization)
+        derivatives = remove_negatives(derivatives)
     if export_settings.get('remove_noise', False) and export_settings['noise_threshold']:
         derivatives = noise_threshold(derivatives, float(export_settings['noise_threshold']))
     if export_settings.get('smoothing', False):
         derivatives = force_smoothing(derivatives, sigma=0.5)
     return derivatives
 
-def preprocess_layers(derivatives, parameterization, grain_shapes, export_settings):
+def preprocess_layers(derivatives, grain_shapes, export_settings):
     """Advanced signal pre-processing based on layer identification. Depending on the export
     settings this can be to merge layers, or to remove thin layers.
 
     param derivatives: Pandas dataframe with derived SMP quantities.
-    param parameterization: The short name for the used parameterization (e. g. 'P2015')
     param grain_shapes: List of grain shapes (one entry per SMP data row).
     param export_settings: Dictionary with export settings. Relevant to this routine are
     the settings 'merge_layers' (bool), 'discard_thin_layers' (bool)
@@ -208,8 +228,8 @@ def preprocess_layers(derivatives, parameterization, grain_shapes, export_settin
             profile_bottom, float(export_settings['discard_layer_thickness']))
     return derivatives, grain_shapes, profile_bottom
 
-def export(settings, derivatives, grain_shapes, parameterization, prof_id, timestamp,
-    smp_serial, longitude, latitude, outfile):
+def export(settings, derivatives, grain_shapes, prof_id, timestamp, smp_serial,
+    longitude, latitude, outfile):
     """CAAML export of an SMP snow profile with forces and derived values. This routing writes
     a CAAML XML file containing:
       - A stratigraphy profile with layers as would be contained in a manual snow profile.
@@ -224,7 +244,6 @@ def export(settings, derivatives, grain_shapes, parameterization, prof_id, times
     look at the subroutines that are called.
     param derivatives: Pandas dataframe with derived SMP quantities.
     param grain_shapes: List of grain shapes (one entry per SMP data row).
-    param parameterization: The short name for the used parameterization (e. g. 'P2015')
     param prof_id: Profile id which will be written in the 'id' attribute.
     param timestamp: Date and time of measurement.
     param smp_serial: Serial number of the SMP device.
@@ -234,12 +253,13 @@ def export(settings, derivatives, grain_shapes, parameterization, prof_id, times
     """
     mm2cm = lambda mm : mm / 10
     m2mm = lambda m : m * 1000
+    parameterization = _get_parameterization_name(derivatives)
 
     # We keep two sets of derivatives: one for the stratigraphy profile with merged layers and
     # one with only basic pre-processing for the embedded density, SSA and hardness profiles
     # (because we don't want only 1 data point per thick layer for the embedded profiles):
-    derivatives = preprocess_lowlevel(derivatives, parameterization, settings)
-    layer_derivatives, grain_shapes, profile_bottom = preprocess_layers(derivatives, parameterization,
+    derivatives = preprocess_lowlevel(derivatives, settings)
+    layer_derivatives, grain_shapes, profile_bottom = preprocess_layers(derivatives,
         grain_shapes, settings)
 
     # Meta data:
