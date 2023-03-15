@@ -21,6 +21,18 @@ def hand_hardness(force):
     else:
         return 'I'
 
+def optical_thickness(ssa):
+    """
+    `Representation of a nonspherical ice particle by a collection of independent spheres for
+    scattering and absorption of radiation <https://doi.org/10.1029/1999JD900496>`_ by
+    Thomas C. Grenfell and Stephen G. Warren publicised in `Journal of Geophysical
+    Research <https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/1999JD900496>`_,
+    Volume 104, 1999.
+    """
+    DENSITY_ICE = 917.
+    d_eff = 6 / (DENSITY_ICE * ssa) # r_eff=3V/A ==> d_eff=6/(rho_ice*SSA)
+    return d_eff
+
 def force_smoothing(derivatives, sigma):
     derivatives.force_median = gaussian_filter(derivatives.force_median, sigma=sigma)
     return derivatives
@@ -104,6 +116,7 @@ def export(settings, derivatives, grain_shapes, parameterization,
     prof_id, timestamp, smp_serial, longitude, latitude, outfile):
 
     mm2cm = lambda mm : mm / 10
+    m2mm = lambda m : m * 1000
     derivatives = preprocess_lowlevel(derivatives, parameterization, settings)
     layer_derivatives, grain_shapes, profile_bottom = preprocess_layers(derivatives, parameterization, grain_shapes, settings)
 
@@ -185,7 +198,7 @@ def export(settings, derivatives, grain_shapes, parameterization,
         grain_size.set('uom', 'mm')
         grain_components = ET.SubElement(grain_size, f'{_ns_caaml}:Components')
         grain_sz_avg = ET.SubElement(grain_components, f'{_ns_caaml}:avg')
-        grain_sz_avg.text = "1"
+        grain_sz_avg.text = str(m2mm(optical_thickness(row[f'{parameterization}_ssa'])))
         grain_hardness = ET.SubElement(layer, f'{_ns_caaml}:hardness')
         grain_hardness.set('uom', '')
         grain_hardness.text = hand_hardness(row['force_median'])
