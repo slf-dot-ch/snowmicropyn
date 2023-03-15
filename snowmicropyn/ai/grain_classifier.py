@@ -1,6 +1,7 @@
 from snowmicropyn import loewe2012, derivatives, Profile
 from snowmicropyn.match import assimilate_grainshape
 from snowmicropyn.parameterizations.proksch2015 import Proksch2015
+import logging
 import pandas as pd
 import pathlib
 import pickle
@@ -12,6 +13,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+
+log = logging.getLogger('snowmicropyn')
 
 class grain_classifier:
 
@@ -41,6 +44,8 @@ class grain_classifier:
             self._index_codes, self._index_labels = pd.factorize(self._training_data.grain_shape)
             self.make_pipeline()
             self.train()
+            if user_settings['save_model'] and user_settings['trained_output_path']:
+                self.save(user_settings['trained_output_path'])
 
     def _numeric_data(self, numeric=True):
         """Convert grain shape column between string and index indentifiers.
@@ -115,12 +120,15 @@ class grain_classifier:
         self._make_scaler()
         self._make_model()
         self._pipe = Pipeline([self._scaler, self._model])
+        log.info(f'Built pipeline: {self._pipe}')
 
     def save(self, model_file):
         """Save current state of pipeline (trained or not) to file system."""
+        log.info(f'Saving model state to "{model_file}"')
         pickle.dump(self._pipe, open(model_file, 'wb'))
 
     def load(self, model_file):
+        log.info(f'Loading model state from "{model_file}"')
         self._pipe = pickle.load(open(model_file, 'rb'))
 
     @property

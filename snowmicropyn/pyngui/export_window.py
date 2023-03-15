@@ -114,10 +114,6 @@ class ExportDialog(QDialog):
         self._inputs['slope_exposition'].setFixedWidth(_widget_width)
         self._inputs['slope_exposition'].setValidator(QDoubleValidator())
         self._inputs['slope_exposition'].setAlignment(Qt.AlignRight)
-        self._inputs['aggregation'] = QLineEdit()
-        self._inputs['aggregation'].setFixedWidth(_widget_width)
-        self._inputs['aggregation'].setValidator(QDoubleValidator())
-        self._inputs['aggregation'].setAlignment(Qt.AlignRight)
 
         # Grain shape tab:
         self._inputs['export_grainshape'] = QCheckBox('Export grain shape estimation')
@@ -197,18 +193,6 @@ class ExportDialog(QDialog):
         meta_frame.setTitle('Metadata')
         meta_frame.setLayout(metadata_layout)
         caaml_layout.addWidget(meta_frame)
-
-        # Data aggregation:
-        aggregation_layout = QVBoxLayout()
-        item_layout = QHBoxLayout()
-        item_layout.addWidget(QLabel('Keep % of data (approx.):'))
-        item_layout.addWidget(self._inputs['aggregation'])
-        item_layout.addWidget(QLabel('%'))
-        aggregation_layout.addLayout(item_layout)
-        aggregation_frame = QGroupBox(self) 
-        aggregation_frame.setTitle('Data aggregation')
-        aggregation_frame.setLayout(aggregation_layout)
-        caaml_layout.addWidget(aggregation_frame)
 
         # Grain shape export:
         grain_export_layout = QVBoxLayout()
