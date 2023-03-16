@@ -118,8 +118,12 @@ venv.bak/
 # Release folders
 RELEASE_*
 
-# Example derivatives
+# Examples output
 examples/profiles/*.csv
+examples/trained_model.dat
+
+# snowmicropyn generated output
+*_smp.caaml
 
 # Sample files may be downloaded here
 data
