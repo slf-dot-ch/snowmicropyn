@@ -22,7 +22,7 @@ export_settings['training_data_folder'] = '../data/rhossa'
 # And we must choose which algorithms to use for the learning process:
 export_settings['scaler'] = 'standard' # pre-processing: data scaling
 export_settings['model'] = 'svc' # use a Support Vector Machine
-export_settings['svc_gamma'] = 100 # parameter specific to SVM model
+export_settings['model_svc_gamma'] = 100 # parameter specific to SVM model
 
 # Initialize a grain shape classifier, in this case with the location
 # of training data in our settings:
