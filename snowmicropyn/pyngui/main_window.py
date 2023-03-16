@@ -444,11 +444,12 @@ class MainWindow(QMainWindow):
             str(par.window_size) + ', overlap=' + str(par.overlap) + ').')
 
     def _export_caaml_triggered(self):
+        param = self.preferences.export_parameterization
         user_settings = self.export_dialog.confirmExportCAAML()
         if user_settings:
             files=[]
             for doc in self.documents:
-                samples_file = doc.export_caaml(export_settings=user_settings)
+                samples_file = doc.export_caaml(parameterization=param, export_settings=user_settings)
                 files.append(samples_file)
             self.notify_dialog.notifyFilesWritten(files)
 
