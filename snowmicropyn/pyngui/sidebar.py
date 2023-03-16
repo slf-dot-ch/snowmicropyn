@@ -338,8 +338,8 @@ class QaFlagTreeItem(QTreeWidgetItem):
         return self.picker.value
 
 class QaPicker(QWidget):
-    _colors = {0: "black", 1: "green", 2: "#8B8000", 3: "orange", 4: "red", 9: "#630700"}
-    _flags = {0: "not set", 1: "excellent", 2: "good", 3: "satisfying", 4: "sufficient", 9: "unsatisfactory"}
+    _colors = {0: "black", 1: "green", 2: "orange", 3: "#630700"}
+    _flags = {0: "not set", 1: "good", 2: "medium", 3: "bad"}
     current_flag = 0
 
     def __init__(self, parent, main_win):
@@ -353,15 +353,11 @@ class QaPicker(QWidget):
         button_layout.setContentsMargins(0, 0, 0, 0)
         button_layout.setSpacing(0)
         for idx in self._colors.keys():
-            button = QToolButton()
+            button = QPushButton()
             button.setCheckable(True)
             button.setText(str(idx))
             button.clicked.connect(lambda state, index=idx: self.on_qa_click(index))
             button.setStyleSheet(f"background-color: {self._colors[idx]}; color: white; font-weight: normal")
-            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-            font_height = QFontMetrics(button.font()).height() + 5
-            font_width = QFontMetrics(button.font()).width("X") * 3
-            button.setMinimumSize(font_width, font_height)
             button_layout.addWidget(button, 0, Qt.AlignLeft)
         layout.addLayout(button_layout)
 
