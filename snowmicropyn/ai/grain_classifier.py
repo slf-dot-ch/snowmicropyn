@@ -34,7 +34,7 @@ class grain_classifier:
     must be supplied programmatically.
     """
     # internal data:
-    _grain_id = 'grain_shape' # name of grain shape column in samles
+    _grain_id = 'grain_shape' # name of grain shape column in samples
     _set = {} # user export settings
     _training_data = pd.DataFrame()
     _numeric_target = False # convert grain shape string representations to indices
@@ -70,7 +70,7 @@ class grain_classifier:
             self._training_data = self.build_training_data(self._set['training_data_folder'])
             self._training_data = preprocess_lowlevel(self._training_data, self._set)
             # Some models (like linear regression) expect numeric values for the parameter to estimate. Create a lookup:
-            self._index_codes, self._index_labels = pd.factorize(self._training_data.grain_shape)
+            self._index_codes, self._index_labels = pd.factorize(self._training_data[self._grain_id])
 
             self.make_pipeline() # no fitting yet
             self.train() # now we fit

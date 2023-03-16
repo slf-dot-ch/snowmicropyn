@@ -1,7 +1,6 @@
 """This file handles data serialization to the CAAML format. It packs measured SMP
 forces and derived quantities to an XML. It also handles the calculations and
 parameterizations necessary to build a CAAML stratigraphy profile."""
-
 import pandas as pd
 from scipy.ndimage import gaussian_filter
 import xml.etree.ElementTree as ET
@@ -53,7 +52,7 @@ def optical_thickness(ssa):
     Volume 104, 1999.
 
     param ssa: Specific surface area in m^2/kg.
-    returns: Optical thickness ("diameter") of particle.
+    returns: Optical thickness ("diameter") of particle in m.
     """
     DENSITY_ICE = 917.
     d_eff = 6 / (DENSITY_ICE * ssa) # r_eff=3V/A ==> d_eff=6/(rho_ice*SSA)
@@ -91,13 +90,13 @@ def remove_negatives(derivatives):
     returns: Pandas dataframe with rows removed where any observable is negative.
     """
     grain_col = pd.Series(dtype=float)
-    if 'grain_shape' in derivatives:
-        grain_col = derivatives.grain_shape
-        derivatives = derivatives.drop('grain_shape', axis=1)
+    if 'grain_shape' in derivatives: # we can not ask 'int >= str?'
+        grain_col = derivatives.grain_shape # so we keep a copy of the shapes if available
+        derivatives = derivatives.drop('grain_shape', axis=1) # and work the rest without
     valid_pos = (derivatives >= 0).all(axis = 1)
     derivatives = derivatives[valid_pos]
     derivatives.reset_index(drop=True, inplace=True)
-    if len(grain_col) > 0:
+    if len(grain_col) > 0: # re-append grain shapes
         grain_col = grain_col[valid_pos]
         grain_col.reset_index(drop=True, inplace=True)
         derivatives = pd.concat([derivatives, grain_col.to_frame()], axis=1)

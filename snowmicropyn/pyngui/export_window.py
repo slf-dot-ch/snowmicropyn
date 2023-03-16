@@ -257,12 +257,12 @@ class ExportDialog(QDialog):
         preprocessing_layout.addWidget(pre_smp_frame)
 
         # Preprocessing specific to training data:
-        pre_training_layout = QVBoxLayout()
-        pre_training_layout.addWidget(self._inputs['exclude_samples_boundaries'])
-        pre_training_frame = QGroupBox(self)
-        pre_training_frame.setTitle('Preprocessing of training data')
-        pre_training_frame.setLayout(pre_training_layout)
-        preprocessing_layout.addWidget(pre_training_frame)
+        #pre_training_layout = QVBoxLayout()
+        #pre_training_layout.addWidget(self._inputs['exclude_samples_boundaries'])
+        #pre_training_frame = QGroupBox(self)
+        #pre_training_frame.setTitle('Preprocessing of training data')
+        #pre_training_frame.setLayout(pre_training_layout)
+        #preprocessing_layout.addWidget(pre_training_frame)
 
         # Tabs:
         tabs = QTabWidget()

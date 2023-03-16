@@ -1,4 +1,4 @@
-"""Calculation of density and ssa.
+"""Calculation of density and SSA.
 
 This module implements the methods to derive density and specific surface area
 (SSA) from SnowMicroPen's signal as described in publication
