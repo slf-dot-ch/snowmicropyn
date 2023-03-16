@@ -1,8 +1,40 @@
 snowmicropyn Changelog
 ======================
 
+Unreleased
+----------
+2023
+
+This version implements CAAML export with grain shape estimation via machine
+learning as well as some convenient new user interface features.
+
+- Added CAAML export: export of SMP forces and derived values for density,
+  specific surface area, grain shape, grain size and hand hardness. The
+  resulting CAAML file is readable by niViz and SNOWPACK.
+- Added machine learning interface: snowmicropyn can now be trained on snow pit
+  test data to assimilate estimated grain shapes into the CAAML output.
+  This includes modules for training data generation (profile matching),
+  data preprocessing, scoring, training, and saving/loading trained model
+  states (albeit all in an early state of development at this point).
+- Added new export window: The CAAML export including the machine learning
+  model fitting can be controlled almost fully in the GUI (in addition to a
+  comprehensive developer's API). Also, some meta data that is not recorded
+  by the SMP can be included.
+- Added schema validation for produced CAAML files according to IACS standards.
+- Added extensive example program for our machine learning API.
+- The air gap (before the SMP probe hits the snow surface) can now be hidden in
+  the plots for easier comparison.
+- Added quality control panel. Several flags and comments can now be saved to
+  the profiles' ini files.
+- Several minor UI improvements.
+- Fixed bug preventing the setting of markers on some systems.
+- Several minor bugfixes.
+- Added download tool for a subset of the RHOSSA dataset for easy access to
+  public (training) data.
+- Improvements to the framework.
+
 Version 1.1.0
----------------
+-------------
 
 2022-02-11
 
