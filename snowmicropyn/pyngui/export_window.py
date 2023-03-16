@@ -116,9 +116,13 @@ class ExportDialog(QDialog):
         self._inputs['slope_exposition'].setAlignment(Qt.AlignRight)
 
         # Grain shape tab:
+        # (For now we offer only the most important defaults for a one-click-solution
+        # which are overwritten by user settings)
         self._inputs['export_grainshape'] = QCheckBox('Export grain shape estimation')
         self._inputs['use_pretrained_model'] = QCheckBox('Use pre-trained model')
+        self._inputs['use_pretrained_model'].setChecked(True)
         self._inputs['trained_input_path'] = FilePicker('Path:', indent=True)
+        self._inputs['trained_input_path'].setText('./snowmicropyn/ai/trained_model_rhossa.dat')
         self._inputs['scaler'] = QComboBox()
         self._inputs['scaler'].addItem('Standard Scaler', 'standard')
         self._inputs['scaler'].addItem('Min/Max Scaler', 'minmax')

@@ -60,7 +60,8 @@ class grain_classifier:
         """
         self._set = user_settings
         if self._set.get('use_pretrained_model', False): # load pickled Pipeline object
-            self.load(self._set['trained_input_path'])
+            input_file = pathlib.Path(self._set['trained_input_path'])
+            self.load(input_file.resolve())
             self._init_from_pickle = True # no training data must be needed in this mode
         else: # fit model on the fly
             if not 'training_data_folder' in self._set:
