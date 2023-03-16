@@ -133,7 +133,7 @@ class ExportDialog(QDialog):
         self._inputs['trained_output_path'] = FilePicker('Path:', save_mode=True, indent=True)
 
         # Preprocessing tab:
-        self._inputs['remove_negative_forces'] = QCheckBox('Remove negative forces and derivatives')
+        self._inputs['remove_negative_data'] = QCheckBox('Remove negative forces and derivatives')
         self._inputs['remove_noise'] = QCheckBox('Noise threshold:')
         self._inputs['noise_threshold'] = QLineEdit()
         self._inputs['noise_threshold'].setFixedWidth(_widget_width)
@@ -234,7 +234,7 @@ class ExportDialog(QDialog):
         # Preprocessing:
         preprocessing_layout = QVBoxLayout()
         pre_smp_layout = QVBoxLayout()
-        pre_smp_layout.addWidget(self._inputs['remove_negative_forces'])
+        pre_smp_layout.addWidget(self._inputs['remove_negative_data'])
         item_layout = QHBoxLayout()
         item_layout.addWidget(self._inputs['remove_noise'])
         item_layout.addWidget(self._inputs['noise_threshold'])

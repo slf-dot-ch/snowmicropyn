@@ -67,6 +67,7 @@ def force_smoothing(derivatives, sigma):
     param sigma: Standard deviation for Gaussian kernel.
     returns: Pandas dataframe with derivatives where the force values were smoothed.
     """
+
     derivatives.force_median = gaussian_filter(derivatives.force_median, sigma=sigma)
     return derivatives
 
@@ -194,11 +195,11 @@ def preprocess_lowlevel(derivatives, export_settings):
 
     param derivatives: Pandas dataframe with derived SMP quantities.
     param export_settings: Dictionary with export settings. Relevant to this routine are
-    the settings/dictionary keys 'remove_negative_forces' (bool), 'remove_noise', (bool)
+    the settings/dictionary keys 'remove_negative_data' (bool), 'remove_noise', (bool)
     'noise_threshold' (float) and 'smoothing' (bool).
     returns: Pandas dataframe with the pre-processed derivatives.
     """
-    if export_settings.get('remove_negative_forces', False):
+    if export_settings.get('remove_negative_data', False):
         derivatives = remove_negatives(derivatives)
     if export_settings.get('remove_noise', False) and export_settings['noise_threshold']:
         derivatives = noise_threshold(derivatives, float(export_settings['noise_threshold']))

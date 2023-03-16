@@ -17,11 +17,12 @@ if __name__ == "__main__":
     pro = smp.Profile.load('../examples/profiles/S37M0876.pnt')
     testfile = "./test_caaml.caaml"
     doc = Document(pro)
-    doc.export_caaml(testfile)
+    export_settings = {}
+    export_settings['remove_negative_data'] = True
+    doc.export_caaml(testfile, export_settings=export_settings)
 
     xsd_file = "./CAAMLv6_SnowProfileIACS.xsd"
     if not os.path.exists(xsd_file):
         res = requests.get(f"http://caaml.org/Schemas/SnowProfileIACS/v6.0.3/{xsd_file}")
         open(xsd_file, "wb").write(res.content)
-    #validate(testfile, xsd_file)
-    validate("../examples/profiles/S37M0876_smp.caaml", xsd_file)
+    validate(testfile, xsd_file)
