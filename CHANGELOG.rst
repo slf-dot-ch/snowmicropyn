@@ -38,7 +38,7 @@ Version 1.1.0
 
 2022-02-11
 
-This version brings a thourough refactoring in order to offer a clean
+This version brings a thorough refactoring in order to offer a clean
 interface for implementing new parameterizations (density, SSA) by lifting
 the burden of having to deal with the GUI (everything is automatic now).
 Three new parameterizations were added (Calonne/Richter and King x2), as well

@@ -18,11 +18,13 @@ with open(readme_rst) as f:
     LONG_DESC = f.read()
 
 DEPENDENCIES = [
-        'pytz',
-        'numpy',
-        'scipy >= 1',
-        'pandas >= 0.22',
         'matplotlib >= 2',
+        'numpy',
+        'pandas >= 0.22',
+        'pickle',
+        'pytz',
+        'scipy >= 1',
+        'sklearn',
         'PyQt5',
 ]
 
