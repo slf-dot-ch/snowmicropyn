@@ -1,9 +1,18 @@
+"""This is a showcase program for snowmicropyn's machine learning API."""
 from snowmicropyn import loewe2012, derivatives, Profile
 from snowmicropyn.ai.grain_classifier import grain_classifier
 from snowmicropyn.parameterizations.proksch2015 import Proksch2015
+import os
 from random import randrange
 
-# First we must build a dictionary with export settings. The GUI is a good
+# First we need some training data. For this the program will search a
+# given folder for .pnt and .caaml files that have the same name and combine
+# them to assimilate grain shapes from the CAAML to the SMP profile.
+# A helper script to get you started with a subset of the RHOSSA dataset
+# is provided in /tools/download_rhossa.py:
+#os.system('cd ../tools && python3 download_rhossa.py')
+
+# Next we must build a dictionary with export settings. The GUI is a good
 # place to check to see what's available.
 export_settings = {}
 

@@ -189,7 +189,7 @@ class ExportDialog(QDialog):
         item_layout.addWidget(self._inputs['slope_exposition'])
         item_layout.addWidget(QLabel('°'))
         metadata_layout.addLayout(item_layout)
-        meta_frame = QGroupBox(self) 
+        meta_frame = QGroupBox(self)
         meta_frame.setTitle('Metadata')
         meta_frame.setLayout(metadata_layout)
         caaml_layout.addWidget(meta_frame)

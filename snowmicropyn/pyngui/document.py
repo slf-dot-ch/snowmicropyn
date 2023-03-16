@@ -52,7 +52,7 @@ class Document:
             outfile = self._profile._pnt_file.with_name(f'{self._profile._pnt_file.stem}_smp').with_suffix('.caaml')
 
         grain_shapes = {}
-        if export_settings.get('export_grainshape', False):
+        if export_settings.get('export_grainshape', False): # start machine learning process
             classifier = grain_classifier(export_settings)
             grain_shapes = classifier.predict(loewe2012_df)
 
