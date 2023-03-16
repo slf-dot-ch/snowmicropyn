@@ -68,8 +68,9 @@ def force_smoothing(derivatives, sigma):
     returns: Pandas dataframe with derivatives where the force values were smoothed.
     """
 
-    derivatives.force_median = gaussian_filter(derivatives.force_median, sigma=sigma)
-    return derivatives
+    mod_derivs = derivatives.copy(deep=True) # make clear it is not a view (silences warning)
+    mod_derivs.force_median = gaussian_filter(mod_derivs.force_median, sigma=sigma)
+    return mod_derivs
 
 def noise_threshold(derivatives, thresh):
     """Signal cutoff for the measured forces. Be aware that low-density snow types can have
