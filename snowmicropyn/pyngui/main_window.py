@@ -384,7 +384,7 @@ class MainWindow(QMainWindow):
 
     def _open_triggered(self):
         cap = "Open Profile(s)"
-        filtr = "pnt Files (*.pnt)"
+        filtr = "pnt Files (*.pnt *.PNT)"
         opts = QFileDialog.ReadOnly
         startdir = self._last_directory
         files, _ = QFileDialog.getOpenFileNames(self, cap, startdir, filtr, options=opts)

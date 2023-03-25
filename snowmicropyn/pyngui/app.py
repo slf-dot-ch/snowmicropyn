@@ -30,7 +30,7 @@ def main():
 
     main_window = MainWindow()
     paths = [pathlib.Path(p) for p in sys.argv[1:]]
-    pnt_files = [p for p in paths if p.is_file() and p.suffix == '.pnt']
+    pnt_files = [p for p in paths if p.is_file() and p.suffix.lower() == '.pnt']
     for f in pnt_files:
         logger.info('Opening file {}'.format(f))
         main_window.open_pnts([f])
