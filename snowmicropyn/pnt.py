@@ -81,7 +81,7 @@ class Pnt:
         GPS_WGS84_LATITUDE = 'gps.wgs84.latitude'
         #: WGS 84 longitude
         GPS_WGS84_LONGITUDE = 'gps.wgs84.longitude'
-        #: WGS84 altitude. **NOT IN USE**.
+        #: WGS84 altitude in cm. In use since v5.
         GPS_WGS84_HEIGHT = 'gps.wgs84.height'
         #: Positional DOP, geometric dilution of precision
         GPS_PDOP = 'gps.pdop'

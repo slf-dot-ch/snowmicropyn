@@ -230,7 +230,7 @@ def preprocess_layers(derivatives, grain_shapes, export_settings):
     return derivatives, grain_shapes, profile_bottom
 
 def export(settings, derivatives, grain_shapes, prof_id, timestamp, smp_serial,
-    longitude, latitude, outfile):
+    longitude, latitude, altitude, outfile):
     """CAAML export of an SMP snow profile with forces and derived values. This routing writes
     a CAAML XML file containing:
       - A stratigraphy profile with layers as would be contained in a manual snow profile.
@@ -254,6 +254,7 @@ def export(settings, derivatives, grain_shapes, prof_id, timestamp, smp_serial,
     """
     mm2cm = lambda mm : mm / 10
     m2mm = lambda m : m * 1000
+    cm2m = lambda cm : cm / 100
     parameterization = _get_parameterization_name(derivatives)
 
     # We keep two sets of derivatives: one for the stratigraphy profile with merged layers and
@@ -289,7 +290,10 @@ def export(settings, derivatives, grain_shapes, prof_id, timestamp, smp_serial,
     loc_name.text = settings.get('location_name', 'SMP observation point')
     obs_sub = ET.SubElement(loc_ref, f'{_ns_caaml}:obsPointSubType')
     obs_sub.text = 'SMP profile location'
-    altitude = settings.get('altitude')
+    if altitude: # SMP altitude is in cm
+        altitude = cm2m(altitude)
+    else: # if no altitude is recorded by the SMP we insert the user chosen one
+        altitude = settings.get('altitude')
     if altitude:
         valid_elevation = ET.SubElement(loc_ref, f'{_ns_caaml}:validElevation')
         val_el_pos = ET.SubElement(valid_elevation, f'{_ns_caaml}:ElevationPosition')

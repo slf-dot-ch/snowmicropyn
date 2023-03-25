@@ -64,6 +64,7 @@ class SidebarWidget(QTreeWidget):
         self.rec_length_item = QTreeWidgetItem((None, None, 'Length', None, ''))
         self.pnt_filename_item = QTreeWidgetItem((None, None, 'Pnt File', None, ''))
         self.coordinates_item = QTreeWidgetItem((None, None, 'Coordinates', None, ''))
+        self.altitude_item = QTreeWidgetItem((None, None, 'Altitude', None, ''))
         self.spatial_res_item = QTreeWidgetItem((None, None, 'Spatial Resolution', None, ''))
         self.overload_item = QTreeWidgetItem((None, None, 'Overload Force', None, ''))
         self.speed_item = QTreeWidgetItem((None, None, 'Speed', None, ''))
@@ -72,6 +73,7 @@ class SidebarWidget(QTreeWidget):
         self.recording_item.addChild(self.pnt_filename_item)
         self.recording_item.addChild(self.timestamp_item)
         self.recording_item.addChild(self.coordinates_item)
+        self.recording_item.addChild(self.altitude_item)
         self.recording_item.addChild(self.rec_length_item)
         self.recording_item.addChild(self.spatial_res_item)
         self.recording_item.addChild(self.overload_item)
@@ -150,6 +152,12 @@ class SidebarWidget(QTreeWidget):
         url_label.setContentsMargins(5, 0, 0, 0)
         url_label.setOpenExternalLinks(True)
         self.setItemWidget(self.coordinates_item, 4, url_label)
+
+        cm2m = lambda cm : cm / 100
+        if p.altitude:
+            self.altitude_item.setText(self.TEXT_COLUMN, f'{cm2m(p._altitude)} m')
+        else:
+            self.altitude_item.setText(self.TEXT_COLUMN, 'n/a')
 
         spatial_res = '{:.3f} µm'.format(p.spatial_resolution * 1000)
         self.spatial_res_item.setText(self.TEXT_COLUMN, spatial_res)

@@ -58,5 +58,5 @@ class Document:
 
         caaml.export(export_settings, derivatives, grain_shapes,
             self._profile._pnt_file.stem, self._profile._timestamp, self._profile._smp_serial,
-            self._profile._longitude, self._profile._latitude, outfile)
+            self._profile._longitude, self._profile._latitude, self._profile._altitude, outfile)
         return outfile

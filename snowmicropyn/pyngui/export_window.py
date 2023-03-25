@@ -179,8 +179,8 @@ class ExportDialog(QDialog):
         item_layout.addWidget(QLabel(''))
         metadata_layout.addLayout(item_layout)
         item_layout = QHBoxLayout()
-        item_layout.addWidget(QLabel('Altitude:'))
-        item_layout.addWidget(self._inputs['altitude'])
+        item_layout.addWidget(QLabel('Altitude:')) # Since this is for all open profiles, we do not try to parse...
+        item_layout.addWidget(self._inputs['altitude']) # ... from a .pnt file (which may or may not have it).
         item_layout.addWidget(QLabel('m'))
         metadata_layout.addLayout(item_layout)
         item_layout = QHBoxLayout()

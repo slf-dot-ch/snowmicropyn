@@ -82,6 +82,7 @@ class Profile(object):
         # Get clean WGS84 coordinates (use +/- instead of N/E)
         self._latitude = self.pnt_header_value(Pnt.Header.GPS_WGS84_LATITUDE)
         self._longitude = self.pnt_header_value(Pnt.Header.GPS_WGS84_LONGITUDE)
+        self._altitude = self.pnt_header_value(Pnt.Header.GPS_WGS84_HEIGHT)
         north = self.pnt_header_value(Pnt.Header.GPS_WGS84_NORTH)
         east = self.pnt_header_value(Pnt.Header.GPS_WGS84_EAST)
         if north.upper() != 'N':
@@ -94,6 +95,11 @@ class Profile(object):
         if abs(self._longitude) > 180:
             log.warning('Longitude value {} invalid, replacing by None'.format(self._longitude))
             self._longitude = None
+        if (self._altitude == 99999): # SMP v<5
+            self._altitude = None
+        elif not -50000 < self._altitude < 900000:
+            log.warning('Altitude value {} invalid, replacing by None'.format(self._altitude))
+            self._altitude = None
 
         # Get a proper timestamp by putting pnt entries together
         self._timestamp = None
@@ -297,6 +303,12 @@ class Profile(object):
         if self._latitude and self._longitude:
             return self._latitude, self._longitude
         return None
+
+    @property
+    def altitude(self):
+        """Recorded altitude of SMP measurement (if any)."""
+        return self._altitude
+
 
     def pnt_header_value(self, pnt_header_id):
         """ Return the value of the pnt header by its ID.
