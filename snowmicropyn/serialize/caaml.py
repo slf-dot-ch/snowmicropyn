@@ -129,7 +129,7 @@ def _chunkup_derivs(derivatives, grain_shapes, similarity_percent):
             new = True
         if not new and derivatives['L2012_delta'][idx] > (derivatives['L2012_delta'][idx - 1] * (100 + similarity_percent) / 100):
             new = True
-        if new:
+        if new or idx == len(derivatives) - 1:
             chunks.append(derivatives.iloc[layer_start:idx]) # start of last layer to previous element
             shapes.append(grain_shapes[idx - 1]) # keep one list entry for the grain shape for each layer
             layer_start = idx # current element is start of new layer
