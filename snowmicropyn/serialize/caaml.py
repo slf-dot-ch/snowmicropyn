@@ -3,6 +3,7 @@ forces and derived quantities to an XML. It also handles the calculations and
 parameterizations necessary to build a CAAML stratigraphy profile."""
 import pandas as pd
 from scipy.ndimage import gaussian_filter
+from scipy.optimize import curve_fit
 import xml.etree.ElementTree as ET
 
 _ns_caaml = 'caaml' # XML namespaces
@@ -24,24 +25,93 @@ def _get_parameterization_name(derivatives):
                 return col[:-len(flag)]
     return None
 
-def hand_hardness(smp_force):
-    """Parameterization of the measured SMP forces to manual hand hardness values.
+def hand_hardness(smp_force, method='regression'):
+    """Parameterization of the measured SMP forces to hand hardness index.
+
+    param smp_force: Penetration force as measured by the SMP in N.
+    returns: Hand hardness index.
+    """
+    if method == 'naive':
+        return hand_hardness_naive(smp_force)
+    elif method == 'regression':
+        return hand_hardness_regression(smp_force)
+
+def hand_hardness_label(smp_force, method='regression'):
+    """Parameterization of the measured SMP forces to hand hardness label.
 
     param smp_force: Penetration force as measured by the SMP in N.
     returns: Hand hardness as a text label.
     """
-    if smp_force <= 50: # ICSSG p. 6,
-        return 'F' # fist
-    elif smp_force <= 175:
-        return '4F' # 4 fingers
-    elif smp_force <= 390:
-        return '1F' # 1 finger
-    elif smp_force <= 715:
-        return 'P' # pencil
-    elif smp_force <= 1200:
-        return 'K' # knife
+    idx = hand_hardness(smp_force, method)
+    return _hardness_index_to_identifier(idx)
+
+def _hardness_index_to_identifier(index):
+    """Numeric hand hardness index to text label.
+
+    param index: Hand hardness index (int or float).
+    returns: Text label for hand hardness index.
+    """
+    id_map = {1: 'F-', 1.5: 'F+', 2: '4F', 2.5: '4F+', 3: '1F', 3.5: '1F+',
+        4: 'P', 4.5: 'P+', 5: 'K', 5.5: 'K+', 6: 'I'}
+    if index < 1:
+        index = 1
+    elif index > 6:
+        index = 6
+    index = round(index * 2) / 2 # round to .5
+    return id_map[index]
+
+def _get_hardness_fit(recalc=False):
+    """Parameterization through regression (measured SMP force and hand hardness index).
+    Data points provided by Van Herwijnen, Pielmeier: Characterizing Snow Stratigraphy:
+    a Comparison of SP2, Snowmicropen, Ramsonde and Hand Hardness Profiles, ISSW Proceedings 2016
+
+    param recalc: Set to True to reproduce the fit parameters on the fly.
+    returns: Fitted function as function object.
+    """
+    hardness_func = lambda xx, aa, bb : aa * xx**bb # use a power law fit
+    if recalc:
+        smp_force_kPa = [4.9303, 11.1914, 17.6419, 37.5721, 49.8849, 104.0583, 124.8842, 314.3845]
+        hand_hardness = [1, 1.5, 2, 2.5, 3, 3.5, 4, 5]
+        A_smp = 19.6e-6 # area of penetration of SMP (in m^2)
+        smp_force_N = [ff * A_smp * 1000 for ff in smp_force_kPa]
+        (aa, bb), _ = curve_fit(hardness_func, smp_force_N, hand_hardness)
     else:
-        return 'I' # ice (sometimes "-")
+        aa = 2.780171583411649 # running the above code unmodified yields these fit parameters
+        bb = 0.341486204481987
+
+    fit_func = lambda xx : hardness_func(xx, aa, bb)
+    return fit_func
+
+def hand_hardness_regression(smp_force):
+    """Parameterization method for hand hardness index.
+    See above for implementation details.
+
+    param smp_force: The measured force in N.
+    returns: Hand hardness index.
+    """
+    fit_func = _get_hardness_fit(True)
+    return fit_func(smp_force)
+
+def hand_hardness_naive(force):
+    """Parameterization method for hand hardness index.
+    Mapping of N to hand hardness according to ICSSG p. 6. This can not
+    be used directly with an SMP measurement.
+
+    param force: Penetration force measured by hand (not with an SMP).
+    returns: Hand hardness index.
+    """
+    if force <= 50:
+        return 1 # fist
+    elif force <= 175:
+        return 2 # 4 fingers
+    elif force <= 390:
+        return 3 # 1 finger
+    elif force <= 715:
+        return 4 # pencil
+    elif force <= 1200:
+        return 5 # knife
+    else:
+        return 6 # ice (sometimes "-")
 
 def optical_thickness(ssa):
     """Calculation of a snow grain's diameter via the specific surface area as explained in
@@ -66,7 +136,6 @@ def force_smoothing(derivatives, sigma):
     param sigma: Standard deviation for Gaussian kernel.
     returns: Pandas dataframe with derivatives where the force values were smoothed.
     """
-
     mod_derivs = derivatives.copy(deep=True) # make clear it is not a view (silences warning)
     mod_derivs.force_median = gaussian_filter(mod_derivs.force_median, sigma=sigma)
     return mod_derivs
@@ -347,7 +416,7 @@ def export(settings, derivatives, grain_shapes, prof_id, timestamp, smp_serial,
         grain_sz_avg.text = str(m2mm(optical_thickness(row[f'{parameterization}_ssa'])))
         grain_hardness = ET.SubElement(layer, f'{_ns_caaml}:hardness')
         grain_hardness.set('uom', '')
-        grain_hardness.text = hand_hardness(row['force_median'])
+        grain_hardness.text = hand_hardness_label(row['force_median'])
 
     # Density profile:
     dens_prof = ET.SubElement(snow_prof_meas, f'{_ns_caaml}:densityProfile')
