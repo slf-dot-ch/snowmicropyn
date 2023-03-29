@@ -1,11 +1,14 @@
 """This file handles data serialization to the CAAML format. It packs measured SMP
 forces and derived quantities to an XML. It also handles the calculations and
 parameterizations necessary to build a CAAML stratigraphy profile."""
+
+import logging
 import pandas as pd
 from scipy.ndimage import gaussian_filter
 from scipy.optimize import curve_fit
 import xml.etree.ElementTree as ET
 
+log = logging.getLogger('snowmicropyn')
 _ns_caaml = 'caaml' # XML namespaces
 _ns_gml = 'gml'
 _ns = {_ns_caaml: 'http://caaml.org/Schemas/SnowProfileIACS/v6.0.3', _ns_gml: 'http://www.opengis.net/gml'}
@@ -29,6 +32,7 @@ def hand_hardness(smp_force, method='regression'):
     """Parameterization of the measured SMP forces to hand hardness index.
 
     param smp_force: Penetration force as measured by the SMP in N.
+    param method: Method of parameterization as string identifier (e. g. 'regression').
     returns: Hand hardness index.
     """
     if method == 'naive':
@@ -72,7 +76,7 @@ def _get_hardness_fit(recalc=False):
     if recalc:
         smp_force_kPa = [4.9303, 11.1914, 17.6419, 37.5721, 49.8849, 104.0583, 124.8842, 314.3845]
         hand_hardness = [1, 1.5, 2, 2.5, 3, 3.5, 4, 5]
-        A_smp = 19.6e-6 # area of penetration of SMP (in m^2)
+        A_smp = 19.6e-6 # area of penetration of SMP as used by authors (in m^2)
         smp_force_N = [ff * A_smp * 1000 for ff in smp_force_kPa]
         (aa, bb), _ = curve_fit(hardness_func, smp_force_N, hand_hardness)
     else:
@@ -89,7 +93,7 @@ def hand_hardness_regression(smp_force):
     param smp_force: The measured force in N.
     returns: Hand hardness index.
     """
-    fit_func = _get_hardness_fit(True)
+    fit_func = _get_hardness_fit()
     return fit_func(smp_force)
 
 def hand_hardness_naive(force):
@@ -174,7 +178,7 @@ def remove_negatives(derivatives):
 def _chunkup_derivs(derivatives, grain_shapes, similarity_percent):
     """Split up SMP data into regions where we can make a guess that the snow type is the same.
     Data rows are deemed to belong to the same layer if a) the grain shape is the same and
-    b) low-level derivatives do not differ too greatly.
+    b) no low-level derivative differs too greatly.
 
     param derivatives: Pandas dataframe with derived SMP quantities.
     param grain_shapes: List of grain shapes (one entry per SMP data row).
@@ -188,20 +192,32 @@ def _chunkup_derivs(derivatives, grain_shapes, similarity_percent):
     chunks = []
     shapes = []
     layer_start = 0
-    for idx, row in derivatives.iterrows():
+
+    for ii in range(len(derivatives)): # run through rows
         new = False
-        if idx == 0: # 1st row is always in 1st layer
+        if ii == 0: # 1st row is always in 1st layer
             continue
-        if grain_shapes[idx] != grain_shapes[idx - 1]:
+        if grain_shapes[ii] != grain_shapes[ii - 1]: # grain shape different --> different layer
             new = True
-        if not new and derivatives['L2012_delta'][idx] < (derivatives['L2012_delta'][idx - 1] * (100 - similarity_percent) / 100):
-            new = True
-        if not new and derivatives['L2012_delta'][idx] > (derivatives['L2012_delta'][idx - 1] * (100 + similarity_percent) / 100):
-            new = True
-        if new or idx == len(derivatives) - 1:
-            chunks.append(derivatives.iloc[layer_start:idx]) # start of last layer to previous element
-            shapes.append(grain_shapes[idx - 1]) # keep one list entry for the grain shape for each layer
-            layer_start = idx # current element is start of new layer
+
+        if not new: # same grain shape - check microparameters
+            all_within = True # are all values within a few % of their predecessors?
+            for jj in range(1, len(derivatives.columns)):
+                if derivatives.iat[ii, jj] < derivatives.iat[ii - 1, jj] * (100 - similarity_percent) / 100:
+                    all_within = False
+                    break
+                if derivatives.iat[ii, jj] > derivatives.iat[ii - 1, jj] * (100 + similarity_percent) / 100:
+                    all_within = False
+                    break
+            if not all_within: # at least 1 value is outside of our allowed range --> different layer
+                new = True
+
+        if new or ii == len(derivatives) - 1:
+            chunks.append(derivatives.iloc[layer_start:ii]) # start of last layer to previous element
+            shapes.append(grain_shapes[ii - 1]) # keep one list entry for the grain shape for each layer
+            layer_start = ii # current element is start of new layer
+
+    log.info(f'CAAML export: Reduced sample size from {len(derivatives)} to {len(chunks)} by merging layers')
     return chunks, shapes
 
 def merge_layers(derivatives, grain_shapes, similarity_percent):
@@ -292,7 +308,8 @@ def preprocess_layers(derivatives, grain_shapes, export_settings):
     """
     profile_bottom = derivatives.iloc[-1].distance # if nothing is merged/removed this will be the bottom
     if export_settings.get('merge_layers', False):
-        derivatives, shapes, profile_bottom = merge_layers(derivatives, grain_shapes, 100)
+        sim_percent = float(export_settings.get('similarity_percent', 500))
+        derivatives, shapes, profile_bottom = merge_layers(derivatives, grain_shapes, sim_percent)
     if export_settings.get('discard_thin_layers', False) and export_settings['discard_layer_thickness']:
         derivatives, grain_shapes, profile_bottom = discard_thin_layers(derivatives, grain_shapes,
             profile_bottom, float(export_settings['discard_layer_thickness']))
