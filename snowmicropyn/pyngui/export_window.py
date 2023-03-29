@@ -2,6 +2,7 @@
 
 """
 
+from collections import defaultdict
 import logging
 from PyQt5.QtCore import QSettings, Qt, QUrl
 from PyQt5.QtGui import QDoubleValidator, QDesktopServices
@@ -300,7 +301,7 @@ class ExportDialog(QDialog):
             wid.setVisible(key.startswith(f'model_{model_str}'))
 
     def _collect_settings(self):
-        settings = {}
+        settings = defaultdict(lambda: None) # easier working with missing keys
         for key, panel in self._inputs.items():
             if isinstance(panel, QCheckBox):
                 settings[key] = panel.isChecked()
