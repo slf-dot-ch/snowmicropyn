@@ -195,10 +195,8 @@ def _chunkup_derivs(derivatives, grain_shapes, similarity_percent):
     shapes = []
     layer_start = 0
 
-    for ii in range(len(derivatives)): # run through rows
+    for ii in range(1, len(derivatives)): # run through rows (1st is always in 1st layer)
         new = False
-        if ii == 0: # 1st row is always in 1st layer
-            continue
         if grain_shapes[ii] != grain_shapes[ii - 1]: # grain shape different --> different layer
             new = True
 
@@ -241,9 +239,9 @@ def merge_layers(derivatives, grain_shapes, similarity_percent):
     merged = pd.DataFrame()
     for chunk in chunks:
         top = chunk.iloc[0].distance
-        mean = chunk.mean() # average all measured values...
-        mean.distance = top # ... except for the distance, which will now represent "top of layer"
-        merged = pd.concat([merged, mean.to_frame().T], ignore_index=True) # rebuild single data frame
+        med = chunk.median() # average all measured values (use median like for the force)...
+        med.distance = top # ... except for the distance, which will now represent "top of layer"
+        merged = pd.concat([merged, med.to_frame().T], ignore_index=True) # rebuild single data frame
     bottom = chunks[-1].iloc[-1].distance # throw away chunks but remember the full profile depth
     return merged, shapes, bottom
 

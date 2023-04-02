@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Unit test for low-level derivatives calculation
 
 import pandas as pd
