@@ -21,10 +21,9 @@ DEPENDENCIES = [
         'matplotlib >= 2',
         'numpy',
         'pandas >= 0.22',
-        'pickle',
         'pytz',
         'scipy >= 1',
-        'sklearn',
+        'scikit-learn',
         'PyQt5',
 ]
 
