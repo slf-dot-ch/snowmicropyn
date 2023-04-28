@@ -45,11 +45,14 @@ class Document:
         derivatives = loewe2012_df
         derivatives = derivatives.merge(param.calc_from_loewe2012(loewe2012_df))
 
+        # add _smp flag to file name in order to (hopefully) not overwrite hand profiles:
+        stem = f'{self._profile._pnt_file.stem}_smp'
         if outfile:
-            outfile = pathlib.Path(outfile)
-        else:
-            # add _smp flag to file name in order to (hopefully) not overwrite hand profiles:
-            outfile = self._profile._pnt_file.with_name(f'{self._profile._pnt_file.stem}_smp').with_suffix('.caaml')
+            outfile = pathlib.Path(outfile) # full file name was given
+            if outfile.is_dir(): # folder name was given -> choose filename
+                outfile = pathlib.Path(f'{outfile}/{stem}.caaml')
+        else: # no name was given --> choose full path
+            outfile = self._profile._pnt_file.with_name(stem).with_suffix('.caaml')
 
         grain_shapes = {}
         if export_settings.get('export_grainshape', False): # start machine learning process
