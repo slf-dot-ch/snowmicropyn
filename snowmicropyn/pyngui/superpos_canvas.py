@@ -27,6 +27,7 @@ class SuperposCanvas(FigureCanvas):
         self.airgap_axes.set_title('Superposition with air gap hidden')
         self.airgap_axes.xaxis.set_label_text('Snow Depth [mm]')
         self.airgap_axes.yaxis.set_label_text('Force [N]')
+        self.airgap_axes.autoscale(enable=True, axis='x', tight=True)
 
         self.active_doc = None
 
@@ -40,6 +41,7 @@ class SuperposCanvas(FigureCanvas):
         airgap_lines = self.airgap_axes.plot(samples_sp.distance, samples_sp.force)
         self._airgap_lines[pro.name] = airgap_lines
 
+        self.airgap_axes.relim()
         self.set_active_doc(doc)
 
     def set_active_doc(self, doc):
@@ -84,6 +86,7 @@ class SuperposCanvas(FigureCanvas):
                 l.set_visible(hide_airgap)
         self.axes.set_visible(not hide_airgap)
         self.airgap_axes.set_visible(hide_airgap)
+        self.airgap_axes.relim()
         self.draw()
 
     def _update_on_marker(self, doc):
