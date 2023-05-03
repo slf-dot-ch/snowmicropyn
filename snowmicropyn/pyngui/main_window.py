@@ -696,10 +696,12 @@ class MainWindow(QMainWindow):
         self.plot_stacked_widget.setCurrentIndex(1 if checked else 0)
         self.superpos_toolbar.setVisible(checked)
         self.plot_toolbar.setVisible(not checked)
+        self.superpos_canvas._switch_airgap(self.airgap_action.isChecked())
 
     def _air_gap(self, checked):
         self.plot_canvas.set_document(self.current_document, checked)
         self.plot_canvas.draw()
+        self.superpos_canvas._switch_airgap(checked)
 
     def all_marker_labels(self):
         labels = set()
