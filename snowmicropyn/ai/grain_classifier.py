@@ -65,7 +65,7 @@ class grain_classifier:
             self._init_from_pickle = True # no training data must be needed in this mode
         else: # fit model on the fly
             if not 'training_data_folder' in self._set:
-                raise ValueError('Grain classification: To fit a model you must supply a training data location.')
+                raise ValueError('Grain classification: To fit a model you must supply a training data location via the "training_data_folder" key.')
             # Combine SMP measurements with external information about the involved grain shapes:
             self._training_data = self.build_training_data(self._set['training_data_folder'])
             self._training_data = preprocess_lowlevel(self._training_data, self._set)

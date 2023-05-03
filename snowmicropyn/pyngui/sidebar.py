@@ -99,12 +99,12 @@ class SidebarWidget(QTreeWidget):
 
         # quality assurance items
 
-        self.qa_items['usable'] = QaCheckboxTreeItem(self.qa_item, 'usable', self.main_window)
+        self.qa_items['unusable'] = QaCheckboxTreeItem(self.qa_item, 'unusable', self.main_window)
         self.qa_items['quality_flag'] = QaFlagTreeItem(self.qa_item, 'quality_flag', self.main_window)
         self.qa_items['comment'] = QaCommentTreeItem(self.qa_item, 'comment', self.main_window)
         self.qa_items['details'] = QaCommentTreeItem(self.qa_item, 'details', self.main_window)
         self.qa_items['experiment'] = QaCommentTreeItem(self.qa_item, 'experiment', self.main_window)
-        self.qa_item.addChild(self.qa_items['usable'])
+        self.qa_item.addChild(self.qa_items['unusable'])
         self.qa_item.addChild(self.qa_items['quality_flag'])
         self.qa_item.addChild(self.qa_items['comment'])
         self.qa_item.addChild(self.qa_items['details'])
@@ -184,8 +184,8 @@ class SidebarWidget(QTreeWidget):
             self.set_marker(label, value)
 
         # Initialize quality flag items:
-        is_usable = p._ini.getboolean('quality assurance', 'usable', fallback=True)
-        self.qa_items['usable'].set_checked(is_usable)
+        is_unusable = p._ini.getboolean('quality assurance', 'unusable', fallback=False)
+        self.qa_items['unusable'].set_checked(is_unusable)
         qa_flag = p._ini.getint('quality assurance', 'qa_flag', fallback=0)
         self.qa_items['quality_flag'].set_flag(qa_flag)
         qa_text_fields = ['comment', 'details', 'experiment']
@@ -308,7 +308,7 @@ class QaCheckboxTreeItem(QTreeWidgetItem):
 
         self.main_window = main_win
         self.checkbox = QCheckBox(self.treeWidget())
-        self.checkbox.stateChanged.connect(self.save_usable)
+        self.checkbox.stateChanged.connect(self.save_unusable)
 
         self.setText(2, name)
         self.treeWidget().setItemWidget(self, 4, self.checkbox)
@@ -319,9 +319,13 @@ class QaCheckboxTreeItem(QTreeWidgetItem):
     def set_checked(self, checked: bool):
         self.checkbox.setChecked(checked)
 
-    def save_usable(self):
+    def save_unusable(self):
         config = self.main_window.current_document.profile._ini
-        config.set('quality assurance', 'usable', str(self.value))
+        val = self.value
+        if val:
+            config.set('quality assurance', 'unusable', str(self.value))
+        else: # don't output defaults
+            config.remove_option('quality assurance', 'unusable')
 
     @property
     def name(self):
@@ -381,7 +385,10 @@ class QaPicker(QWidget):
 
     def save_flag(self):
         config = self.main_window.current_document.profile._ini
-        config.set('quality assurance', 'qa_flag', str(self.value))
+        if self.value == 0: # don't ouput defaults
+            config.remove_option('quality assurance', 'qa_flag')
+        else:
+            config.set('quality assurance', 'qa_flag', str(self.value))
 
     @property
     def value(self):
