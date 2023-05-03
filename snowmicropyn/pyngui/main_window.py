@@ -528,6 +528,9 @@ class MainWindow(QMainWindow):
         doc = self.current_document
         doc.profile.detect_surface()
         self.set_marker('surface', doc.profile.surface)
+        self.plot_canvas.set_document(self.current_document, self.airgap_action.isChecked())
+        self.plot_canvas.draw()
+        self.superpos_canvas._update_on_marker(doc)
         self.update()
 
     @staticmethod

@@ -85,3 +85,8 @@ class SuperposCanvas(FigureCanvas):
         self.axes.set_visible(not hide_airgap)
         self.airgap_axes.set_visible(hide_airgap)
         self.draw()
+
+    def _update_on_marker(self, doc):
+        self.remove_doc(doc)
+        self.add_doc(doc)
+
