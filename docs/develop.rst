@@ -14,9 +14,12 @@ To **release** new versions of *snowmicropyn*, you need accounts on PyPI_ and
 `test PyPI`_. The project maintainer must grant your account the necessary
 rights so your user is able to deploy releases.
 
-To **release** updated **documentation**, you need an account on
-`Read the Docs`_. The project maintainer must grant your account the necessary
-rights so your user is able to deploy releases.
+The documentation is built automatically on each code push, so as long as you
+adhere to documentation standards everything should work out of the box.
+To manage the **documentation**'s builds however you need an account on
+`Read the Docs`_ (you can also use your GitHub account) where the control panel
+will let you work on all branches. The project maintainer must grant your
+account the necessary rights so your user is able to deploy releases.
 
 Git Hash
 --------
