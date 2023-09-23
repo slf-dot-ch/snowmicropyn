@@ -95,7 +95,7 @@ class MainWindow(QMainWindow):
         self.saveall_action = QAction('Save &All', self)
         self.drop_action = QAction('&Drop', self)
         self.exportall_action = QAction('&Export All', self)
-        self.export_caaml_action = QAction('Export &CAAML', self)
+        self.export_caaml_action = QAction('Export &CAAML...', self)
         self.export_niviz_action = QAction('Export for niViz...', self)
         self.next_action = QAction('Next Profile', self)
         self.previous_action = QAction('Previous Profile', self)
