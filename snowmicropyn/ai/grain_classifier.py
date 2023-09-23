@@ -67,7 +67,7 @@ class grain_classifier:
             if not 'training_data_folder' in self._set:
                 raise ValueError('Grain classification: To fit a model you must supply a training data location via the "training_data_folder" key.')
             # Combine SMP measurements with external information about the involved grain shapes:
-            self._training_data = self.build_training_data(self._set['training_data_folder'])
+            self._training_data = self.build_training_data(self._set['training_data_folder'], self._set['training_data_method'])
             self._training_data = preprocess_lowlevel(self._training_data, self._set)
             # Some models (like linear regression) expect numeric values for the parameter to estimate. Create a lookup:
             self._index_codes, self._index_labels = pd.factorize(self._training_data[self._grain_id])
@@ -95,11 +95,15 @@ class grain_classifier:
         return column
 
     @staticmethod
-    def build_training_data(data_folder: str):
+    def build_training_data(data_folder: str, method: str):
         """Loads an SMP profile and an associated CAAML (manual) profile, calculates
         the derivatives and adds a column with the grain shape taken from the CAAML.
 
         param data_folder: Folder with a collection of matching SMP and CAAML profiles.
+        param method: Format of training dataset / method of parsing. Can be one of the
+        following:
+          'exact': Finds the grain shape in a CAAML with the same base file name.
+          'RHOSSA': Finds the grain shape from markers in the SMP profile.
         returns: Pandas dataframe with the grain shape added to the SMP data.
         """
         proksch = Proksch2015() # Fetch Löwe's moving window properties from here
@@ -107,10 +111,9 @@ class grain_classifier:
         data = pd.DataFrame()
         for file in profiles:
             pnt = str(file.resolve())
-            caaml = pnt[:-3] + 'caaml'
             pro = Profile.load(pnt)
             derivs = loewe2012.calc(pro._samples, proksch.window_size, proksch.overlap)
-            matched = assimilate_grainshape(derivs, caaml) # insert "grain_shape" column
+            matched = assimilate_grainshape(derivs, pro, method) # insert "grain_shape" column
             data = pd.concat([data, matched]) # put all training data in single container
         return data
 

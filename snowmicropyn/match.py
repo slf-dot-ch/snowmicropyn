@@ -21,21 +21,18 @@ def match_layers_exact(samples, shapes):
     data['grain_shape'] = shape_list
     return data
 
-def match_layers(samples, shapes, method='exact'):
-    """Method to match grain shapes to an SMP profile. A new column will be
-    inserted in the SMP data set. Currently the following algorithms are
-    implemented:
-      - exact: The snow type is looked up at exactly the recorded position, i. e.
-        it is assumed that the external grain shape measurements describe the SMP
-        profile perfectly.
+def match_layers_rhossa(samples, pro):
+    """Extract the grain shapes from manually set markers on the profile.
+
+    param samples: Pandas dataframe with measured SMP forces.
+    param pro: snowmicropyn Profile to parse
+    returns: Pandas dataframe with a new column containing the grain shapes.
     """
-    if method == 'exact':
-        data = match_layers_exact(samples, shapes)
-    else:
-        raise ValueError(f'Layer matching method "{method}" is not available.')
+    print(pro.markers)
+    data = samples
     return data
 
-def assimilate_grainshape(samples, caaml_file):
+def assimilate_grainshape(samples, pro, method: str):
     """Add grain shape taken from an external (manual) snow profile to the SMP dataset.
 
     param samples: Recorded SMP samples as pandas dataframe.
@@ -43,6 +40,12 @@ def assimilate_grainshape(samples, caaml_file):
     grain shapes.
     returns: SMP samples with assimlated grain shapes.
     """
-    grain_shapes = caaml.parse_grainshape(caaml_file)
-    data = match_layers(samples, grain_shapes)
+    if method == 'exact':
+        caaml = pro._pnt_file.resolve()[:-3] + 'caaml'
+        grain_shapes = caaml.parse_grainshape(caaml_file)
+        data = match_layers_exact(samples, grain_shapes)
+    elif method.upper() == 'RHOSSA':
+        data = match_layers_rhossa(samples, pro)
+    else:
+        raise ValueError(f'Layer matching method "{method}" is not available.')
     return data
