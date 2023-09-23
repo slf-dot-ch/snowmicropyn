@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
         action.triggered.connect(self._drop_triggered)
 
         action = self.export_caaml_action
-        action.setIcon(QIcon(':/icons/csv.png'))
+        action.setIcon(QIcon(':/icons/export.png'))
         action.setShortcut('Ctrl+C')
         action.setStatusTip('Export All Profiles to CAAML')
         action.triggered.connect(self._export_caaml_triggered)

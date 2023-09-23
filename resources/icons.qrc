@@ -1,11 +1,29 @@
 <RCC>
   <qresource prefix="icons">
-    <file>drop.png</file>
-    <file>drop@2x.png</file>
+    <file>air_gap.png</file>
+    <file>air_gap@2x.png</file>
     <file>csv.png</file>
     <file>csv@2x.png</file>
+    <file>delete.png</file>
+    <file>delete@2x.png</file>
+    <file>detect_ground.png</file>
+    <file>detect_ground@2x.png</file>
+    <file>detect_surface.png</file>
+    <file>detect_surface@2x.png</file>
+    <file>drop.png</file>
+    <file>drop@2x.png</file>
+    <file>export.png</file>
+    <file>export@2x.png</file>
     <file>info.png</file>
     <file>info@2x.png</file>
+    <file>kml.png</file>
+    <file>kml@2x.png</file>
+    <file>logs.png</file>
+    <file>logs@2x.png</file>
+    <file>map.png</file>
+    <file>map@2x.png</file>
+    <file>marker_add.png</file>
+    <file>marker_add@2x.png</file>
     <file>next.png</file>
     <file>next@2x.png</file>
     <file>open.png</file>
@@ -20,24 +38,8 @@
     <file>settings@2x.png</file>
     <file>shutdown.png</file>
     <file>shutdown@2x.png</file>
-    <file>logs.png</file>
-    <file>logs@2x.png</file>
-    <file>map.png</file>
-    <file>map@2x.png</file>
-    <file>kml.png</file>
-    <file>kml@2x.png</file>
     <file>slflogo.png</file>
     <file>slflogo@2x.png</file>
-    <file>delete.png</file>
-    <file>delete@2x.png</file>
-    <file>detect_ground.png</file>
-    <file>detect_ground@2x.png</file>
-    <file>detect_surface.png</file>
-    <file>detect_surface@2x.png</file>
-    <file>marker_add.png</file>
-    <file>marker_add@2x.png</file>
-    <file>air_gap.png</file>
-    <file>air_gap@2x.png</file>
     <file>superpos.png</file>
     <file>superpos@2x.png</file>
   </qresource>

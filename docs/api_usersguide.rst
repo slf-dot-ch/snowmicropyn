@@ -183,7 +183,8 @@ markers set for the grain types.
 
 The folder :file:`tools` contains a script to download and prepare both of
 these types of datasets, in this case from the RHOSSA campaign (follow the
-links therein for more information about this dataset).
+links therein for more information about this dataset, and about the
+markers' naming conventions).
 
 Obviously if you are inherently interested in the grain shape then these
 methods have their limits - again, the provided example performs some test
