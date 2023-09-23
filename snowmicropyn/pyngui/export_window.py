@@ -2,6 +2,7 @@
 
 """
 
+from awio import get_scriptpath
 from collections import defaultdict
 import logging
 from PyQt5.QtCore import QSettings, Qt, QUrl
@@ -123,7 +124,8 @@ class ExportDialog(QDialog):
         self._inputs['use_pretrained_model'] = QCheckBox('Use pre-trained model')
         self._inputs['use_pretrained_model'].setChecked(True)
         self._inputs['trained_input_path'] = FilePicker('Path:', indent=True)
-        self._inputs['trained_input_path'].setText('./snowmicropyn/ai/trained_model_rhossa.dat')
+        default_trained_path = get_scriptpath(__file__) + '../ai/trained_model_rhossa.dat'
+        self._inputs['trained_input_path'].setText(default_trained_path)
         self._inputs['scaler'] = QComboBox()
         self._inputs['scaler'].addItem('Standard Scaler', 'standard')
         self._inputs['scaler'].addItem('Min/Max Scaler', 'minmax')
