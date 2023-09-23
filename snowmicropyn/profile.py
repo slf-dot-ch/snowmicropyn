@@ -79,6 +79,11 @@ class Profile(object):
         # Load pnt file, returns header (dict) and raw samples
         self._pnt_header, pnt_samples = Pnt.load(self._pnt_file)
 
+        # Set name of profile (by default a entry from pnt header)
+        self._name = self.pnt_header_value(Pnt.Header.FILENAME)
+        if name:
+            self._name = name
+
         # Get clean WGS84 coordinates (use +/- instead of N/E)
         self._latitude = self.pnt_header_value(Pnt.Header.GPS_WGS84_LATITUDE)
         self._longitude = self.pnt_header_value(Pnt.Header.GPS_WGS84_LONGITUDE)
@@ -90,15 +95,15 @@ class Profile(object):
         if east.upper() != 'E':
             self._longitude = -self._longitude
         if abs(self._latitude) > 90:
-            log.warning('Latitude value {} invalid, replacing by None'.format(self._latitude))
+            log.warning(f'Latitude value {self._latitude} invalid, replacing by None (file {self._name})')
             self._latitude = None
         if abs(self._longitude) > 180:
-            log.warning('Longitude value {} invalid, replacing by None'.format(self._longitude))
+            log.warning(f'Longitude value {self._latitude} invalid, replacing by None (file {self._name})')
             self._longitude = None
         if (self._altitude == 99999): # SMP v<5
             self._altitude = None
         elif not -50000 < self._altitude < 900000:
-            log.warning('Altitude value {} invalid, replacing by None'.format(self._altitude))
+            log.warning(f'Altitude value {self._latitude} invalid, replacing by None (file {self._name})')
             self._altitude = None
 
         # Get a proper timestamp by putting pnt entries together
@@ -114,11 +119,6 @@ class Profile(object):
             log.info('Timestamp of profile as reported by pnt header is {}'.format(self.timestamp))
         except ValueError:
             log.warning('Unable to build timestamp from pnt header fields')
-
-        # Set name of profile (by default a entry from pnt header)
-        self._name = self.pnt_header_value(Pnt.Header.FILENAME)
-        if name:
-            self._name = name
 
         # Get other important entries from header
         self._samples_count = self.pnt_header_value(Pnt.Header.SAMPLES_COUNT_FORCE)
