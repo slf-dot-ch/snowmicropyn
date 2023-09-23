@@ -28,6 +28,7 @@ Table of Content
    api_reference.rst
    pyngui.rst
    parameterization.rst
+   snowpit.rst
    develop.rst
    troubleshooting.rst
 

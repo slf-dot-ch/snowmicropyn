@@ -43,6 +43,8 @@ master_doc = 'index'
 
 github_url = 'https://github.com/slf-dot-ch/snowmicropyn/tree/{}/%s'.format(release)
 
+html_theme = "sphinx_rtd_theme"
+
 extlinks = {
     'github_issue': ('https://github.com/slf-dot-ch/snowmicropyn/issues/%s', 'Issue '),
     'github_tree': ('https://github.com/slf-dot-ch/snowmicropyn/tree/v{}/%s'.format(release), ' '),
