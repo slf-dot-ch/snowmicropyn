@@ -18,6 +18,7 @@ class Mock(MagicMock):
 MOCK_MODULES = ['PyQt5']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
+nitpicky = True
 
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.extlinks']
 
