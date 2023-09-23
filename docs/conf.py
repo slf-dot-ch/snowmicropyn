@@ -27,7 +27,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.extlinks']
 sys.path.append(join(os.path.dirname(__file__), '..'))
 
 project = 'snowmicropyn'
-copyright = '2018, SLF'
+copyright = '2018-2023, SLF'
 
 # Load the package's __version__.py to get version string
 here = os.path.abspath(os.path.dirname(__file__))
