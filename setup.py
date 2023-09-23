@@ -72,6 +72,6 @@ setup(
         ]
     },
 
-    python_requires='>=3.4',
+    python_requires='>=3.8',
     install_requires=DEPENDENCIES
 )

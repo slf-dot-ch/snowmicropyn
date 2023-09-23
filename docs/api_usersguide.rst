@@ -152,6 +152,46 @@ be e. g. "P2015", "CR2020", "K2020a" or "K2020b".
 
 .. literalinclude:: ../examples/parameterizations.py
 
+Working with the machine learning module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Have a look at how snowmicropyn uses machine learning for its
+`grain shape estimation`_. To reiterate, this is done in order to be able
+to provide valid snowpit CAAML output. For example, niViz_ needs the grain
+shape to display something.
+
+In order to accomplish this, snowmicropyn offers a machine learning interface
+which will try to learn the connection between the measured SMP microparameters
+and known grain shapes.
+
+As usual you can control this interface through the API and via the GUI. Have a
+look at the shipped `ai example program`_ to see how to control the API. The
+GUI on the other hand is opened when exporting to CAAML.
+
+Snowmicropyn ships a training data file which has been pre-computed for your
+convenience, so ideally when enabling grain shape export it should produce
+valid output. However, it will be trained with a limited amount of profiles
+from a certain climate setting so if available you should produce your own
+training data.
+
+To do so you need to specify a folder containing SMP data and grain shape
+information, as well as the method used for parsing. For example, method
+'exact' expects a folder that contains both pnt files and caaml files (same base
+name) where the grain shape is taken from the caaml file at measurement depth.
+Method 'RHOSSA' on the other hand expects pnt files only but they must have
+markers set for the grain types.
+
+The folder :file:`tools` contains a script to download and prepare both of
+these types of datasets, in this case from the RHOSSA campaign (follow the
+links therein for more information about this dataset).
+
+Obviously if you are inherently interested in the grain shape then these
+methods have their limits - again, the provided example performs some test
+scores to give an idea about the accuracy.
+
 .. _matplotlib: https://www.matplotlib.org/
 .. _Download: https://github.com/slf-dot-ch/snowmicropyn/
 .. _Parameterizations: https://snowmicropyn.readthedocs.io/en/latest/api_reference.html#module-snowmicropyn.parameterizations.proksch2015
+.. _grain shape estimation: https://snowmicropyn.readthedocs.io/en/latest/snowpit.html#snow-grain-shapes-machine-learning
+.. _niViz: https://niviz.org/
+.. _ai example program: https://github.com/slf-dot-ch/snowmicropyn/blob/master/examples/machine_learning.py
