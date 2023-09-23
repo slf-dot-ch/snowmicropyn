@@ -123,7 +123,7 @@ class ExportDialog(QDialog):
         self._inputs['use_pretrained_model'] = QCheckBox('Use pre-trained model')
         self._inputs['use_pretrained_model'].setChecked(True)
         self._inputs['trained_input_path'] = FilePicker('Path:', indent=True)
-        self._inputs['trained_input_path'].setText('./snowmicropyn/ai/trained_model_markers.dat')
+        self._inputs['trained_input_path'].setText('./snowmicropyn/ai/trained_model_rhossa.dat')
         self._inputs['scaler'] = QComboBox()
         self._inputs['scaler'].addItem('Standard Scaler', 'standard')
         self._inputs['scaler'].addItem('Min/Max Scaler', 'minmax')

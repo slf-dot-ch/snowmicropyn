@@ -60,7 +60,7 @@ setup(
         'Topic :: Scientific/Engineering :: Atmospheric Science'
     ],
 
-    packages=['snowmicropyn', 'snowmicropyn.parameterizations', 'snowmicropyn.pyngui'],
+    packages=['snowmicropyn', 'snowmicropyn.ai', 'snowmicropyn.parameterizations', 'snowmicropyn.pyngui', 'snowmicropyn.serialize'],
     package_data={
         'snowmicropyn': ['githash'],
         'snowmicropyn.pyngui': ['about.html'],
