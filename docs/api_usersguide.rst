@@ -136,7 +136,7 @@ This will print something like:
    Weight above hoar layer: 98 kg/m^2
 
 Using Different Parameterizations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------
 
 Depending on your SMP device and/or your climatic settings different
 parameterizations to derive observables from the raw SMP measurements may be
@@ -152,8 +152,8 @@ be e. g. "P2015", "CR2020", "K2020a" or "K2020b".
 
 .. literalinclude:: ../examples/parameterizations.py
 
-Working with the machine learning module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Working with the Machine Learning Module
+----------------------------------------
 
 Have a look at how snowmicropyn uses machine learning for its
 `grain shape estimation`_. To reiterate, this is done in order to be able

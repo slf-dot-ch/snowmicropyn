@@ -168,7 +168,7 @@ class ExportDialog(QDialog):
         self.button_box.rejected.connect(self.reject)
         self.button_box.accepted.connect(self.accept)
         self.button_box.helpRequested.connect(lambda: QDesktopServices.openUrl(
-            QUrl('https://snowmicropyn.readthedocs.io/en/latest/api_reference.html#snowmicropyn.Profile.export_samples_niviz')))
+            QUrl('https://snowmicropyn.readthedocs.io/en/latest/snowpit.html')))
 
 
     def _init_ui(self):
