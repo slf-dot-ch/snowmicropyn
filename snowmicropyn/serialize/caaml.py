@@ -197,7 +197,8 @@ def _chunkup_derivs(derivatives, grain_shapes, similarity_percent):
 
     for ii in range(1, len(derivatives)): # run through rows (1st is always in 1st layer)
         new = False
-        if grain_shapes[ii] != grain_shapes[ii - 1]: # grain shape different --> different layer
+
+        if len(grain_shapes) > 0 and grain_shapes[ii] != grain_shapes[ii - 1]: # grain shape different --> different layer
             new = True
 
         if not new: # same grain shape - check microparameters
@@ -214,7 +215,8 @@ def _chunkup_derivs(derivatives, grain_shapes, similarity_percent):
 
         if new or ii == len(derivatives) - 1:
             chunks.append(derivatives.iloc[layer_start:ii]) # start of last layer to previous element
-            shapes.append(grain_shapes[ii - 1]) # keep one list entry for the grain shape for each layer
+            if len(grain_shapes) > 0:
+                shapes.append(grain_shapes[ii - 1]) # keep one list entry for the grain shape for each layer
             layer_start = ii # current element is start of new layer
 
     log.info(f'CAAML export: Reduced sample size from {len(derivatives)} to {len(chunks)} by merging layers')
