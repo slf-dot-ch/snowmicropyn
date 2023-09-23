@@ -23,15 +23,17 @@ learning as well as some convenient new user interface features.
 - Added schema validation for produced CAAML files according to IACS standards.
 - Added extensive example program for our machine learning API.
 - The air gap (before the SMP probe hits the snow surface) can now be hidden in
-  the plots for easier comparison.
+  the plots (single ones and superposition) for easier comparison.
 - Added quality control panel. Several flags and comments can now be saved to
   the profiles' ini files.
+- Custom taskbar icon.
 - Several minor UI improvements.
 - Fixed bug preventing the setting of markers on some systems.
 - Several minor bugfixes.
 - Added download tool for a subset of the RHOSSA dataset for easy access to
   public (training) data.
 - Improvements to the framework.
+- Documentation improvements.
 
 Version 1.1.0
 -------------

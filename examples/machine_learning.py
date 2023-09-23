@@ -20,6 +20,8 @@ export_settings = {}
 # as well as which kind of dataest we have:
 export_settings['training_data_folder'] = '../data/rhossa'
 export_settings['training_data_method'] = 'exact'
+#export_settings['training_data_folder'] = '../data/rhossa_markers/'
+#export_settings['training_data_method'] = 'markers'
 
 # And we must choose which algorithms to use for the learning process:
 export_settings['scaler'] = 'standard' # pre-processing: data scaling
