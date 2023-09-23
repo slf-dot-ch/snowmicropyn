@@ -1,5 +1,6 @@
 """This module performs layer matching between profiles."""
 from snowmicropyn.serialize import caaml
+import re
 
 def match_layers_exact(samples, shapes):
     """Align a SMP profile with a manual one by comparing penetration depth
@@ -28,8 +29,26 @@ def match_layers_rhossa(samples, pro):
     param pro: snowmicropyn Profile to parse
     returns: Pandas dataframe with a new column containing the grain shapes.
     """
-    print(pro.markers)
     data = samples
+    data['grain_shape'] = 'NOt_labelled' # n/a value of dataset
+    # sort by sample distance and convert to sorted container for index access:
+    markers = list(sorted(pro.markers.items()))
+    for ii in range(len(markers)):
+        label = markers[ii][0]
+        nr = re.search(r'(.*)(\d+)$', label)
+        if nr is not None: # we consider any marker that ends with a number to be a layer (e. g. "rg1")
+            grain_type = nr.group(1) # marker name without number
+            # Markers are read through the config parser as lower case, so in accordance to
+            # the ICSSG we must capitalize the main form (first 2 letters):
+            grain_type = grain_type[0:2].upper() + grain_type[2:]
+            pos = markers[ii][1]
+            if (ii == len(markers) - 1):
+                nextpos = float(data.tail(1).distance)
+            else:
+                nextpos = markers[ii + 1][1]
+            data.loc[(data.distance >= pos) & (data.distance < nextpos), 'grain_shape'] = grain_type
+
+    data = data[data.grain_shape != 'NOt_labelled'] # remove unclassified rows
     return data
 
 def assimilate_grainshape(samples, pro, method: str):
@@ -41,7 +60,7 @@ def assimilate_grainshape(samples, pro, method: str):
     returns: SMP samples with assimlated grain shapes.
     """
     if method == 'exact':
-        caaml = pro._pnt_file.resolve()[:-3] + 'caaml'
+        caaml_file = str(pro._pnt_file.resolve())[:-3] + 'caaml'
         grain_shapes = caaml.parse_grainshape(caaml_file)
         data = match_layers_exact(samples, grain_shapes)
     elif method.upper() == 'RHOSSA':

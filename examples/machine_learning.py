@@ -16,8 +16,10 @@ from random import randrange
 # place to check to see what's available.
 export_settings = {}
 
-# Training. To fit the model we must tell where the training data is located:
+# Training. To fit the model we must tell where the training data is located,
+# as well as which kind of dataest we have:
 export_settings['training_data_folder'] = '../data/rhossa'
+export_settings['training_data_method'] = 'exact'
 
 # And we must choose which algorithms to use for the learning process:
 export_settings['scaler'] = 'standard' # pre-processing: data scaling
