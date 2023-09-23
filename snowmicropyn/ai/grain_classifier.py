@@ -103,7 +103,7 @@ class grain_classifier:
         param method: Format of training dataset / method of parsing. Can be one of the
         following:
           'exact': Finds the grain shape in a CAAML with the same base file name.
-          'RHOSSA': Finds the grain shape from markers in the SMP profile.
+          'markers': Finds the grain shape from markers in the SMP profile.
         returns: Pandas dataframe with the grain shape added to the SMP data.
         """
         proksch = Proksch2015() # Fetch Löwe's moving window properties from here

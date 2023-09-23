@@ -22,7 +22,7 @@ def match_layers_exact(samples, shapes):
     data['grain_shape'] = shape_list
     return data
 
-def match_layers_rhossa(samples, pro):
+def match_layers_markers(samples, pro):
     """Extract the grain shapes from manually set markers on the profile.
 
     param samples: Pandas dataframe with measured SMP forces.
@@ -63,8 +63,8 @@ def assimilate_grainshape(samples, pro, method: str):
         caaml_file = str(pro._pnt_file.resolve())[:-3] + 'caaml'
         grain_shapes = caaml.parse_grainshape(caaml_file)
         data = match_layers_exact(samples, grain_shapes)
-    elif method.upper() == 'RHOSSA':
-        data = match_layers_rhossa(samples, pro)
+    elif method == 'markers':
+        data = match_layers_markers(samples, pro)
     else:
         raise ValueError(f'Layer matching method "{method}" is not available.')
     return data

@@ -178,7 +178,7 @@ To do so you need to specify a folder containing SMP data and grain shape
 information, as well as the method used for parsing. For example, method
 'exact' expects a folder that contains both pnt files and caaml files (same base
 name) where the grain shape is taken from the caaml file at measurement depth.
-Method 'RHOSSA' on the other hand expects pnt files only but they must have
+Method 'markers' on the other hand expects pnt files only but they must have
 markers set for the grain types.
 
 The folder :file:`tools` contains a script to download and prepare both of
