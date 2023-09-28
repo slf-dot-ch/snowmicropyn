@@ -64,6 +64,7 @@ setup(
     package_data={
         'snowmicropyn': ['githash'],
         'snowmicropyn.pyngui': ['about.html'],
+        'snowmicropyn.ai': ['trained_model_rhossa.dat'],
     },
     include_package_data=True,
     entry_points={
