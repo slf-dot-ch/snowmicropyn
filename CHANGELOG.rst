@@ -1,9 +1,9 @@
 snowmicropyn Changelog
 ======================
 
-Unreleased
+Version 1.2.0
 ----------
-2023
+2023-09-28
 
 This version implements CAAML export with grain shape estimation via machine
 learning as well as some convenient new user interface features.

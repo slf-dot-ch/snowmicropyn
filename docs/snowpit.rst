@@ -37,7 +37,7 @@ SMP signal into a full simulated snow pit.
 Micromechanical properties - A shot noise model
 -----------------------------------------------
 
-Löwe et al showed with a `shot noise approach`_ that some microstructural
+Löwe et al. showed with a `shot noise approach`_ that some microstructural
 parameters of the snowpack can be be deduced from the analytical solution of a
 stochastic model. To this end the penetration force of the SMP cone can be
 interpreted as a Poisson shot noise process and can be simulated as such, giving
@@ -112,7 +112,7 @@ to calibrate the density and SSA models with.
    aa[0] + aa[1] * np.log(F_m) + aa[2] * np.log(F_m) * LL + aa[3] * LL
 
    and a couple of parameter sets for this model are provided in snowmicropyn.
-   See doc:`api_reference` for further details.
+   See :doc:`api_reference` for further details.
 
 #. Specific Surface Area (SSA)
 
