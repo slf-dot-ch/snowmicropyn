@@ -2,13 +2,13 @@
 
 """
 
-from awio import get_scriptpath
 from collections import defaultdict
 import logging
 from PyQt5.QtCore import QSettings, Qt, QUrl
 from PyQt5.QtGui import QDoubleValidator, QDesktopServices
 from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog, QGroupBox, \
     QHBoxLayout, QLabel, QLineEdit, QPushButton, QTabWidget, QVBoxLayout, QWidget
+import os
 import sys
 
 log = logging.getLogger('snowmicropyn')
@@ -17,6 +17,15 @@ _window_min_width = 600
 _widget_width = int(_window_min_width / 5)
 _spacer_width = int(_window_min_width / 20)
 _spacer_height = _spacer_width
+
+def get_scriptpath(scriptfile: str) -> str:
+    """Returns the path of caller's script file.
+
+    Arguments:
+        scriptfile: Use __file__ for this in the calling script.
+    """
+
+    return(os.path.dirname(os.path.realpath(scriptfile)) + "/")
 
 class LabelNumber(QWidget):
     _spinbox = None
