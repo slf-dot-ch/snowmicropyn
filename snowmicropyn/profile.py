@@ -455,7 +455,7 @@ class Profile(object):
                 'force': 'force [N]',
             }
             data = samples.rename(columns=with_units)
-            data.to_csv(f, header=True, index=False, float_format=fmt)
+            data.to_csv(f, header=True, index=False, float_format=fmt, lineterminator='\n')
         return file
 
     def export_samples_niviz(self, export_settings, file=None, precision=4):
