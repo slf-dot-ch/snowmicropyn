@@ -318,7 +318,7 @@ def preprocess_layers(derivatives, grain_shapes, export_settings):
     return derivatives, grain_shapes, profile_bottom
 
 def export(settings, derivatives, grain_shapes, prof_id, timestamp, smp_serial,
-    longitude, latitude, altitude, outfile):
+    longitude, latitude, altitude, outfile, binary=False):
     """CAAML export of an SMP snow profile with forces and derived values. This routing writes
     a CAAML XML file containing:
       - A stratigraphy profile with layers as would be contained in a manual snow profile.
@@ -492,7 +492,11 @@ def export(settings, derivatives, grain_shapes, prof_id, timestamp, smp_serial,
 
     tree = ET.ElementTree(root)
     ET.indent(tree, space="\t", level=0) # human-readable CAAML
-    tree.write(outfile, encoding="UTF-8", xml_declaration=True)
+    if binary:
+        return tree
+    else:
+        tree.write(outfile, encoding="UTF-8", xml_declaration=True)
+        return outfile
 
 def _addGenericComments(cmt_root, parameterization: str):
     caaml_cmt = ET.SubElement(cmt_root, f'{_ns_caaml}:comment')
