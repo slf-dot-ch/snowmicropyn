@@ -34,7 +34,7 @@ class Document:
         for key, par in params.items():
             self._derivatives[key] = par.calc(samples)
 
-    def export_caaml(self, outfile=None, parameterization='P2015', export_settings={}):
+    def export_caaml(self, outfile=None, parameterization='P2015', export_settings={}, binary=False):
 
         # Prepare samples:
         samples = self._profile.samples_within_snowpack()
@@ -48,14 +48,15 @@ class Document:
         derivatives = self._profile.calc_derivatives(snowpack_only=True, parameterization=parameterization,
             hand_hardness=True, optical_thickness=True, names_with_units=False)
 
-        # add _smp flag to file name in order to (hopefully) not overwrite hand profiles:
-        stem = f'{self._profile._pnt_file.stem}_smp'
-        if outfile:
-            outfile = pathlib.Path(outfile) # full file name was given
-            if outfile.is_dir(): # folder name was given -> choose filename
-                outfile = pathlib.Path(f'{outfile}/{stem}.caaml')
-        else: # no name was given --> choose full path
-            outfile = self._profile._pnt_file.with_name(stem).with_suffix('.caaml')
+        if not binary:
+            # add _smp flag to file name in order to (hopefully) not overwrite hand profiles:
+            stem = f'{self._profile._pnt_file.stem}_smp'
+            if outfile:
+                outfile = pathlib.Path(outfile) # full file name was given
+                if outfile.is_dir(): # folder name was given -> choose filename
+                    outfile = pathlib.Path(f'{outfile}/{stem}.caaml')
+            else: # no name was given --> choose full path
+                outfile = self._profile._pnt_file.with_name(stem).with_suffix('.caaml')
 
         loewe_derivs = derivatives[['distance', 'force_median', 'L2012_lambda', 'L2012_f0', 'L2012_delta', 'L2012_L']]
 
@@ -64,7 +65,8 @@ class Document:
             classifier = grain_classifier(export_settings)
             grain_shapes = classifier.predict(loewe_derivs)
 
-        caaml.export(export_settings, derivatives, grain_shapes,
-            self._profile._pnt_file.stem, self._profile._timestamp, self._profile._smp_serial,
-            self._profile._longitude, self._profile._latitude, self._profile._altitude, outfile)
-        return outfile
+        content = caaml.export(export_settings, derivatives, grain_shapes,
+            self._profile.name, self._profile._timestamp, self._profile._smp_serial,
+            self._profile._longitude, self._profile._latitude, self._profile._altitude, outfile,
+            binary)
+        return content

@@ -74,10 +74,13 @@ class Profile(object):
 
     """
 
-    def __init__(self, pnt_file, name=None):
-        self._pnt_file = pathlib.Path(pnt_file)
+    def __init__(self, pnt_file, name=None, binary=False):
+        if not binary:
+            self._pnt_file = pathlib.Path(pnt_file)
+        else:
+            self._pnt_file = None
         # Load pnt file, returns header (dict) and raw samples
-        self._pnt_header, pnt_samples = Pnt.load(self._pnt_file)
+        self._pnt_header, pnt_samples = Pnt.load(pnt_file, binary=binary)
 
         # Set name of profile (by default a entry from pnt header)
         self._name = self.pnt_header_value(Pnt.Header.FILENAME)
@@ -151,10 +154,11 @@ class Profile(object):
         self._ini = configparser.ConfigParser()
 
         # Look for corresponding ini file
-        self._ini_file = self._pnt_file.with_suffix('.ini')
-        if self._ini_file.exists():
-            log.info('Reading ini file {} for {}'.format(self._ini_file, self))
-            self._ini.read(self._ini_file)
+        if self._pnt_file:
+            self._ini_file = self._pnt_file.with_suffix('.ini')
+            if self._ini_file.exists():
+                log.info('Reading ini file {} for {}'.format(self._ini_file, self))
+                self._ini.read(self._ini_file)
 
         # Ensure existence of necessary sections
         if not self._ini.has_section('markers'):
@@ -400,7 +404,7 @@ class Profile(object):
         return self.samples.force.max()
 
     @staticmethod
-    def load(pnt_file, name=None):
+    def load(pnt_file, name=None, binary=False):
         """ Loads a profile from a pnt file.
 
         This static method loads a pnt file and also its ini file in case it's
@@ -413,7 +417,7 @@ class Profile(object):
 
         .. _path-like object: https://docs.python.org/3/glossary.html#term-path-like-object
         """
-        return Profile(pnt_file, name)
+        return Profile(pnt_file, name, binary)
 
     def save(self):
         """ Save markers of this profile to an ini file.
