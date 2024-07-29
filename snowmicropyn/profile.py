@@ -94,16 +94,20 @@ class Profile(object):
             self._latitude = -self._latitude
         if east.upper() != 'E':
             self._longitude = -self._longitude
-        if abs(self._latitude) > 90:
+        if self._latitude == -99999: # silently remove if just not measured
+            self._latitude = None
+        elif abs(self._latitude) > 90:
             log.warning(f'Latitude value {self._latitude} invalid, replacing by None (file {self._name})')
             self._latitude = None
-        if abs(self._longitude) > 180:
-            log.warning(f'Longitude value {self._latitude} invalid, replacing by None (file {self._name})')
+        if self._longitude == -99999:
             self._longitude = None
-        if (self._altitude == 99999): # SMP v<5
+        elif abs(self._longitude) > 180:
+            log.warning(f'Longitude value {self._longitude} invalid, replacing by None (file {self._name})')
+            self._longitude = None
+        if self._altitude == 99999: # SMP v<5
             self._altitude = None
         elif not -50000 < self._altitude < 900000:
-            log.warning(f'Altitude value {self._latitude} invalid, replacing by None (file {self._name})')
+            log.warning(f'Altitude value {self._altitude} invalid, replacing by None (file {self._name})')
             self._altitude = None
 
         # Get a proper timestamp by putting pnt entries together
