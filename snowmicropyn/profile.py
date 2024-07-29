@@ -574,17 +574,8 @@ class Profile(object):
                     writer.writerow(['pnt_' + header_id.name, str(value)])
         return file
 
-    def export_derivatives(self, file=None, snowpack_only=True, parameterization='P2015', precision=4):
-        """Export observables derived from the SMP signal.
-
-        From the GUI, this is called with the parameterzation set in the user settings. Programmatically,
-        Proksch 2015 is defaulted; for others you must supply the object's .shortname property.
-        """
-        if file:
-            file = pathlib.Path(file)
-        else:
-            file = self._pnt_file.with_name(self._pnt_file.stem + '_derivatives').with_suffix('.csv')
-
+    def calc_derivatives(self, snowpack_only=True, parameterization='P2015', precision=4, names_with_units=True):
+        """Calculate observables derived from the SMP signal."""
         samples = self.samples
         if snowpack_only:
             samples = self.samples_within_snowpack()
@@ -608,9 +599,25 @@ class Profile(object):
         }
         log.info('Calculating derivatives by ' + param.name)
         derivatives = derivatives.merge(param.calc_from_loewe2012(loewe2012_df))
-        with_units[param.shortname + '_ssa'] = param.shortname + '_ssa [m^2/kg]'
-        with_units[param.shortname + '_density'] = param.shortname + '_density [kg/m^3]'
-        derivatives = derivatives.rename(columns=with_units)
+        if names_with_units:
+            with_units[param.shortname + '_ssa'] = param.shortname + '_ssa [m^2/kg]'
+            with_units[param.shortname + '_density'] = param.shortname + '_density [kg/m^3]'
+            derivatives = derivatives.rename(columns=with_units)
+
+        return derivatives
+
+    def export_derivatives(self, file=None, snowpack_only=True, parameterization='P2015', precision=4, names_with_units=True):
+        """Export observables derived from the SMP signal.
+
+        From the GUI, this is called with the parameterization set in the user settings. Programmatically,
+        Proksch 2015 is defaulted; for others you must supply the object's .shortname property.
+        """
+        if file:
+            file = pathlib.Path(file)
+        else:
+            file = self._pnt_file.with_name(self._pnt_file.stem + '_derivatives').with_suffix('.csv')
+
+        derivatives = self.calc_derivatives(snowpack_only, parameterization, precision)
 
         fmt = '%.{}f'.format(precision)
         derivatives.to_csv(file, header=True, index=False, float_format=fmt, na_rep='nan')
