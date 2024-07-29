@@ -30,28 +30,15 @@ def _get_parameterization_name(derivatives):
                 return col[:-len(flag)]
     return None
 
-def hand_hardness(smp_force, method='regression'):
-    """Parameterization of the measured SMP forces to hand hardness index.
-
-    param smp_force: Penetration force as measured by the SMP in N.
-    param method: Method of parameterization as string identifier (e. g. 'regression').
-    returns: Hand hardness index.
-    """
-    if method == 'naive':
-        return hand_hardness_naive(smp_force)
-    elif method == 'regression':
-        return hand_hardness_regression(smp_force)
-
-def hand_hardness_label(smp_force, method='regression'):
+def hand_hardness_label(hand_hardness):
     """Parameterization of the measured SMP forces to hand hardness label.
 
-    param smp_force: Penetration force as measured by the SMP in N.
+    param hand_hardness: Hand hardness in Newton.
     returns: Hand hardness as a text label.
     """
-    idx = hand_hardness(smp_force, method)
-    return _hardness_index_to_identifier(idx)
+    return _hardness_to_identifier(hand_hardness)
 
-def _hardness_index_to_identifier(index):
+def _hardness_to_identifier(index):
     """Numeric hand hardness index to text label.
 
     param index: Hand hardness index (int or float).
@@ -65,74 +52,6 @@ def _hardness_index_to_identifier(index):
         index = 6
     index = round(index * 2) / 2 # round to .5
     return id_map[index]
-
-def _get_hardness_fit(recalc=False):
-    """Parameterization through regression (measured SMP force and hand hardness index).
-    Data points provided by van Herwijnen, Pielmeier: Characterizing Snow Stratigraphy:
-    a Comparison of SP2, Snowmicropen, Ramsonde and Hand Hardness Profiles, ISSW Proceedings 2016
-
-    param recalc: Set to True to reproduce the fit parameters on the fly.
-    returns: Fitted function as function object.
-    """
-    hardness_func = lambda xx, aa, bb : aa * xx**bb # use a power law fit
-    if recalc:
-        smp_force_kPa = [4.9303, 11.1914, 17.6419, 37.5721, 49.8849, 104.0583, 124.8842, 314.3845]
-        hand_hardness = [1, 1.5, 2, 2.5, 3, 3.5, 4, 5]
-        A_smp = 19.6e-6 # area of penetration of SMP as used by authors (in m^2)
-        smp_force_N = [ff * A_smp * 1000 for ff in smp_force_kPa]
-        (aa, bb), _ = curve_fit(hardness_func, smp_force_N, hand_hardness)
-    else:
-        aa = 2.780171583411649 # running the above code unmodified yields these fit parameters
-        bb = 0.341486204481987
-
-    fit_func = lambda xx : hardness_func(xx, aa, bb)
-    return fit_func
-
-def hand_hardness_regression(smp_force):
-    """Parameterization method for hand hardness index.
-    See above for implementation details.
-
-    param smp_force: The measured force in N.
-    returns: Hand hardness index.
-    """
-    fit_func = _get_hardness_fit()
-    return fit_func(smp_force)
-
-def hand_hardness_naive(force):
-    """Parameterization method for hand hardness index.
-    Mapping of N to hand hardness according to ICSSG p. 6. This can not
-    be used directly with an SMP measurement.
-
-    param force: Penetration force measured by hand (not with an SMP).
-    returns: Hand hardness index.
-    """
-    if force <= 50:
-        return 1 # fist
-    elif force <= 175:
-        return 2 # 4 fingers
-    elif force <= 390:
-        return 3 # 1 finger
-    elif force <= 715:
-        return 4 # pencil
-    elif force <= 1200:
-        return 5 # knife
-    else:
-        return 6 # ice (sometimes "-")
-
-def optical_thickness(ssa):
-    """Calculation of a snow grain's diameter via the specific surface area as explained in
-    `Representation of a nonspherical ice particle by a collection of independent spheres for
-    scattering and absorption of radiation <https://doi.org/10.1029/1999JD900496>`_ by
-    Thomas C. Grenfell and Stephen G. Warren publicised in `Journal of Geophysical
-    Research <https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/1999JD900496>`_,
-    Volume 104, 1999.
-
-    param ssa: Specific surface area in m^2/kg.
-    returns: Optical thickness ("diameter") of particle in m.
-    """
-    DENSITY_ICE = 917.
-    d_eff = 6 / (DENSITY_ICE * ssa) # r_eff=3V/A ==> d_eff=6/(rho_ice*SSA)
-    return d_eff
 
 def force_smoothing(derivatives, sigma):
     """Signal smoothing for the measured forces.
@@ -433,10 +352,10 @@ def export(settings, derivatives, grain_shapes, prof_id, timestamp, smp_serial,
         grain_size.set('uom', 'mm')
         grain_components = ET.SubElement(grain_size, f'{_ns_caaml}:Components')
         grain_sz_avg = ET.SubElement(grain_components, f'{_ns_caaml}:avg')
-        grain_sz_avg.text = str(m2mm(optical_thickness(row[f'{parameterization}_ssa'])))
+        grain_sz_avg.text = str(m2mm(row['optical_thickness']))
         grain_hardness = ET.SubElement(layer, f'{_ns_caaml}:hardness')
         grain_hardness.set('uom', '')
-        grain_hardness.text = hand_hardness_label(row['force_median'])
+        grain_hardness.text = hand_hardness_label(row['hand_hardness'])
 
     # Density profile:
     dens_prof = ET.SubElement(snow_prof_meas, f'{_ns_caaml}:densityProfile')

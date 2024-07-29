@@ -574,7 +574,8 @@ class Profile(object):
                     writer.writerow(['pnt_' + header_id.name, str(value)])
         return file
 
-    def calc_derivatives(self, snowpack_only=True, parameterization='P2015', precision=4, names_with_units=True):
+    def calc_derivatives(self, snowpack_only=True, parameterization='P2015', precision=4,
+            hand_hardness=False, optical_thickness=False, names_with_units=True):
         """Calculate observables derived from the SMP signal."""
         samples = self.samples
         if snowpack_only:
@@ -588,18 +589,31 @@ class Profile(object):
         loewe2012_df = loewe2012.calc(samples, param.window_size, param.overlap)
         derivatives = loewe2012_df
 
-        # Add units in label for export
-        with_units = {
-            'distance': 'distance [mm]',
-            'force_median': 'force_median [N]',
-            'L2012_lambda': 'L2012_lambda [1/mm]',
-            'L2012_f0': 'L2012_f0 [N]',
-            'L2012_delta': 'L2012_delta [mm]',
-            'L2012_L': 'L2012_L [mm]',
-        }
         log.info('Calculating derivatives by ' + param.name)
         derivatives = derivatives.merge(param.calc_from_loewe2012(loewe2012_df))
+
+        if hand_hardness:
+            hardness = derivatives['force_median']
+            hardness = self.hand_hardness_regression(hardness)
+            derivatives['hand_hardness'] = hardness
+
+        if optical_thickness:
+            thickness = derivatives[f'{parameterization}_ssa']
+            thickness = self.optical_thickness(thickness)
+            derivatives['optical_thickness'] = thickness
+
         if names_with_units:
+            # Add units in label for export
+            with_units = {
+                'distance': 'distance [mm]',
+                'force_median': 'force_median [N]',
+                'L2012_lambda': 'L2012_lambda [1/mm]',
+                'L2012_f0': 'L2012_f0 [N]',
+                'L2012_delta': 'L2012_delta [mm]',
+                'L2012_L': 'L2012_L [mm]',
+                'hand_hardness': 'hand_hardness [N]',
+                'optical_thickness': 'optical_thickness [m]',
+            }
             with_units[param.shortname + '_ssa'] = param.shortname + '_ssa [m^2/kg]'
             with_units[param.shortname + '_density'] = param.shortname + '_density [kg/m^3]'
             derivatives = derivatives.rename(columns=with_units)
@@ -666,6 +680,53 @@ class Profile(object):
         s = self.marker('surface', fallback=self.samples.distance.iloc[0])
         g = self.marker('ground', fallback=self.samples.distance.iloc[-1])
         return self.samples_within_distance(s, g, relativize)
+
+    def _get_hardness_fit(self, recalc=False):
+        """Parameterization through regression (measured SMP force and hand hardness index).
+        Data points provided by van Herwijnen, Pielmeier: Characterizing Snow Stratigraphy:
+        a Comparison of SP2, Snowmicropen, Ramsonde and Hand Hardness Profiles, ISSW Proceedings 2016
+
+        param recalc: Set to True to reproduce the fit parameters on the fly.
+        returns: Fitted function as function object.
+        """
+        hardness_func = lambda xx, aa, bb : aa * xx**bb # use a power law fit
+        if recalc:
+            smp_force_kPa = [4.9303, 11.1914, 17.6419, 37.5721, 49.8849, 104.0583, 124.8842, 314.3845]
+            hand_hardness = [1, 1.5, 2, 2.5, 3, 3.5, 4, 5]
+            A_smp = 19.6e-6 # area of penetration of SMP as used by authors (in m^2)
+            smp_force_N = [ff * A_smp * 1000 for ff in smp_force_kPa]
+            (aa, bb), _ = curve_fit(hardness_func, smp_force_N, hand_hardness)
+        else:
+            aa = 2.780171583411649 # running the above code unmodified yields these fit parameters
+            bb = 0.341486204481987
+
+        fit_func = lambda xx : hardness_func(xx, aa, bb)
+        return fit_func
+
+    def hand_hardness_regression(self, smp_force):
+        """Parameterization method for hand hardness index.
+        See above for implementation details.
+
+        param smp_force: The measured force in N.
+        returns: Hand hardness index.
+        """
+        fit_func = self._get_hardness_fit()
+        return fit_func(smp_force)
+
+    def optical_thickness(self, ssa):
+        """Calculation of a snow grain's diameter via the specific surface area as explained in
+        `Representation of a nonspherical ice particle by a collection of independent spheres for
+        scattering and absorption of radiation <https://doi.org/10.1029/1999JD900496>`_ by
+        Thomas C. Grenfell and Stephen G. Warren publicised in `Journal of Geophysical
+        Research <https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/1999JD900496>`_,
+        Volume 104, 1999.
+
+        param ssa: Specific surface area in m^2/kg.
+        returns: Optical thickness ("diameter") of particle in m.
+        """
+        DENSITY_ICE = 917.
+        d_eff = 6 / (DENSITY_ICE * ssa) # r_eff=3V/A ==> d_eff=6/(rho_ice*SSA)
+        return d_eff
 
     def detect_surface(self):
         """ Convenience method to detect the surface. This also sets the marker

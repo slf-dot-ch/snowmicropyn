@@ -40,10 +40,13 @@ class Document:
         samples = self._profile.samples_within_snowpack()
 
         # Prepare derivatives:
-        param = params[parameterization]
-        loewe2012_df = loewe2012.calc(samples, param.window_size, param.overlap)
-        derivatives = loewe2012_df
-        derivatives = derivatives.merge(param.calc_from_loewe2012(loewe2012_df))
+        #param = params[parameterization]
+        #loewe2012_df = loewe2012.calc(samples, param.window_size, param.overlap)
+        #derivatives = loewe2012_df
+        #derivatives = derivatives.merge(param.calc_from_loewe2012(loewe2012_df))
+
+        derivatives = self._profile.calc_derivatives(snowpack_only=True, parameterization=parameterization,
+            hand_hardness=True, optical_thickness=True, names_with_units=False)
 
         # add _smp flag to file name in order to (hopefully) not overwrite hand profiles:
         stem = f'{self._profile._pnt_file.stem}_smp'
@@ -54,10 +57,12 @@ class Document:
         else: # no name was given --> choose full path
             outfile = self._profile._pnt_file.with_name(stem).with_suffix('.caaml')
 
+        loewe_derivs = derivatives[['distance', 'force_median', 'L2012_lambda', 'L2012_f0', 'L2012_delta', 'L2012_L']]
+
         grain_shapes = {}
         if export_settings.get('export_grainshape', False): # start machine learning process
             classifier = grain_classifier(export_settings)
-            grain_shapes = classifier.predict(loewe2012_df)
+            grain_shapes = classifier.predict(loewe_derivs)
 
         caaml.export(export_settings, derivatives, grain_shapes,
             self._profile._pnt_file.stem, self._profile._timestamp, self._profile._smp_serial,
