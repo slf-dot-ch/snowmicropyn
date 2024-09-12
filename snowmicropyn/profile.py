@@ -582,7 +582,7 @@ class Profile(object):
                     writer.writerow(['pnt_' + header_id.name, str(value)])
         return file
 
-    def calc_derivatives(self, snowpack_only=True, parameterization='P2015', precision=4,
+    def calc_derivatives(self, snowpack_only=False, parameterization='P2015', precision=4,
             hand_hardness=False, optical_thickness=False, names_with_units=True):
         """Calculate observables derived from the SMP signal."""
         samples = self.samples
@@ -619,7 +619,7 @@ class Profile(object):
                 'L2012_f0': 'L2012_f0 [N]',
                 'L2012_delta': 'L2012_delta [mm]',
                 'L2012_L': 'L2012_L [mm]',
-                'hand_hardness': 'hand_hardness [N]',
+                'hand_hardness': 'hand_hardness [1]',
                 'optical_thickness': 'optical_thickness [m]',
             }
             with_units[param.shortname + '_ssa'] = param.shortname + '_ssa [m^2/kg]'
