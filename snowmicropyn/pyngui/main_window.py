@@ -10,7 +10,6 @@ from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationTo
 import snowmicropyn
 import snowmicropyn.pyngui.icons
 import snowmicropyn.pyngui.kml
-import snowmicropyn.tools
 from snowmicropyn.pyngui.document import Document
 from snowmicropyn.pyngui.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.pyngui.plot_canvas import PlotCanvas
