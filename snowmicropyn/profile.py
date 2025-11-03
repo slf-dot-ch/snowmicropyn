@@ -12,6 +12,7 @@ from . import windowing
 from . import __version__, githash
 from . import detection
 from . import loewe2012
+from . import tools
 # to keep code for a new parameterization to a single file we import all modules available:
 from .parameterizations import *
 from .derivatives import parameterizations
@@ -150,6 +151,9 @@ class Profile(object):
         force_arr = np.asarray(pnt_samples) * factor
         stacked = np.column_stack([distance_arr, force_arr])
         self._samples = pd.DataFrame(stacked, columns=('distance', 'force'))
+
+        # define a force offset attribute
+        self._force_offset = 0.0
 
         self._ini = configparser.ConfigParser()
 
@@ -329,6 +333,78 @@ class Profile(object):
     def samples(self):
         """ Returns the samples. This is a pandas dataframe."""
         return self._samples
+
+
+    def calc_drift(self):
+        p = self
+
+        try:
+            begin = p.marker('drift_begin')
+            begin_label = 'Marker drift_begin'
+        except KeyError:
+            # Skip the first few values of profile for drift calculation
+            begin = p.samples.distance.iloc[10]
+            begin_label = 'Begin of Profile'
+
+        try:
+            end = p.marker('drift_end')
+            end_label = 'Marker drift_end'
+        except KeyError:
+            try:
+                end = p.marker('surface')
+                end_label = 'Marker surface'
+            except KeyError:
+                end = p.samples.distance.iloc[-1]
+                end_label = 'End of Profile'
+
+        log.debug('Calculating drift from {} to {}'.format(begin, end))
+
+        # Flip begin and end to make sure begin is always smaller then end
+        if end < begin:
+            begin, end = end, begin
+
+        drift_range = p.samples[p.samples.distance.between(begin, end)]
+
+        x_fit, y_fit, drift, offset, noise = tools.lin_fit(drift_range.distance,
+                                                                        drift_range.force)
+        self._fit_x = x_fit
+        self._fit_y = y_fit
+        self._dirft = drift
+        self._offset = offset
+        self._noise = noise
+
+        #self.sidebar.set_drift(begin_label, end_label, drift, offset, noise)
+        return begin_label, end_label, x_fit, y_fit, drift, offset, noise
+
+    def subtract_force_offset(self):
+        force = self._samples['force']
+
+        surface_at = self.marker("surface", fallback=0)
+        if surface_at == 0:
+            surface_at = self.detect_surface()
+
+        print("Surface at: ", surface_at)
+
+        if surface_at > 0:
+            idx = self._samples[self._samples['distance'] < surface_at].index
+            force_above_0 = force.iloc[idx]
+            distance_above_0 = self._samples['distance'].iloc[idx]
+
+            _, _, _, _, _, force_offset, _ = self.calc_drift()
+            force_offset -= 0.00 # introduce constant
+
+            log.info('Subtracting offset of {:.4f} N calculated from {} samples above surface marker at {:.2f} mm'.format(force_offset, len(idx), surface_at))
+            self._samples['force'] = force - force_offset
+
+            self._force_offset = force_offset
+
+
+    def reset_force_offset(self):
+        force = self._samples['force']
+        #if hasattr(self, '_force_offset'):
+        log.info('Resetting offset of {:.4f} N'.format(self._force_offset))
+        self._samples['force'] = force + self._force_offset
+            #del self._force_offset
 
     @property
     def markers(self):

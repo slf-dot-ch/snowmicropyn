@@ -685,40 +685,12 @@ class MainWindow(QMainWindow):
             self.set_marker(name, value)
 
     def calc_drift(self):
-        p = self.current_document.profile
 
-        try:
-            begin = p.marker('drift_begin')
-            begin_label = 'Marker drift_begin'
-        except KeyError:
-            # Skip the first few values of profile for drift calculation
-            begin = p.samples.distance.iloc[10]
-            begin_label = 'Begin of Profile'
+        begin_label, end_label, x_fit, y_fit, drift, offset, noise = self.current_document.profile.calc_drift()
 
-        try:
-            end = p.marker('drift_end')
-            end_label = 'Marker drift_end'
-        except KeyError:
-            try:
-                end = p.marker('surface')
-                end_label = 'Marker surface'
-            except KeyError:
-                end = p.samples.distance.iloc[-1]
-                end_label = 'End of Profile'
-
-        log.debug('Calculating drift from {} to {}'.format(begin, end))
-
-        # Flip begin and end to make sure begin is always smaller then end
-        if end < begin:
-            begin, end = end, begin
-
-        drift_range = p.samples[p.samples.distance.between(begin, end)]
-
-        x_fit, y_fit, drift, offset, noise = snowmicropyn.tools.lin_fit(drift_range.distance,
-                                                                        drift_range.force)
         self.current_document._fit_x = x_fit
         self.current_document._fit_y = y_fit
-        self.current_document._dirft = drift
+        self.current_document._drift = drift
         self.current_document._offset = offset
         self.current_document._noise = noise
 
