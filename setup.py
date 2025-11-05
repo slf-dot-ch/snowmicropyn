@@ -67,6 +67,7 @@ setup(
         'snowmicropyn.ai': ['trained_model_rhossa.dat'],
     },
     include_package_data=True,
+    data_files=[('share/snowmicropyn', ['CHANGELOG.rst'])],
     entry_points={
         'gui_scripts': [
             'pyngui = snowmicropyn.pyngui.app:main'

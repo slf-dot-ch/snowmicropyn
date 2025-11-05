@@ -46,6 +46,8 @@ def main():
 
     main_window.show()
 
+    main_window.changelog_dialog.show()
+
     sys.exit(app.exec())
 
 if __name__ == '__main__':
