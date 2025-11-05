@@ -387,11 +387,9 @@ class Profile(object):
 
         if surface_at > 0:
             idx = self._samples[self._samples['distance'] < surface_at].index
-            force_above_0 = force.iloc[idx]
-            distance_above_0 = self._samples['distance'].iloc[idx]
 
             _, _, _, _, _, force_offset, _ = self.calc_drift()
-            force_offset -= 0.00 # introduce constant
+            force_offset -= 0.01 # introduce constant
 
             log.info('Subtracting offset of {:.4f} N calculated from {} samples above surface marker at {:.2f} mm'.format(force_offset, len(idx), surface_at))
             self._samples['force'] = force - force_offset
