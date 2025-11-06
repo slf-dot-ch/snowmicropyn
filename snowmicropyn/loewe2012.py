@@ -49,9 +49,20 @@ def calc_step(spatial_res, forces, cone_area=SMP_CONE_AREA):
     k1 = np.mean(forces)
     k2 = np.var(forces)
 
+    tol = 0.001
+    if k1 < tol:
+        print("above surface")
+        return 0, 0, 0, np.inf  # Constant signal
+
+    is_surface = False
+    k1_ = np.mean(forces[:n // 2])
+    if k1_ < tol:
+        print("above surface half")
+        is_surface = True
+
     # signal detrending as suggested by Proksch 2015
     force_detrended = signal.detrend(forces-k1, type='linear')
-    
+
     # Covariance/Autocorrelation (Equation 8 in publication)
     c_f = np.correlate(force_detrended, force_detrended, mode='full')
 
@@ -66,7 +77,10 @@ def calc_step(spatial_res, forces, cone_area=SMP_CONE_AREA):
     f0 = (3. / 2) * k2 / k1
 
     # According to equation 2 in publication
-    L = (cone_area / lambda_) ** (1. / 3)
+    if is_surface:
+        L = (cone_area / (4 * lambda_)) ** (1. / 3)
+    else:
+        L = (cone_area / lambda_) ** (1. / 3)
 
     return lambda_, f0, delta, L
 
@@ -89,6 +103,7 @@ def calc(samples, window, overlap):
     # Calculate spatial resolution of the distance samples as median of all
     # step sizes.
     spatial_res = np.median(np.diff(samples.distance.values))
+    print("window:", window, "overlap:", overlap)
 
     # Split dataframe into chunks
     chunks = chunkup(samples, window, overlap)

@@ -532,15 +532,16 @@ class MainWindow(QMainWindow):
     def _subtract_offset_triggered(self, checked):
         doc = self.current_document
 
-        if self.subtract_offset_action.isChecked():
-            doc.profile.subtract_force_offset()
-        else:
-            doc.profile.reset_force_offset()
+        if doc is not None:
+            if self.subtract_offset_action.isChecked():
+                doc.profile.subtract_force_offset()
+            else:
+                doc.profile.reset_force_offset()
 
         if doc is not None:
             self.calc_drift()
 
-        doc.recalc_derivatives()
+            doc.recalc_derivatives()
 
         self.plot_canvas.set_document(self.current_document, self.airgap_action.isChecked())
 
@@ -636,9 +637,11 @@ class MainWindow(QMainWindow):
 
         self.stacked_widget.setCurrentIndex(1 if at_least_one else 0)
 
-        if self.subtract_offset_action.isChecked():
-            if doc is not None:
+        if doc is not None:
+            if self.subtract_offset_action.isChecked():
                 doc.profile.subtract_force_offset()
+            else:
+                doc.profile.reset_force_offset()
                 doc.recalc_derivatives()
 
         self.sidebar.set_document(doc)

@@ -153,6 +153,7 @@ class Profile(object):
         self._samples = pd.DataFrame(stacked, columns=('distance', 'force'))
 
         # define a force offset attribute
+        self._force_drift = 0.0
         self._force_offset = 0.0
 
         self._ini = configparser.ConfigParser()
@@ -388,21 +389,30 @@ class Profile(object):
         if surface_at > 0:
             idx = self._samples[self._samples['distance'] < surface_at].index
 
-            _, _, _, _, _, force_offset, _ = self.calc_drift()
-            force_offset -= 0.01 # introduce constant
+            _, _, _, _, force_drift, force_offset, _ = self.calc_drift()
 
             log.info('Subtracting offset of {:.4f} N calculated from {} samples above surface marker at {:.2f} mm'.format(force_offset, len(idx), surface_at))
-            self._samples['force'] = force - force_offset
+            # subtract a linear baseline (drift * distance + offset) instead of a constant
+            distances = self._samples['distance']
+            baseline = distances * force_drift + force_offset
+            self._samples.loc[:, 'force'] = force - baseline
 
+            self._force_drift = force_drift
             self._force_offset = force_offset
 
 
     def reset_force_offset(self):
         force = self._samples['force']
-        #if hasattr(self, '_force_offset'):
         log.info('Resetting offset of {:.4f} N'.format(self._force_offset))
-        self._samples['force'] = force + self._force_offset
-            #del self._force_offset
+        # Re-apply previously subtracted linear baseline (drift * distance + offset)
+        force = self._samples['force']
+        drift = self._force_drift
+        offset = self._force_offset
+        distances = self._samples['distance']
+        baseline = distances * drift + offset
+        self._samples.loc[:, 'force'] = force + baseline
+        log.info('Restored baseline (drift={:.6f}, offset={:.6f})'.format(drift, offset))
+
 
     @property
     def markers(self):
