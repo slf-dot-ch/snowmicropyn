@@ -401,7 +401,6 @@ class MainWindow(QMainWindow):
         for f in files:
             p = snowmicropyn.Profile.load(f)
             doc = Document(p)
-            doc.recalc_derivatives()
             new_docs.append(doc)
             self.superpos_canvas.add_doc(doc)
         self.documents.extend(new_docs)
