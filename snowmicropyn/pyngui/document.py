@@ -25,6 +25,7 @@ class Document:
         return self._derivatives
 
     def recalc_derivatives(self, relativize=False):
+        print("Calculating derivatives ... ")
         samples = self._profile.samples_within_snowpack(relativize)
 
         # A dictionary is built with the parameterization's shortname as the key,

@@ -1,6 +1,7 @@
 import logging
 from os.path import expanduser, dirname, abspath, join
 from string import Template
+import time
 
 from PyQt5.QtCore import QLocale, QRect, Qt, QSettings, QSize
 from PyQt5.QtGui import QIcon, QDoubleValidator, QValidator
@@ -610,7 +611,12 @@ class MainWindow(QMainWindow):
 
         if doc is not None:
             self.calc_drift()
-
+            start = time.time()
+            if not doc.derivatives:
+                doc.recalc_derivatives()
+            end = time.time()
+            print("timing ", end - start)
+            
         self.plot_canvas.set_document(doc, self.airgap_action.isChecked())
         self.plot_canvas.draw()
         # Reset toolbar history
