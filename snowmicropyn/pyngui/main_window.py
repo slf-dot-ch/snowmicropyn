@@ -729,7 +729,7 @@ class NoDocWidget(QWidget):
 class NotificationDialog(QDialog):
     def __init__(self, *args):
         super(NotificationDialog, self).__init__(*args)
-
+        self.setWindowFlags(Qt.Popup)
         self.hint_label = QLabel()
         self.hint_label.setWordWrap(True)
         self.content_textedit = QTextEdit()
