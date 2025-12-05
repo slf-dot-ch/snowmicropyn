@@ -28,6 +28,7 @@ class SuperposCanvas(FigureCanvas):
         self.airgap_axes.xaxis.set_label_text('Snow Depth [mm]')
         self.airgap_axes.yaxis.set_label_text('Force [N]')
         self.airgap_axes.autoscale(enable=True, axis='x', tight=True)
+        self.airgap_axes.set_forward_navigation_events(True)
 
         self.active_doc = None
 

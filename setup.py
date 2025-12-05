@@ -18,7 +18,7 @@ with open(readme_rst) as f:
     LONG_DESC = f.read()
 
 DEPENDENCIES = [
-        'matplotlib >= 2',
+        'matplotlib >= 3.10',
         'numpy',
         'pandas >= 0.22',
         'pytz',
@@ -73,6 +73,6 @@ setup(
         ]
     },
 
-    python_requires='>=3.8',
+    python_requires='>=3.10',
     install_requires=DEPENDENCIES
 )
