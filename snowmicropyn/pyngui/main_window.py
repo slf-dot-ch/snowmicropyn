@@ -1,4 +1,5 @@
 import logging
+import signal
 from os.path import expanduser, dirname, abspath, join
 from string import Template
 import time
@@ -22,6 +23,9 @@ from snowmicropyn.pyngui.superpos_canvas import SuperposCanvas
 from snowmicropyn.derivatives import parameterizations
 
 log = logging.getLogger('snowmicropyn')
+
+signal.signal(signal.SIGINT, signal.SIG_DFL)  # Handle Ctrl+C
+
 
 class MainWindow(QMainWindow):
     SETTING_LAST_DIRECTORY = 'MainFrame/last_directory'
@@ -395,7 +399,9 @@ class MainWindow(QMainWindow):
         filtr = "pnt Files (*.pnt *.PNT)"
         opts = QFileDialog.ReadOnly
         startdir = self._last_directory
-        files, _ = QFileDialog.getOpenFileNames(self, cap, startdir, filtr, options=opts)
+        # FIX (temp)
+        #files, _ = QFileDialog.getOpenFileNames(self, cap, startdir, filtr, options=opts)
+        files, _ = QFileDialog.getOpenFileNames(self, "test", "/home/Documents", "*.pnt")
         if files:
             self.open_pnts(files)
 
@@ -634,11 +640,13 @@ class MainWindow(QMainWindow):
         self.stacked_widget.setCurrentIndex(1 if at_least_one else 0)
 
         if doc is not None:
+            # doc.profile._force_offset = 0.0
+            # doc.profile._drift_offset = 0.0
             if self.subtract_offset_action.isChecked():
                 doc.profile.subtract_force_offset()
             else:
                 doc.profile.reset_force_offset()
-                doc.recalc_derivatives()
+            doc.recalc_derivatives()
 
         self.sidebar.set_document(doc)
 

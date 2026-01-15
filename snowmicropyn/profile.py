@@ -391,14 +391,19 @@ class Profile(object):
 
             _, _, _, _, force_drift, force_offset, _ = self.calc_drift()
 
+            # force_offset -= 0.015368
+            force_drift = 0.0
+            
             log.info('Subtracting offset of {:.4f} N calculated from {} samples above surface marker at {:.2f} mm'.format(force_offset, len(idx), surface_at))
             # subtract a linear baseline (drift * distance + offset) instead of a constant
             distances = self._samples['distance']
             baseline = distances * force_drift + force_offset
             self._samples.loc[:, 'force'] = force - baseline
 
-            self._force_drift = force_drift
-            self._force_offset = force_offset
+            if self._force_drift == 0:
+                self._force_drift = force_drift
+            if self._force_offset == 0:
+                self._force_offset = force_offset
 
 
     def reset_force_offset(self):
@@ -411,6 +416,9 @@ class Profile(object):
         distances = self._samples['distance']
         baseline = distances * drift + offset
         self._samples.loc[:, 'force'] = force + baseline
+        self._force_drift = 0.0
+        self._force_offset = 0.0
+        print("reset")
         log.info('Restored baseline (drift={:.6f}, offset={:.6f})'.format(drift, offset))
 
 

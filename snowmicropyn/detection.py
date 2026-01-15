@@ -3,6 +3,7 @@ import logging
 import numpy as np
 
 from .tools import downsample, smooth
+from .windowing import chunkup
 
 log = logging.getLogger('snowmicropyn')
 
@@ -36,7 +37,7 @@ def detect_ground(profile):
     return ground
 
 
-def detect_surface(profile):
+def detect_surface(profile, legacy=False):
     """Automatic detection of surface (begin of snowpack).
 
     :param profile: The profile to detect surface in.
@@ -44,35 +45,60 @@ def detect_surface(profile):
     :rtype: float
     """
 
-    # Cut off ca. 1 mm
-    try:
-        distance = profile.samples.distance.values[250:]
-        force = profile.samples.force.values[250:]
+    if ~legacy:
+        samples = profile.samples
+        window = 2
+        overlap = 50
+        chunks = chunkup(samples, window, overlap)
 
-        force = downsample(force, 20)
-        distance = downsample(distance, 20)
+        i = 0
+        k0 = 0
+        for center, chunk in chunks:
+            k1 = np.mean(chunk.force)
+            if i == 0:
+                k0 = k1
+                i += 1
+                continue
+            tol = 0.001
+            if (k1-k0) > tol:
+                surface = center
+                return surface
+            i += k1
+            k0 = k1
 
-        force = smooth(force, 242)
-
-        y_grad = np.gradient(force)
-        y_grad = downsample(y_grad, 3)
-        x_grad = downsample(distance, 3)
-
-        max_force = np.amax(force)
-
-        for i in np.arange(100, x_grad.size):
-            std = np.std(y_grad[:i - 1])
-            mean = np.mean(y_grad[:i - 1])
-            if y_grad[i] >= 5 * std + mean:
-                surface = x_grad[i]
-                break
-
-        if i == x_grad.size - 1:
-            surface = max_force
-
-        log.info('Detected surface at {:.3f} mm in profile {}'.format(surface, profile))
-        return surface
-
-    except ValueError:
         log.warning('Failed to detect surface')
         return 0
+
+    else:
+    # Cut off ca. 1 mm
+        try:
+            distance = profile.samples.distance.values[250:]
+            force = profile.samples.force.values[250:]
+
+            force = downsample(force, 20)
+            distance = downsample(distance, 20)
+
+            force = smooth(force, 242)
+
+            y_grad = np.gradient(force)
+            y_grad = downsample(y_grad, 3)
+            x_grad = downsample(distance, 3)
+
+            max_force = np.amax(force)
+
+            for i in np.arange(100, x_grad.size):
+                std = np.std(y_grad[:i - 1])
+                mean = np.mean(y_grad[:i - 1])
+                if y_grad[i] >= 5 * std + mean:
+                    surface = x_grad[i]
+                    break
+
+            if i == x_grad.size - 1:
+                surface = max_force
+
+            log.info('Detected surface at {:.3f} mm in profile {}'.format(surface, profile))
+            return surface
+
+        except ValueError:
+            log.warning('Failed to detect surface')
+            return 0

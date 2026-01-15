@@ -62,6 +62,8 @@ class PlotCanvas(FigureCanvas):
 
         self.mpl_connect('button_press_event', self.mouse_button_pressed)
 
+        self.prev = None
+
     def build_menu(self):
         def set_marker(name):
             self.main_window.set_marker(name, self.clicked_distance())
