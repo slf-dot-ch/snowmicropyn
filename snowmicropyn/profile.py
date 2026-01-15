@@ -392,7 +392,7 @@ class Profile(object):
             _, _, _, _, force_drift, force_offset, _ = self.calc_drift()
 
             # force_offset -= 0.015368
-            force_drift = 0.0
+            # force_drift = 0.0
             
             log.info('Subtracting offset of {:.4f} N calculated from {} samples above surface marker at {:.2f} mm'.format(force_offset, len(idx), surface_at))
             # subtract a linear baseline (drift * distance + offset) instead of a constant
