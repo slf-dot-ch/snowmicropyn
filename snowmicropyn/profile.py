@@ -553,7 +553,7 @@ class Profile(object):
             5) Data stretching: multiply by a factor (to match a nearby snow pit height)
             6) Adapt header lines
 
-        When the parameter ``file`` is not provided, the default name is used 
+        When the parameter ``file`` is not provided, the default name is used
         which is same as the pnt file from which the profile was loaded with a
         suffix `_samples_niviz` and the `csv` extension.
 
