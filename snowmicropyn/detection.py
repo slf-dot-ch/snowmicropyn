@@ -46,6 +46,7 @@ def detect_surface(profile, legacy=False):
     """
 
     if ~legacy:
+        # new method using chunking in combination with a tolerance/threshold
         samples = profile.samples
         window = 2
         overlap = 50
@@ -62,6 +63,7 @@ def detect_surface(profile, legacy=False):
             tol = 0.001
             if (k1-k0) > tol:
                 surface = center
+                log.info('Detected surface at {:.3f} mm in profile {}'.format(surface, profile))
                 return surface
             i += k1
             k0 = k1
@@ -70,7 +72,9 @@ def detect_surface(profile, legacy=False):
         return 0
 
     else:
-    # Cut off ca. 1 mm
+        # legacy method involves a smooth/gradient approach
+        # that does not work for very fresh snow
+        # Cut off ca. 1 mm
         try:
             distance = profile.samples.distance.values[250:]
             force = profile.samples.force.values[250:]

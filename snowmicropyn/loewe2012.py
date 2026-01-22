@@ -49,6 +49,8 @@ def calc_step(spatial_res, forces, cone_area=SMP_CONE_AREA):
     k1 = np.mean(forces)
     k2 = np.var(forces)
 
+    # use a tolerance to detect where the signal deviates from the background
+    # level and treat this as surface
     tol = 0.001
     if k1 < tol:
         print("above surface")
@@ -78,6 +80,7 @@ def calc_step(spatial_res, forces, cone_area=SMP_CONE_AREA):
 
     # According to equation 2 in publication
     if is_surface:
+        # Treat surface slightly different as density lambda_ is underestimated
         L = (cone_area / (4 * lambda_)) ** (1. / 3)
     else:
         L = (cone_area / lambda_) ** (1. / 3)
