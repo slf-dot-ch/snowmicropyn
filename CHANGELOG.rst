@@ -1,6 +1,23 @@
 snowmicropyn Changelog
 ======================
 
+Version 1.3.0
+----------
+2026-01-15
+
+This version implements a 'above surface' background detection algorithm
+and improves the automatic surface detection algorithm.
+
+- Added background and drift correction. Instead of setting the baseline
+  to zero, it is set to the value of the Calonne and Richter (2020) model
+  in order to ensure consistency when deriving snow microstructure parameters.
+- Improved automatic surface detection algorithm. The new algorithm is more
+  robust and works better for fresh snow conditions.
+- Disable autoprocessing when loading profiles. This improves initial load time.
+  Derivatives are now calculated when first selecting a profile for viewing. The
+  subsequent times, the cached values are used.
+- Several minor bugfixes and improvements.
+
 Version 1.2.1
 ----------
 2023-09-28

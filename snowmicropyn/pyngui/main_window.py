@@ -1,4 +1,5 @@
 import logging
+import signal
 from os.path import expanduser, dirname, abspath, join
 from string import Template
 import time
@@ -11,7 +12,6 @@ from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationTo
 import snowmicropyn
 import snowmicropyn.pyngui.icons
 import snowmicropyn.pyngui.kml
-import snowmicropyn.tools
 from snowmicropyn.pyngui.document import Document
 from snowmicropyn.pyngui.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.pyngui.plot_canvas import PlotCanvas
@@ -23,6 +23,9 @@ from snowmicropyn.pyngui.superpos_canvas import SuperposCanvas
 from snowmicropyn.derivatives import parameterizations
 
 log = logging.getLogger('snowmicropyn')
+
+signal.signal(signal.SIGINT, signal.SIG_DFL)  # Handle Ctrl+C
+
 
 class MainWindow(QMainWindow):
     SETTING_LAST_DIRECTORY = 'MainFrame/last_directory'
@@ -104,6 +107,7 @@ class MainWindow(QMainWindow):
         self.plot_surface_and_ground_action = QAction('Plot Surface && Ground', self)
         self.plot_markers_action = QAction('Plot other Markers', self)
         self.plot_drift_action = QAction('Plot Drift', self)
+        self.subtract_offset_action = QAction('Subtract Offset', self)
         self.detect_surface_action = QAction('Auto Detect Surface', self)
         self.detect_ground_action = QAction('Auto Detect Ground', self)
         self.add_marker_action = QAction('New Marker', self)
@@ -197,6 +201,12 @@ class MainWindow(QMainWindow):
         action.setShortcut('Ctrl+P')
         action.setStatusTip('Previous Profile')
         action.triggered.connect(self._previous_triggered)
+
+        action = self.subtract_offset_action
+        action.setCheckable(True)
+        action.setChecked(True)
+        action.setStatusTip('Subtract Drift from Force Signal')
+        action.triggered.connect(self._subtract_offset_triggered)
 
         action = self.detect_surface_action
         action.setIcon(QIcon(':/icons/detect_surface.png'))
@@ -338,6 +348,7 @@ class MainWindow(QMainWindow):
         menu.addAction(self.show_log_action)
 
         menu = menubar.addMenu('&Profile')
+        menu.addAction(self.subtract_offset_action)
         menu.addAction(self.detect_surface_action)
         menu.addAction(self.detect_ground_action)
         menu.addAction(self.add_marker_action)
@@ -388,7 +399,9 @@ class MainWindow(QMainWindow):
         filtr = "pnt Files (*.pnt *.PNT)"
         opts = QFileDialog.ReadOnly
         startdir = self._last_directory
-        files, _ = QFileDialog.getOpenFileNames(self, cap, startdir, filtr, options=opts)
+        # FIX (temp)
+        #files, _ = QFileDialog.getOpenFileNames(self, cap, startdir, filtr, options=opts)
+        files, _ = QFileDialog.getOpenFileNames(self, "test", "/home/Documents", "*.pnt")
         if files:
             self.open_pnts(files)
 
@@ -518,6 +531,25 @@ class MainWindow(QMainWindow):
         # of method ``switch_profile``. The work is done there.
         self.profile_combobox.setCurrentIndex(i)
 
+    def _subtract_offset_triggered(self, checked):
+        doc = self.current_document
+
+        if doc is not None:
+            if self.subtract_offset_action.isChecked():
+                doc.profile.subtract_force_offset()
+            else:
+                doc.profile.reset_force_offset()
+
+        if doc is not None:
+            self.calc_drift()
+
+            doc.recalc_derivatives()
+
+        self.plot_canvas.set_document(self.current_document, self.airgap_action.isChecked())
+
+        self.plot_canvas.draw()
+        self.update()
+
     def _detect_ground_triggered(self):
         doc = self.current_document
         doc.profile.detect_ground()
@@ -607,6 +639,15 @@ class MainWindow(QMainWindow):
 
         self.stacked_widget.setCurrentIndex(1 if at_least_one else 0)
 
+        if doc is not None:
+            # doc.profile._force_offset = 0.0
+            # doc.profile._drift_offset = 0.0
+            if self.subtract_offset_action.isChecked():
+                doc.profile.subtract_force_offset()
+            else:
+                doc.profile.reset_force_offset()
+            doc.recalc_derivatives()
+
         self.sidebar.set_document(doc)
 
         if doc is not None:
@@ -639,6 +680,7 @@ class MainWindow(QMainWindow):
 
         if label in ('surface', 'drift_begin', 'drift_end'):
             self.calc_drift()
+            self._subtract_offset_triggered(self.subtract_offset_action.isChecked())
             self.plot_canvas.set_plot('force', 'drift', (doc._fit_x, doc._fit_y))
 
         if label in ('surface', 'ground'):
@@ -658,40 +700,12 @@ class MainWindow(QMainWindow):
             self.set_marker(name, value)
 
     def calc_drift(self):
-        p = self.current_document.profile
 
-        try:
-            begin = p.marker('drift_begin')
-            begin_label = 'Marker drift_begin'
-        except KeyError:
-            # Skip the first few values of profile for drift calculation
-            begin = p.samples.distance.iloc[10]
-            begin_label = 'Begin of Profile'
+        begin_label, end_label, x_fit, y_fit, drift, offset, noise = self.current_document.profile.calc_drift()
 
-        try:
-            end = p.marker('drift_end')
-            end_label = 'Marker drift_end'
-        except KeyError:
-            try:
-                end = p.marker('surface')
-                end_label = 'Marker surface'
-            except KeyError:
-                end = p.samples.distance.iloc[-1]
-                end_label = 'End of Profile'
-
-        log.debug('Calculating drift from {} to {}'.format(begin, end))
-
-        # Flip begin and end to make sure begin is always smaller then end
-        if end < begin:
-            begin, end = end, begin
-
-        drift_range = p.samples[p.samples.distance.between(begin, end)]
-
-        x_fit, y_fit, drift, offset, noise = snowmicropyn.tools.lin_fit(drift_range.distance,
-                                                                        drift_range.force)
         self.current_document._fit_x = x_fit
         self.current_document._fit_y = y_fit
-        self.current_document._dirft = drift
+        self.current_document._drift = drift
         self.current_document._offset = offset
         self.current_document._noise = noise
 

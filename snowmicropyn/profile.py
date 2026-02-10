@@ -12,6 +12,7 @@ from . import windowing
 from . import __version__, githash
 from . import detection
 from . import loewe2012
+from . import tools
 # to keep code for a new parameterization to a single file we import all modules available:
 from .parameterizations import *
 from .derivatives import parameterizations
@@ -150,6 +151,10 @@ class Profile(object):
         force_arr = np.asarray(pnt_samples) * factor
         stacked = np.column_stack([distance_arr, force_arr])
         self._samples = pd.DataFrame(stacked, columns=('distance', 'force'))
+
+        # define a force offset attribute
+        self._force_drift = 0.0
+        self._force_offset = 0.0
 
         self._ini = configparser.ConfigParser()
 
@@ -330,6 +335,93 @@ class Profile(object):
         """ Returns the samples. This is a pandas dataframe."""
         return self._samples
 
+
+    def calc_drift(self):
+        p = self
+
+        try:
+            begin = p.marker('drift_begin')
+            begin_label = 'Marker drift_begin'
+        except KeyError:
+            # Skip the first few values of profile for drift calculation
+            begin = p.samples.distance.iloc[10]
+            begin_label = 'Begin of Profile'
+
+        try:
+            end = p.marker('drift_end')
+            end_label = 'Marker drift_end'
+        except KeyError:
+            try:
+                end = p.marker('surface')
+                end_label = 'Marker surface'
+            except KeyError:
+                end = p.samples.distance.iloc[-1]
+                end_label = 'End of Profile'
+
+        log.debug('Calculating drift from {} to {}'.format(begin, end))
+
+        # Flip begin and end to make sure begin is always smaller then end
+        if end < begin:
+            begin, end = end, begin
+
+        drift_range = p.samples[p.samples.distance.between(begin, end)]
+
+        x_fit, y_fit, drift, offset, noise = tools.lin_fit(drift_range.distance,
+                                                                        drift_range.force)
+        self._fit_x = x_fit
+        self._fit_y = y_fit
+        self._dirft = drift
+        self._offset = offset
+        self._noise = noise
+
+        #self.sidebar.set_drift(begin_label, end_label, drift, offset, noise)
+        return begin_label, end_label, x_fit, y_fit, drift, offset, noise
+
+    def subtract_force_offset(self):
+        force = self._samples['force']
+
+        surface_at = self.marker("surface", fallback=0)
+        if surface_at == 0:
+            surface_at = self.detect_surface()
+
+        print("Surface at: ", surface_at)
+
+        if surface_at > 0:
+            idx = self._samples[self._samples['distance'] < surface_at].index
+
+            _, _, _, _, force_drift, force_offset, _ = self.calc_drift()
+
+            force_offset -= 0.015346 # mean value from RHOSSA calibration dataset
+            # force_drift = 0.0
+
+            log.info('Subtracting offset of {:.4f} N calculated from {} samples above surface marker at {:.2f} mm'.format(force_offset, len(idx), surface_at))
+            # subtract a linear baseline (drift * distance + offset) instead of a constant
+            distances = self._samples['distance']
+            baseline = distances * force_drift + force_offset
+            self._samples.loc[:, 'force'] = force - baseline
+
+            if self._force_drift == 0:
+                self._force_drift = force_drift
+            if self._force_offset == 0:
+                self._force_offset = force_offset
+
+
+    def reset_force_offset(self):
+        force = self._samples['force']
+        log.info('Resetting offset of {:.4f} N'.format(self._force_offset))
+        # Re-apply previously subtracted linear baseline (drift * distance + offset)
+        force = self._samples['force']
+        drift = self._force_drift
+        offset = self._force_offset
+        distances = self._samples['distance']
+        baseline = distances * drift + offset
+        self._samples.loc[:, 'force'] = force + baseline
+        self._force_drift = 0.0
+        self._force_offset = 0.0
+        print("reset")
+        log.info('Restored baseline (drift={:.6f}, offset={:.6f})'.format(drift, offset))
+
+
     @property
     def markers(self):
         """ Returns all markers on the profile (a dictionary).
@@ -477,7 +569,7 @@ class Profile(object):
             5) Data stretching: multiply by a factor (to match a nearby snow pit height)
             6) Adapt header lines
 
-        When the parameter ``file`` is not provided, the default name is used 
+        When the parameter ``file`` is not provided, the default name is used
         which is same as the pnt file from which the profile was loaded with a
         suffix `_samples_niviz` and the `csv` extension.
 
