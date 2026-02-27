@@ -399,9 +399,7 @@ class MainWindow(QMainWindow):
         filtr = "pnt Files (*.pnt *.PNT)"
         opts = QFileDialog.ReadOnly
         startdir = self._last_directory
-        # FIX (temp)
-        #files, _ = QFileDialog.getOpenFileNames(self, cap, startdir, filtr, options=opts)
-        files, _ = QFileDialog.getOpenFileNames(self, "test", "/home/Documents", "*.pnt")
+        files, _ = QFileDialog.getOpenFileNames(self, cap, startdir, filtr, options=opts)
         if files:
             self.open_pnts(files)
 
