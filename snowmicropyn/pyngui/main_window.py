@@ -1,4 +1,6 @@
 import logging
+import re
+from pathlib import Path
 import signal
 from os.path import expanduser, dirname, abspath, join
 from string import Template
@@ -7,6 +9,7 @@ import time
 from PyQt5.QtCore import QLocale, QRect, Qt, QSettings, QSize
 from PyQt5.QtGui import QIcon, QDoubleValidator, QValidator
 from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QApplication
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 
 import snowmicropyn
@@ -43,6 +46,7 @@ class MainWindow(QMainWindow):
         super().__init__(*args, **kwargs)
         self.setWindowTitle(APP_NAME)
 
+        self.changelog_dialog = ChangelogDialog()
         self.notify_dialog = NotificationDialog()
         self.marker_dialog = MarkerDialog(self)
         self.prefs_dialog = PreferencesDialog(parameterizations)
@@ -773,6 +777,67 @@ class NotificationDialog(QDialog):
         self.hint_label.setText(hint_text)
         self.content_textedit.setText('\n'.join([str(f) for f in files]))
         self.exec()
+
+
+class ChangelogDialog(QDialog):
+    SETTING_LAST_SEEN_VERSION = 'MainFrame/last_seen_version'
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(APP_NAME + " — What's New")
+
+        self.info_text = QPlainTextEdit()
+        self.info_text.setReadOnly(True)
+        self.info_text.setMinimumSize(600, 300)
+
+        screen = QApplication.primaryScreen().availableGeometry()
+        geo = self.frameGeometry()
+        geo.moveCenter(screen.center())
+        self.move(geo.topLeft())
+
+        self.checkbox = QCheckBox("Don't show this again")
+        self.checkbox.setChecked(False)
+
+        close_btn = QPushButton('Close')
+        close_btn.clicked.connect(self.accept)
+
+        # TODO: check when installed via pip without -e
+        changelog_path = Path(__file__).resolve().parent.parent.parent / "CHANGELOG.rst"
+        latest_changes = 'No release notes available.'
+
+        if changelog_path.exists():
+            with changelog_path.open(encoding='utf-8') as fh:
+                changelog_text = fh.read()
+                matches = list(re.finditer(r'(?m)^Version\s+\d+\.\d+\.\d+\s*$', changelog_text))
+                if matches:
+                    m0 = matches[0]
+                    start = m0.start()
+                    end = matches[1].start() if len(matches) > 1 else len(changelog_text)
+                    latest_changes = changelog_text[start:end].strip()
+
+        self.info_text.setPlainText(latest_changes)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.info_text)
+        layout.addWidget(self.checkbox)
+        layout.addWidget(close_btn, alignment=Qt.AlignRight)
+        self.setLayout(layout)
+
+        self.finished.connect(self._persist_choice)
+
+        self.setAttribute(Qt.WA_DeleteOnClose)
+
+    def _persist_choice(self, result):
+        # If "Don't show again" is checked, record the current version
+        # so the dialog won't reappear until a newer version is installed.
+        if self.checkbox.isChecked():
+            QSettings().setValue(self.SETTING_LAST_SEEN_VERSION, VERSION)
+
+    def show(self):
+        """Show the dialog only if the version has changed since it was last dismissed."""
+        last_seen = QSettings().value(self.SETTING_LAST_SEEN_VERSION, defaultValue='', type=str)
+        if last_seen != VERSION:
+            super().show()
 
 
 class MarkerDialog(QDialog):
