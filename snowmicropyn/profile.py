@@ -148,9 +148,8 @@ class Profile(object):
         # Create a pandas dataframe with distance and force
         distance_arr = np.arange(0, self._samples_count) * self._spatial_resolution
         factor = self.pnt_header_value(Pnt.Header.SAMPLES_CONVFACTOR_FORCE)
-        force_arr = np.asarray(pnt_samples) * factor
-        stacked = np.column_stack([distance_arr, force_arr])
-        self._samples = pd.DataFrame(stacked, columns=('distance', 'force'))
+        force_arr = np.asarray(pnt_samples, dtype=np.float64) * factor
+        self._samples = pd.DataFrame({'distance': distance_arr, 'force': force_arr})
 
         # define a force offset attribute
         self._force_drift = 0.0

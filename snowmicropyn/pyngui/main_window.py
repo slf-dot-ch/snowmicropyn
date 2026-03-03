@@ -543,7 +543,7 @@ class MainWindow(QMainWindow):
 
             doc.recalc_derivatives()
 
-        self.plot_canvas.set_document(self.current_document, self.airgap_action.isChecked())
+        self.plot_canvas.refresh_data(self.current_document, self.airgap_action.isChecked())
 
         self.plot_canvas.draw()
         self.update()
@@ -558,10 +558,7 @@ class MainWindow(QMainWindow):
         doc = self.current_document
         doc.profile.detect_surface()
         self.set_marker('surface', doc.profile.surface)
-        self.plot_canvas.set_document(self.current_document, self.airgap_action.isChecked())
-        self.plot_canvas.draw()
         self.superpos_canvas._update_on_marker(doc)
-        self.update()
 
     @staticmethod
     def _about_triggered():
@@ -655,7 +652,7 @@ class MainWindow(QMainWindow):
                 doc.recalc_derivatives()
             end = time.time()
             print("timing ", end - start)
-            
+
         self.plot_canvas.set_document(doc, self.airgap_action.isChecked())
         self.plot_canvas.draw()
         # Reset toolbar history
@@ -674,21 +671,20 @@ class MainWindow(QMainWindow):
         p.set_marker(label, value)
 
         self.sidebar.set_marker(label, value)
-        self.plot_canvas.set_marker(label, value)
 
         if label in ('surface', 'drift_begin', 'drift_end'):
             self.calc_drift()
-            self._subtract_offset_triggered(self.subtract_offset_action.isChecked())
-            self.plot_canvas.set_plot('force', 'drift', (doc._fit_x, doc._fit_y))
-
-        if label in ('surface', 'ground'):
+            if self.subtract_offset_action.isChecked():
+                doc.profile.subtract_force_offset()
+            else:
+                doc.profile.reset_force_offset()
             doc.recalc_derivatives()
-            for key, par in snowmicropyn.params.items():
-                self.plot_canvas.set_plot('density', 'density_' + key,
-                    (doc.derivatives[key]['distance'], doc.derivatives[key][par.shortname + '_density']))
-                if hasattr(par, 'ssa'):
-                    self.plot_canvas.set_plot('ssa', 'ssa_' + key,
-                        (doc.derivatives[key]['distance'], doc.derivatives[key][par.shortname + '_ssa']))
+            self.plot_canvas.refresh_data(doc, self.airgap_action.isChecked())
+        elif label == 'ground':
+            doc.recalc_derivatives()
+            self.plot_canvas.refresh_data(doc, self.airgap_action.isChecked())
+        else:
+            self.plot_canvas.set_marker(label, value)
 
         self.plot_canvas.draw()
 
