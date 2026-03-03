@@ -780,11 +780,11 @@ class NotificationDialog(QDialog):
 
 
 class ChangelogDialog(QDialog):
-    SETTING = 'MainFrame/show_info'
+    SETTING_LAST_SEEN_VERSION = 'MainFrame/last_seen_version'
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(APP_NAME + ' — Info')
+        self.setWindowTitle(APP_NAME + " — What's New")
 
         self.info_text = QPlainTextEdit()
         self.info_text.setReadOnly(True)
@@ -795,16 +795,17 @@ class ChangelogDialog(QDialog):
         geo.moveCenter(screen.center())
         self.move(geo.topLeft())
 
-        self.checkbox = QCheckBox('Show this message on startup')
-        self.checkbox.setChecked(True)
+        self.checkbox = QCheckBox("Don't show this again")
+        self.checkbox.setChecked(False)
 
         close_btn = QPushButton('Close')
         close_btn.clicked.connect(self.accept)
 
         # TODO: check when installed via pip without -e
         changelog_path = Path(__file__).resolve().parent.parent.parent / "CHANGELOG.rst"
+        latest_changes = 'No release notes available.'
 
-        if changelog_path is not None:
+        if changelog_path.exists():
             with changelog_path.open(encoding='utf-8') as fh:
                 changelog_text = fh.read()
                 matches = list(re.finditer(r'(?m)^Version\s+\d+\.\d+\.\d+\s*$', changelog_text))
@@ -827,13 +828,15 @@ class ChangelogDialog(QDialog):
         self.setAttribute(Qt.WA_DeleteOnClose)
 
     def _persist_choice(self, result):
-        is_checked = self.checkbox.isChecked()
-        QSettings().setValue(self.SETTING, is_checked)
-
+        # If "Don't show again" is checked, record the current version
+        # so the dialog won't reappear until a newer version is installed.
+        if self.checkbox.isChecked():
+            QSettings().setValue(self.SETTING_LAST_SEEN_VERSION, VERSION)
 
     def show(self):
-        show_info = QSettings().value(ChangelogDialog.SETTING, defaultValue=True, type=bool)
-        if show_info:
+        """Show the dialog only if the version has changed since it was last dismissed."""
+        last_seen = QSettings().value(self.SETTING_LAST_SEEN_VERSION, defaultValue='', type=str)
+        if last_seen != VERSION:
             super().show()
 
 
