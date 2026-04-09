@@ -39,7 +39,7 @@ class PlotCanvas(FigureCanvas):
 
     LABEL_FONT_SIZE = 14
     TICKS_FONT_SIZE = 12
-    PLOT_ALPHA = 0.75
+    PLOT_ALPHA = 0.65
 
     # Layout mode: 'legacy', 'vertical', or 'profile'
     # 'legacy': all plots overlaid on one axes (twinx for SSA and density)
@@ -496,6 +496,11 @@ class PlotCanvas(FigureCanvas):
                 v = pos.min()
                 if min_pos is None or v < min_pos:
                     min_pos = v
+
+        if min_pos is not None:
+            if min_pos < self.FORCE_LOG_MIN_FALLBACK:
+                min_pos = self.FORCE_LOG_MIN_FALLBACK
+
         return min_pos if min_pos is not None else self.FORCE_LOG_MIN_FALLBACK
 
     def set_limits(self):
