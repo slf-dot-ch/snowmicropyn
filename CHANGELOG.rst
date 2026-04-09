@@ -28,7 +28,9 @@ optimised plotting backend.
   objects instead of recreating axes on every document switch. Added
   ``refresh_data()`` for in-place updates that preserve the current
   zoom state.
-- Added new plot layouts for better data overview.
+- Added new plot layouts for better data overview, and a user-facing
+  ``Force Log Scale`` toggle to switch the force axis between logarithmic
+  and linear scaling.
 - Setting surface or ground markers no longer resets the plot zoom.
 - Increased default line width for better visibility.
 - Fixed file dialog options in profile open dialog.
