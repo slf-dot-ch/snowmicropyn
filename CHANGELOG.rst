@@ -9,9 +9,6 @@ This version brings major performance improvements across the board:
 faster file loading, parallelised derivative computation, and an
 optimised plotting backend.
 
-- Replaced matplotlib plotting backend with pyqtgraph for significantly
-  faster and more responsive plot rendering. OpenGL acceleration is
-  enabled and automatic downsampling is used for large profiles.
 - Parallelised Löwe 2012 shot noise model computation using a persistent
   process pool. Parameterisations sharing the same window size and
   overlap now reuse a single Löwe 2012 result, and results are cached
@@ -31,6 +28,9 @@ optimised plotting backend.
   objects instead of recreating axes on every document switch. Added
   ``refresh_data()`` for in-place updates that preserve the current
   zoom state.
+- Added new plot layouts for better data overview, and a user-facing
+  ``Force Log Scale`` toggle to switch the force axis between logarithmic
+  and linear scaling.
 - Setting surface or ground markers no longer resets the plot zoom.
 - Increased default line width for better visibility.
 - Fixed file dialog options in profile open dialog.
