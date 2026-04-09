@@ -303,8 +303,8 @@ class MainWindow(QMainWindow):
         layout_group.addAction(action)
         action.triggered.connect(lambda: self.plot_canvas.set_layout_mode('profile'))
 
-        self.plot_canvas.set_layout_mode(saved_mode)
         self.plot_canvas.force_log_scale = self.force_log_scale_action.isChecked()
+        self.plot_canvas.set_layout_mode(saved_mode)
 
         action = self.add_marker_action
         action.setShortcut('Ctrl+M')
