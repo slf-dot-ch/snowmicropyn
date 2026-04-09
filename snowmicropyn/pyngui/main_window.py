@@ -39,6 +39,8 @@ class MainWindow(QMainWindow):
     SETTING_PLOT_DRIFT = 'MainFrame/plot/drift'
     SETTING_PLOT_DENSITY_ROOT = 'MainFrame/plot/density_'
     SETTING_PLOT_SSA_ROOT = 'MainFrame/plot/ssa_'
+    SETTING_LAYOUT_MODE = 'MainFrame/plot/layout_mode'
+    SETTING_FORCE_LOG_SCALE = 'MainFrame/plot/force_log_scale'
 
     DEFAULT_GEOMETRY = QRect(100, 100, 800, 600)
 
@@ -111,6 +113,10 @@ class MainWindow(QMainWindow):
         self.plot_surface_and_ground_action = QAction('Plot Surface && Ground', self)
         self.plot_markers_action = QAction('Plot other Markers', self)
         self.plot_drift_action = QAction('Plot Drift', self)
+        self.force_log_scale_action = QAction('Force Log Scale', self)
+        self.layout_legacy_action = QAction('Legacy (overlaid)', self)
+        self.layout_vertical_action = QAction('Stacked', self)
+        self.layout_profile_action = QAction('Profile', self)
         self.subtract_offset_action = QAction('Subtract Offset', self)
         self.detect_surface_action = QAction('Auto Detect Surface', self)
         self.detect_ground_action = QAction('Auto Detect Ground', self)
@@ -263,6 +269,43 @@ class MainWindow(QMainWindow):
         enabled = QSettings().value(setting, defaultValue=False, type=bool)
         action.setChecked(enabled)
 
+        action = self.force_log_scale_action
+        action.setShortcut('Alt+L')
+        action.setStatusTip('Toggle logarithmic force axis')
+        action.setCheckable(True)
+        setting = MainWindow.SETTING_FORCE_LOG_SCALE
+        enabled = QSettings().value(setting, defaultValue=False, type=bool)
+        action.setChecked(enabled)
+        action.triggered.connect(lambda checked: self.plot_canvas.set_force_log_scale(checked))
+
+        layout_group = QActionGroup(self)
+        layout_group.setExclusive(True)
+        saved_mode = QSettings().value(MainWindow.SETTING_LAYOUT_MODE, defaultValue='vertical', type=str)
+
+        action = self.layout_legacy_action
+        action.setStatusTip('All plots overlaid on one axis')
+        action.setCheckable(True)
+        action.setChecked(saved_mode == 'legacy')
+        layout_group.addAction(action)
+        action.triggered.connect(lambda: self.plot_canvas.set_layout_mode('legacy'))
+
+        action = self.layout_vertical_action
+        action.setStatusTip('Force, density, SSA stacked vertically')
+        action.setCheckable(True)
+        action.setChecked(saved_mode == 'vertical')
+        layout_group.addAction(action)
+        action.triggered.connect(lambda: self.plot_canvas.set_layout_mode('vertical'))
+
+        action = self.layout_profile_action
+        action.setStatusTip('Force, density, SSA side by side, depth on Y')
+        action.setCheckable(True)
+        action.setChecked(saved_mode == 'profile')
+        layout_group.addAction(action)
+        action.triggered.connect(lambda: self.plot_canvas.set_layout_mode('profile'))
+
+        self.plot_canvas.set_layout_mode(saved_mode)
+        self.plot_canvas.force_log_scale = self.force_log_scale_action.isChecked()
+
         action = self.add_marker_action
         action.setShortcut('Ctrl+M')
         action.setIcon(QIcon(':/icons/marker_add.png'))
@@ -346,6 +389,13 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addAction(self.plot_drift_action)
         menu.addSeparator()
+        menu.addAction(self.force_log_scale_action)
+        menu.addSeparator()
+        layout_menu = menu.addMenu('Layout')
+        layout_menu.addAction(self.layout_legacy_action)
+        layout_menu.addAction(self.layout_vertical_action)
+        layout_menu.addAction(self.layout_profile_action)
+        menu.addSeparator()
         menu.addAction(self.next_action)
         menu.addAction(self.previous_action)
         menu.addSeparator()
@@ -378,6 +428,12 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.saveall_action)
         toolbar.addAction(self.airgap_action)
         toolbar.addAction(self.superpos_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.force_log_scale_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.layout_legacy_action)
+        toolbar.addAction(self.layout_vertical_action)
+        toolbar.addAction(self.layout_profile_action)
         toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
 
     def closeEvent(self, event):
@@ -388,6 +444,8 @@ class MainWindow(QMainWindow):
         QSettings().setValue(MainWindow.SETTING_PLOT_SURFACE_AND_GROUND, self.plot_surface_and_ground_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_MARKERS, self.plot_markers_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_DRIFT, self.plot_drift_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_FORCE_LOG_SCALE, self.force_log_scale_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_LAYOUT_MODE, self.plot_canvas.layout_mode)
         for key, par in self.params.items():
             QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_ROOT + key, self.plot_density_actions[key].isChecked())
             if hasattr(par, 'ssa'):
