@@ -147,6 +147,4 @@ def calc(samples, window, overlap):
 
     if np.isinf(out_lamb).any():
         log.warning('Constant signal - could not compute intensity of Poisson process')
-        if len(log.handlers) > 1: # we are in the GUI
-            log.handlers[1].toTop()
     return result

@@ -8,6 +8,7 @@ import os
 import atexit
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
+import numpy as np
 
 
 def _compute_loewe2012(samples, window_size, overlap):
@@ -106,17 +107,26 @@ class Document:
 
         missing_groups = [g for g in group_keys if g not in self._loewe_cache_results]
 
+        def _store_and_warn(key, result):
+            self._loewe_cache_results[key] = result
+            if np.isinf(result['L2012_lambda']).any():
+                loewe2012.log.warning(
+                    'Constant signal - could not compute intensity of Poisson process'
+                )
+                if len(loewe2012.log.handlers) > 1:  # we are in the GUI
+                    loewe2012.log.handlers[1].toTop()
+
         # For one group, avoid process/serialization overhead and run inline.
         if len(missing_groups) == 1:
             ws, ov = missing_groups[0]
-            self._loewe_cache_results[(ws, ov)] = _compute_loewe2012(samples, ws, ov)
+            _store_and_warn((ws, ov), _compute_loewe2012(samples, ws, ov))
         elif len(missing_groups) > 1:
             executor = _get_executor()
             futures = {}
             for (ws, ov) in missing_groups:
                 futures[(ws, ov)] = executor.submit(_compute_loewe2012, samples, ws, ov)
             for grp, future in futures.items():
-                self._loewe_cache_results[grp] = future.result()
+                _store_and_warn(grp, future.result())
 
         for grp in group_keys:
             loewe_results[grp] = self._loewe_cache_results[grp]
