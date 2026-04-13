@@ -30,6 +30,16 @@ log = logging.getLogger('snowmicropyn')
 signal.signal(signal.SIGINT, signal.SIG_DFL)  # Handle Ctrl+C
 
 
+class StayOpenMenu(QMenu):
+    """A QMenu that stays open when a checkable action is toggled."""
+    def mouseReleaseEvent(self, event):
+        action = self.activeAction()
+        if action and action.isCheckable():
+            action.trigger()
+            return
+        super().mouseReleaseEvent(event)
+
+
 class MainWindow(QMainWindow):
     SETTING_LAST_DIRECTORY = 'MainFrame/last_directory'
     SETTING_GEOMETRY = 'MainFrame/geometry'
@@ -356,7 +366,8 @@ class MainWindow(QMainWindow):
         menu = menubar.addMenu('&View')
         menu.addAction(self.plot_smpsignal_action)
 
-        density_menu = menu.addMenu('Plot &Density')
+        density_menu = StayOpenMenu('Plot &Density', menu)
+        menu.addMenu(density_menu)
         for key, par in self.params.items():
             #action.setShortcut('Alt+D,P')
             action = self.plot_density_actions[key]
@@ -368,7 +379,8 @@ class MainWindow(QMainWindow):
             action.setChecked(enabled)
             density_menu.addAction(action)
 
-        ssa_menu = menu.addMenu('Plot &SSA')
+        ssa_menu = StayOpenMenu('Plot &SSA', menu)
+        menu.addMenu(ssa_menu)
         for key, par in self.params.items():
             if not hasattr(par, 'ssa'):
                 continue
