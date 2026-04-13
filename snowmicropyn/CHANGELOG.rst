@@ -3,11 +3,12 @@ snowmicropyn Changelog
 
 Version 1.4.0
 ----------
-2026-03-03
+2026-04-13
 
 This version brings major performance improvements across the board:
 faster file loading, parallelised derivative computation, and an
-optimised plotting backend.
+optimised plotting backend. In addition, it adds several UI usability
+improvements and small stability fixes in plotting and packaging.
 
 - Parallelised Löwe 2012 shot noise model computation using a persistent
   process pool. Parameterisations sharing the same window size and
@@ -31,6 +32,14 @@ optimised plotting backend.
 - Added new plot layouts for better data overview, and a user-facing
   ``Force Log Scale`` toggle to switch the force axis between logarithmic
   and linear scaling.
+  - Added a persistent stay-open behavior for checkable ``Plot Density``
+  and ``Plot SSA`` dropdown menus in the main window.
+- Added context menu support in the sidebar to copy displayed values.
+- Added an air-gap toggle update path for the superposition canvas so
+  profiles are refreshed consistently when toggling air-gap visibility.
+- Fixed zoom/pan behavior in stacked layouts: hidden axes are now
+  excluded from navigation handling, and force log/linear scale changes
+  no longer overwrite user zoom unless the scale actually changes.
 - Setting surface or ground markers no longer resets the plot zoom.
 - Increased default line width for better visibility.
 - Fixed file dialog options in profile open dialog.

@@ -11,11 +11,35 @@ welcome.
 Installing
 ----------
 
-Install and update using ``pip``:
+Use a virtual environment (recommended), then install with either
+``pip`` or ``uv``.
+
+Using ``pip``
 
 .. code-block:: console
 
-    pip install -U snowmicropyn
+    python -m venv .venv
+    source .venv/bin/activate
+    python -m pip install snowmicropyn
+
+To upgrade in the same environment:
+
+.. code-block:: console
+
+    python -m pip install --upgrade snowmicropyn
+
+Using ``uv``
+
+.. code-block:: console
+
+    uv venv
+    uv pip install snowmicropyn
+
+To upgrade in the same environment:
+
+.. code-block:: console
+
+    uv pip install --upgrade snowmicropyn
 
 A Simple Example
 ----------------
