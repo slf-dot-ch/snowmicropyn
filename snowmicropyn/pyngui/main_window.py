@@ -876,7 +876,7 @@ class ChangelogDialog(QDialog):
         close_btn.clicked.connect(self.accept)
 
         # TODO: check when installed via pip without -e
-        changelog_path = Path(__file__).resolve().parent.parent.parent / "CHANGELOG.rst"
+        changelog_path = Path(__file__).resolve().parent.parent / "CHANGELOG.rst"
         latest_changes = 'No release notes available.'
 
         if changelog_path.exists():
