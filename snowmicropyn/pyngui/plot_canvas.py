@@ -375,9 +375,12 @@ class PlotCanvas(FigureCanvas):
         if n == 0:
             return
 
-        # Hide all axes first
+        # Hide all axes first and disable their navigation so the
+        # zoom/pan tool does not target them while they overlap a
+        # repositioned visible axis.
         for name in self._axes_order:
             self._axes[name].set_visible(False)
+            self._axes[name].set_navigate(False)
 
         if self.layout_mode == 'vertical':
             left, right = 0.1, 0.95
@@ -390,6 +393,7 @@ class PlotCanvas(FigureCanvas):
                 y_bottom = top - (i + 1) * ax_height - i * hspace
                 self._axes[name].set_position([left, y_bottom, right - left, ax_height])
                 self._axes[name].set_visible(True)
+                self._axes[name].set_navigate(True)
 
                 # Show x-axis label only on the bottom visible axes
                 if name == visible[-1]:
@@ -411,6 +415,7 @@ class PlotCanvas(FigureCanvas):
                 x_left = left + i * (ax_width + wspace)
                 self._axes[name].set_position([x_left, bottom, ax_width, top - bottom])
                 self._axes[name].set_visible(True)
+                self._axes[name].set_navigate(True)
 
                 # Show y-axis label only on the leftmost visible axes
                 if name == visible[0]:
@@ -449,13 +454,17 @@ class PlotCanvas(FigureCanvas):
         }
         self._update_axes_layout(axes_visible)
 
-        # Apply force log/linear scale
+        # Apply force log/linear scale (only when it actually changes,
+        # because set_xscale/set_yscale marks limits as stale and
+        # triggers autoscaling, which would overwrite a user zoom).
         force_scale = 'log' if self.force_log_scale else 'linear'
         if self.layout_mode == 'profile':
-            self._axes['force'].set_xscale(force_scale)
+            if self._axes['force'].get_xscale() != force_scale:
+                self._axes['force'].set_xscale(force_scale)
             self._axes['force'].xaxis.set_visible(visibility['plot_force'])
         else:
-            self._axes['force'].set_yscale(force_scale)
+            if self._axes['force'].get_yscale() != force_scale:
+                self._axes['force'].set_yscale(force_scale)
             self._axes['force'].yaxis.set_visible(visibility['plot_force'])
         if self.layout_mode == 'legacy':
             self._axes['ssa'].yaxis.set_visible(visibility['plot_ssa'])
