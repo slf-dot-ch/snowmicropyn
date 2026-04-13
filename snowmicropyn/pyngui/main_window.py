@@ -487,6 +487,8 @@ class MainWindow(QMainWindow):
         for f in files:
             p = snowmicropyn.Profile.load(f)
             doc = Document(p)
+            doc.profile.detect_surface()
+            doc.profile.subtract_force_offset()
             new_docs.append(doc)
             self.superpos_canvas.add_doc(doc)
         self.documents.extend(new_docs)
@@ -789,6 +791,8 @@ class MainWindow(QMainWindow):
         self.superpos_canvas._switch_airgap(self.airgap_action.isChecked())
 
     def _air_gap(self, checked):
+        for doc in self.documents:
+            self.superpos_canvas._update_on_marker(doc)
         self.plot_canvas.set_document(self.current_document, checked)
         self.plot_canvas.draw()
         self.superpos_canvas._switch_airgap(checked)
