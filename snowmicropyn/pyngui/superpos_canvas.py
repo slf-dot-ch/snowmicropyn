@@ -21,12 +21,12 @@ class SuperposCanvas(FigureCanvas):
 
         self.axes = self.figure.add_axes([0.1, 0.1, 0.85, 0.80])
         self.axes.set_title('Superposition')
-        self.axes.xaxis.set_label_text('Snow Depth [mm]')
-        self.axes.yaxis.set_label_text('Force [N]')
+        self.axes.xaxis.set_label_text('Snow Depth / mm')
+        self.axes.yaxis.set_label_text('Force / N')
         self.airgap_axes = self.figure.add_axes([0.1, 0.1, 0.85, 0.80])
         self.airgap_axes.set_title('Superposition with air gap hidden')
-        self.airgap_axes.xaxis.set_label_text('Snow Depth [mm]')
-        self.airgap_axes.yaxis.set_label_text('Force [N]')
+        self.airgap_axes.xaxis.set_label_text('Snow Depth / mm')
+        self.airgap_axes.yaxis.set_label_text('Force / N')
         #self.airgap_axes.autoscale(enable=True, axis='x', tight=True)
         self.airgap_axes.set_forward_navigation_events(True)
 

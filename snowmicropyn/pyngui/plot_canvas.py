@@ -86,17 +86,17 @@ class PlotCanvas(FigureCanvas):
         """Create all axes and pre-allocate Line2D objects. Called once."""
         if self.layout_mode == 'legacy':
             ax_force = self.figure.add_axes([0.1, 0.1, 0.72, 0.85])
-            ax_force.xaxis.set_label_text('Snow Depth [mm]')
+            ax_force.xaxis.set_label_text('Snow Depth / mm')
             ax_force.xaxis.label.set_size(self.LABEL_FONT_SIZE)
             ax_force.xaxis.set_tick_params(labelsize=self.TICKS_FONT_SIZE)
-            ax_force.yaxis.label.set_text('Force [N]')
+            ax_force.yaxis.label.set_text('Force / N')
             ax_force.yaxis.label.set_color(self.COLORS['label_force'])
             ax_force.yaxis.label.set_size(self.LABEL_FONT_SIZE)
             ax_force.yaxis.set_tick_params(labelsize=self.TICKS_FONT_SIZE)
             self._axes['force'] = ax_force
 
             ax_ssa = ax_force.twinx()
-            ax_ssa.yaxis.label.set_text('SSA [$m^2/kg$]')
+            ax_ssa.yaxis.label.set_text('SSA / (m$^2$/kg)')
             ax_ssa.yaxis.label.set_color(self.COLORS['label_ssa'])
             ax_ssa.yaxis.tick_right()
             ax_ssa.yaxis.set_label_position('right')
@@ -105,7 +105,7 @@ class PlotCanvas(FigureCanvas):
             self._axes['ssa'] = ax_ssa
 
             ax_density = ax_force.twinx()
-            ax_density.yaxis.label.set_text('Density [$kg/m^3$]')
+            ax_density.yaxis.label.set_text('Density / (kg/m$^3$)')
             ax_density.yaxis.label.set_color(self.COLORS['label_density'])
             ax_density.yaxis.tick_right()
             ax_density.yaxis.set_label_position('right')
@@ -115,7 +115,7 @@ class PlotCanvas(FigureCanvas):
 
         elif self.layout_mode == 'vertical':
             ax_force = self.figure.add_subplot(3, 1, 1)
-            ax_force.yaxis.label.set_text('Force [N]')
+            ax_force.yaxis.label.set_text('Force / N')
             ax_force.yaxis.label.set_color(self.COLORS['label_force'])
             ax_force.yaxis.label.set_size(self.LABEL_FONT_SIZE)
             ax_force.yaxis.set_tick_params(labelsize=self.TICKS_FONT_SIZE)
@@ -123,7 +123,7 @@ class PlotCanvas(FigureCanvas):
             self._axes['force'] = ax_force
 
             ax_density = self.figure.add_subplot(3, 1, 2, sharex=ax_force)
-            ax_density.yaxis.label.set_text('Density [$kg/m^3$]')
+            ax_density.yaxis.label.set_text('Density / (kg/m$^3$)')
             ax_density.yaxis.label.set_color(self.COLORS['label_density'])
             ax_density.yaxis.label.set_size(self.LABEL_FONT_SIZE)
             ax_density.yaxis.set_tick_params(labelsize=self.TICKS_FONT_SIZE)
@@ -131,7 +131,7 @@ class PlotCanvas(FigureCanvas):
             self._axes['density'] = ax_density
 
             ax_ssa = self.figure.add_subplot(3, 1, 3, sharex=ax_force)
-            ax_ssa.yaxis.label.set_text('SSA [$m^2/kg$]')
+            ax_ssa.yaxis.label.set_text('SSA / (m$^2$/kg)')
             ax_ssa.yaxis.label.set_color(self.COLORS['label_ssa'])
             ax_ssa.yaxis.label.set_size(self.LABEL_FONT_SIZE)
             ax_ssa.yaxis.set_tick_params(labelsize=self.TICKS_FONT_SIZE)
@@ -140,7 +140,7 @@ class PlotCanvas(FigureCanvas):
 
         elif self.layout_mode == 'profile':
             ax_force = self.figure.add_subplot(1, 3, 1)
-            ax_force.xaxis.label.set_text('Force [N]')
+            ax_force.xaxis.label.set_text('Force / N')
             ax_force.xaxis.label.set_color(self.COLORS['label_force'])
             ax_force.xaxis.label.set_size(self.LABEL_FONT_SIZE)
             ax_force.xaxis.set_tick_params(labelsize=self.TICKS_FONT_SIZE)
@@ -149,7 +149,7 @@ class PlotCanvas(FigureCanvas):
             self._axes['force'] = ax_force
 
             ax_density = self.figure.add_subplot(1, 3, 2, sharey=ax_force)
-            ax_density.xaxis.label.set_text('Density [$kg/m^3$]')
+            ax_density.xaxis.label.set_text('Density / (kg/m$^3$)')
             ax_density.xaxis.label.set_color(self.COLORS['label_density'])
             ax_density.xaxis.label.set_size(self.LABEL_FONT_SIZE)
             ax_density.xaxis.set_tick_params(labelsize=self.TICKS_FONT_SIZE)
@@ -157,7 +157,7 @@ class PlotCanvas(FigureCanvas):
             self._axes['density'] = ax_density
 
             ax_ssa = self.figure.add_subplot(1, 3, 3, sharey=ax_force)
-            ax_ssa.xaxis.label.set_text('SSA [$m^2/kg$]')
+            ax_ssa.xaxis.label.set_text('SSA / (m$^2$/kg)')
             ax_ssa.xaxis.label.set_color(self.COLORS['label_ssa'])
             ax_ssa.xaxis.label.set_size(self.LABEL_FONT_SIZE)
             ax_ssa.xaxis.set_tick_params(labelsize=self.TICKS_FONT_SIZE)
@@ -397,7 +397,7 @@ class PlotCanvas(FigureCanvas):
 
                 # Show x-axis label only on the bottom visible axes
                 if name == visible[-1]:
-                    self._axes[name].xaxis.set_label_text('Snow Depth [mm]')
+                    self._axes[name].xaxis.set_label_text('Snow Depth / mm')
                     self._axes[name].xaxis.label.set_size(self.LABEL_FONT_SIZE)
                     self._axes[name].tick_params(axis='x', labelbottom=True)
                 else:
@@ -419,7 +419,7 @@ class PlotCanvas(FigureCanvas):
 
                 # Show y-axis label only on the leftmost visible axes
                 if name == visible[0]:
-                    self._axes[name].yaxis.set_label_text('Snow Depth [mm]')
+                    self._axes[name].yaxis.set_label_text('Snow Depth / mm')
                     self._axes[name].yaxis.label.set_size(self.LABEL_FONT_SIZE)
                     self._axes[name].tick_params(axis='y', labelleft=True)
                 else:
