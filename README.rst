@@ -11,11 +11,45 @@ welcome.
 Installing
 ----------
 
-Install and update using ``pip``:
+Use a virtual environment (recommended), then install with either
+``pip`` or ``uv``.
+
+Using ``pip``
 
 .. code-block:: console
 
-    pip install -U snowmicropyn
+    python -m venv .venv
+    source .venv/bin/activate
+    python -m pip install snowmicropyn
+
+To upgrade in the same environment:
+
+.. code-block:: console
+
+    python -m pip install --upgrade snowmicropyn
+
+Using ``uv``
+
+.. code-block:: console
+
+    uv venv
+    uv pip install snowmicropyn
+
+To upgrade in the same environment:
+
+.. code-block:: console
+
+    uv pip install --upgrade snowmicropyn
+
+Editable install (development)
+
+.. code-block:: console
+
+    git clone https://github.com/slf-dot-ch/snowmicropyn.git
+    cd snowmicropyn
+    python -m venv .venv
+    source .venv/bin/activate
+    python -m pip install -e .
 
 A Simple Example
 ----------------
@@ -42,6 +76,6 @@ To get in touch, please write to snowmicropen@slf.ch.
 
 
 .. _SLF: https://www.slf.ch
-.. _SnowMicroPen: https://www.slf.ch/en/services-and-products/research-instruments/snowmicropen-r-smp4-version.html
+.. _SnowMicroPen: https://www.slf.ch/en/about-the-slf/instrumented-field-sites-and-laboratories/snow-instruments/snowmicropenr/
 .. _GPL: https://www.gnu.org/licenses/gpl-3.0.en.html
 .. _documentation: https://snowmicropyn.readthedocs.io/

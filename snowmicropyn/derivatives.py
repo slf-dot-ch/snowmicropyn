@@ -83,13 +83,35 @@ class Derivatives:
         :param shotnoise_dataframe: A pandas dataframe containing shot noise model values.
         :return: A pandas dataframe with the columns distance, density and ssa.
         """
-        result = []
-        for index, row in shotnoise_dataframe.iterrows():
-            density, ssa = self.calc_step(row.force_median, row.L2012_L, row.L2012_lambda,
-                row.L2012_f0, row.L2012_delta)
-            result.append((row.distance, density, ssa))
-        return pd.DataFrame(result, columns=['distance', self.shortname + '_density',
-            self.shortname + '_ssa'])
+        distance = shotnoise_dataframe['distance'].to_numpy()
+        force_median = shotnoise_dataframe['force_median'].to_numpy()
+        element_size = shotnoise_dataframe['L2012_L'].to_numpy()
+        lamb = shotnoise_dataframe['L2012_lambda'].to_numpy()
+        f0 = shotnoise_dataframe['L2012_f0'].to_numpy()
+        delta = shotnoise_dataframe['L2012_delta'].to_numpy()
+
+        try:
+            density = self.density(force_median, element_size, lamb, f0, delta)
+            if hasattr(self, 'ssa'):
+                ssa = self.ssa(density, force_median, element_size, lamb, f0, delta)
+            else:
+                ssa = np.full_like(density, np.nan, dtype=float)
+
+            return pd.DataFrame({
+                'distance': distance,
+                self.shortname + '_density': np.asarray(density),
+                self.shortname + '_ssa': np.asarray(ssa),
+            })
+        except Exception:
+            # Backward-compatible fallback for custom parameterizations that
+            # only support scalar inputs.
+            result = []
+            for index, row in shotnoise_dataframe.iterrows():
+                density_i, ssa_i = self.calc_step(row.force_median, row.L2012_L,
+                    row.L2012_lambda, row.L2012_f0, row.L2012_delta)
+                result.append((row.distance, density_i, ssa_i))
+            return pd.DataFrame(result, columns=['distance', self.shortname + '_density',
+                self.shortname + '_ssa'])
 
     def calc(self, samples):
         """Calculate ssa and density from a pandas dataframe containing the samples
@@ -101,12 +123,6 @@ class Derivatives:
         :return: A pandas dataframe with the columns distance, density and ssa.
         """
         sn = snowmicropyn.loewe2012.calc(samples, self.window_size, self.overlap)
-        result = []
-        for index, row in sn.iterrows():
-            density, ssa = self.calc_step(row.force_median, row.L2012_L, row.L2012_lambda,
-                row.L2012_f0, row.L2012_delta)
-            result.append((row.distance, density, ssa))
-        return pd.DataFrame(result, columns=['distance', self.shortname + '_density',
-            self.shortname + '_ssa'])
+        return self.calc_from_loewe2012(sn)
 
 parameterizations = Parameterizations() # access throughout SMPyn via this

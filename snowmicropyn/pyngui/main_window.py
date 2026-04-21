@@ -1,16 +1,20 @@
 import logging
+import re
+from pathlib import Path
+import signal
 from os.path import expanduser, dirname, abspath, join
 from string import Template
+import time
 
 from PyQt5.QtCore import QLocale, QRect, Qt, QSettings, QSize
 from PyQt5.QtGui import QIcon, QDoubleValidator, QValidator
 from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QApplication
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 
 import snowmicropyn
 import snowmicropyn.pyngui.icons
 import snowmicropyn.pyngui.kml
-import snowmicropyn.tools
 from snowmicropyn.pyngui.document import Document
 from snowmicropyn.pyngui.globals import APP_NAME, VERSION, GITHASH
 from snowmicropyn.pyngui.plot_canvas import PlotCanvas
@@ -23,6 +27,19 @@ from snowmicropyn.derivatives import parameterizations
 
 log = logging.getLogger('snowmicropyn')
 
+signal.signal(signal.SIGINT, signal.SIG_DFL)  # Handle Ctrl+C
+
+
+class StayOpenMenu(QMenu):
+    """A QMenu that stays open when a checkable action is toggled."""
+    def mouseReleaseEvent(self, event):
+        action = self.activeAction()
+        if action and action.isCheckable():
+            action.trigger()
+            return
+        super().mouseReleaseEvent(event)
+
+
 class MainWindow(QMainWindow):
     SETTING_LAST_DIRECTORY = 'MainFrame/last_directory'
     SETTING_GEOMETRY = 'MainFrame/geometry'
@@ -32,6 +49,8 @@ class MainWindow(QMainWindow):
     SETTING_PLOT_DRIFT = 'MainFrame/plot/drift'
     SETTING_PLOT_DENSITY_ROOT = 'MainFrame/plot/density_'
     SETTING_PLOT_SSA_ROOT = 'MainFrame/plot/ssa_'
+    SETTING_LAYOUT_MODE = 'MainFrame/plot/layout_mode'
+    SETTING_FORCE_LOG_SCALE = 'MainFrame/plot/force_log_scale'
 
     DEFAULT_GEOMETRY = QRect(100, 100, 800, 600)
 
@@ -39,6 +58,7 @@ class MainWindow(QMainWindow):
         super().__init__(*args, **kwargs)
         self.setWindowTitle(APP_NAME)
 
+        self.changelog_dialog = ChangelogDialog()
         self.notify_dialog = NotificationDialog()
         self.marker_dialog = MarkerDialog(self)
         self.prefs_dialog = PreferencesDialog(parameterizations)
@@ -103,6 +123,11 @@ class MainWindow(QMainWindow):
         self.plot_surface_and_ground_action = QAction('Plot Surface && Ground', self)
         self.plot_markers_action = QAction('Plot other Markers', self)
         self.plot_drift_action = QAction('Plot Drift', self)
+        self.force_log_scale_action = QAction('Force Log Scale', self)
+        self.layout_legacy_action = QAction('Legacy (overlaid)', self)
+        self.layout_vertical_action = QAction('Stacked', self)
+        self.layout_profile_action = QAction('Profile', self)
+        self.subtract_offset_action = QAction('Subtract Offset', self)
         self.detect_surface_action = QAction('Auto Detect Surface', self)
         self.detect_ground_action = QAction('Auto Detect Ground', self)
         self.add_marker_action = QAction('New Marker', self)
@@ -197,6 +222,12 @@ class MainWindow(QMainWindow):
         action.setStatusTip('Previous Profile')
         action.triggered.connect(self._previous_triggered)
 
+        action = self.subtract_offset_action
+        action.setCheckable(True)
+        action.setChecked(True)
+        action.setStatusTip('Subtract Drift from Force Signal')
+        action.triggered.connect(self._subtract_offset_triggered)
+
         action = self.detect_surface_action
         action.setIcon(QIcon(':/icons/detect_surface.png'))
         action.setShortcut('Ctrl+T')
@@ -248,6 +279,43 @@ class MainWindow(QMainWindow):
         enabled = QSettings().value(setting, defaultValue=False, type=bool)
         action.setChecked(enabled)
 
+        action = self.force_log_scale_action
+        action.setShortcut('Alt+L')
+        action.setStatusTip('Toggle logarithmic force axis')
+        action.setCheckable(True)
+        setting = MainWindow.SETTING_FORCE_LOG_SCALE
+        enabled = QSettings().value(setting, defaultValue=False, type=bool)
+        action.setChecked(enabled)
+        action.triggered.connect(lambda checked: self.plot_canvas.set_force_log_scale(checked))
+
+        layout_group = QActionGroup(self)
+        layout_group.setExclusive(True)
+        saved_mode = QSettings().value(MainWindow.SETTING_LAYOUT_MODE, defaultValue='vertical', type=str)
+
+        action = self.layout_legacy_action
+        action.setStatusTip('All plots overlaid on one axis')
+        action.setCheckable(True)
+        action.setChecked(saved_mode == 'legacy')
+        layout_group.addAction(action)
+        action.triggered.connect(lambda: self.plot_canvas.set_layout_mode('legacy'))
+
+        action = self.layout_vertical_action
+        action.setStatusTip('Force, density, SSA stacked vertically')
+        action.setCheckable(True)
+        action.setChecked(saved_mode == 'vertical')
+        layout_group.addAction(action)
+        action.triggered.connect(lambda: self.plot_canvas.set_layout_mode('vertical'))
+
+        action = self.layout_profile_action
+        action.setStatusTip('Force, density, SSA side by side, depth on Y')
+        action.setCheckable(True)
+        action.setChecked(saved_mode == 'profile')
+        layout_group.addAction(action)
+        action.triggered.connect(lambda: self.plot_canvas.set_layout_mode('profile'))
+
+        self.plot_canvas.force_log_scale = self.force_log_scale_action.isChecked()
+        self.plot_canvas.set_layout_mode(saved_mode)
+
         action = self.add_marker_action
         action.setShortcut('Ctrl+M')
         action.setIcon(QIcon(':/icons/marker_add.png'))
@@ -298,7 +366,8 @@ class MainWindow(QMainWindow):
         menu = menubar.addMenu('&View')
         menu.addAction(self.plot_smpsignal_action)
 
-        density_menu = menu.addMenu('Plot &Density')
+        density_menu = StayOpenMenu('Plot &Density', menu)
+        menu.addMenu(density_menu)
         for key, par in self.params.items():
             #action.setShortcut('Alt+D,P')
             action = self.plot_density_actions[key]
@@ -310,7 +379,8 @@ class MainWindow(QMainWindow):
             action.setChecked(enabled)
             density_menu.addAction(action)
 
-        ssa_menu = menu.addMenu('Plot &SSA')
+        ssa_menu = StayOpenMenu('Plot &SSA', menu)
+        menu.addMenu(ssa_menu)
         for key, par in self.params.items():
             if not hasattr(par, 'ssa'):
                 continue
@@ -331,12 +401,20 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addAction(self.plot_drift_action)
         menu.addSeparator()
+        menu.addAction(self.force_log_scale_action)
+        menu.addSeparator()
+        layout_menu = menu.addMenu('Layout')
+        layout_menu.addAction(self.layout_legacy_action)
+        layout_menu.addAction(self.layout_vertical_action)
+        layout_menu.addAction(self.layout_profile_action)
+        menu.addSeparator()
         menu.addAction(self.next_action)
         menu.addAction(self.previous_action)
         menu.addSeparator()
         menu.addAction(self.show_log_action)
 
         menu = menubar.addMenu('&Profile')
+        menu.addAction(self.subtract_offset_action)
         menu.addAction(self.detect_surface_action)
         menu.addAction(self.detect_ground_action)
         menu.addAction(self.add_marker_action)
@@ -362,6 +440,12 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.saveall_action)
         toolbar.addAction(self.airgap_action)
         toolbar.addAction(self.superpos_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.force_log_scale_action)
+        toolbar.addSeparator()
+        toolbar.addAction(self.layout_legacy_action)
+        toolbar.addAction(self.layout_vertical_action)
+        toolbar.addAction(self.layout_profile_action)
         toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
 
     def closeEvent(self, event):
@@ -372,6 +456,8 @@ class MainWindow(QMainWindow):
         QSettings().setValue(MainWindow.SETTING_PLOT_SURFACE_AND_GROUND, self.plot_surface_and_ground_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_MARKERS, self.plot_markers_action.isChecked())
         QSettings().setValue(MainWindow.SETTING_PLOT_DRIFT, self.plot_drift_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_FORCE_LOG_SCALE, self.force_log_scale_action.isChecked())
+        QSettings().setValue(MainWindow.SETTING_LAYOUT_MODE, self.plot_canvas.layout_mode)
         for key, par in self.params.items():
             QSettings().setValue(MainWindow.SETTING_PLOT_DENSITY_ROOT + key, self.plot_density_actions[key].isChecked())
             if hasattr(par, 'ssa'):
@@ -401,7 +487,8 @@ class MainWindow(QMainWindow):
         for f in files:
             p = snowmicropyn.Profile.load(f)
             doc = Document(p)
-            doc.recalc_derivatives()
+            doc.profile.detect_surface()
+            doc.profile.subtract_force_offset()
             new_docs.append(doc)
             self.superpos_canvas.add_doc(doc)
         self.documents.extend(new_docs)
@@ -518,6 +605,25 @@ class MainWindow(QMainWindow):
         # of method ``switch_profile``. The work is done there.
         self.profile_combobox.setCurrentIndex(i)
 
+    def _subtract_offset_triggered(self, checked):
+        doc = self.current_document
+
+        if doc is not None:
+            if self.subtract_offset_action.isChecked():
+                doc.profile.subtract_force_offset()
+            else:
+                doc.profile.reset_force_offset()
+
+        if doc is not None:
+            self.calc_drift()
+
+            doc.recalc_derivatives()
+
+        self.plot_canvas.refresh_data(self.current_document, self.airgap_action.isChecked())
+
+        self.plot_canvas.draw()
+        self.update()
+
     def _detect_ground_triggered(self):
         doc = self.current_document
         doc.profile.detect_ground()
@@ -528,10 +634,7 @@ class MainWindow(QMainWindow):
         doc = self.current_document
         doc.profile.detect_surface()
         self.set_marker('surface', doc.profile.surface)
-        self.plot_canvas.set_document(self.current_document, self.airgap_action.isChecked())
-        self.plot_canvas.draw()
         self.superpos_canvas._update_on_marker(doc)
-        self.update()
 
     @staticmethod
     def _about_triggered():
@@ -607,10 +710,24 @@ class MainWindow(QMainWindow):
 
         self.stacked_widget.setCurrentIndex(1 if at_least_one else 0)
 
+        if doc is not None:
+            # doc.profile._force_offset = 0.0
+            # doc.profile._drift_offset = 0.0
+            if self.subtract_offset_action.isChecked():
+                doc.profile.subtract_force_offset()
+            else:
+                doc.profile.reset_force_offset()
+            doc.recalc_derivatives()
+
         self.sidebar.set_document(doc)
 
         if doc is not None:
             self.calc_drift()
+            start = time.time()
+            if not doc.derivatives:
+                doc.recalc_derivatives()
+            end = time.time()
+            print("timing ", end - start)
 
         self.plot_canvas.set_document(doc, self.airgap_action.isChecked())
         self.plot_canvas.draw()
@@ -630,20 +747,20 @@ class MainWindow(QMainWindow):
         p.set_marker(label, value)
 
         self.sidebar.set_marker(label, value)
-        self.plot_canvas.set_marker(label, value)
 
         if label in ('surface', 'drift_begin', 'drift_end'):
             self.calc_drift()
-            self.plot_canvas.set_plot('force', 'drift', (doc._fit_x, doc._fit_y))
-
-        if label in ('surface', 'ground'):
+            if self.subtract_offset_action.isChecked():
+                doc.profile.subtract_force_offset()
+            else:
+                doc.profile.reset_force_offset()
             doc.recalc_derivatives()
-            for key, par in snowmicropyn.params.items():
-                self.plot_canvas.set_plot('density', 'density_' + key,
-                    (doc.derivatives[key]['distance'], doc.derivatives[key][par.shortname + '_density']))
-                if hasattr(par, 'ssa'):
-                    self.plot_canvas.set_plot('ssa', 'ssa_' + key,
-                        (doc.derivatives[key]['distance'], doc.derivatives[key][par.shortname + '_ssa']))
+            self.plot_canvas.refresh_data(doc, self.airgap_action.isChecked())
+        elif label == 'ground':
+            doc.recalc_derivatives()
+            self.plot_canvas.refresh_data(doc, self.airgap_action.isChecked())
+        else:
+            self.plot_canvas.set_marker(label, value)
 
         self.plot_canvas.draw()
 
@@ -653,40 +770,12 @@ class MainWindow(QMainWindow):
             self.set_marker(name, value)
 
     def calc_drift(self):
-        p = self.current_document.profile
 
-        try:
-            begin = p.marker('drift_begin')
-            begin_label = 'Marker drift_begin'
-        except KeyError:
-            # Skip the first few values of profile for drift calculation
-            begin = p.samples.distance.iloc[10]
-            begin_label = 'Begin of Profile'
+        begin_label, end_label, x_fit, y_fit, drift, offset, noise = self.current_document.profile.calc_drift()
 
-        try:
-            end = p.marker('drift_end')
-            end_label = 'Marker drift_end'
-        except KeyError:
-            try:
-                end = p.marker('surface')
-                end_label = 'Marker surface'
-            except KeyError:
-                end = p.samples.distance.iloc[-1]
-                end_label = 'End of Profile'
-
-        log.debug('Calculating drift from {} to {}'.format(begin, end))
-
-        # Flip begin and end to make sure begin is always smaller then end
-        if end < begin:
-            begin, end = end, begin
-
-        drift_range = p.samples[p.samples.distance.between(begin, end)]
-
-        x_fit, y_fit, drift, offset, noise = snowmicropyn.tools.lin_fit(drift_range.distance,
-                                                                        drift_range.force)
         self.current_document._fit_x = x_fit
         self.current_document._fit_y = y_fit
-        self.current_document._dirft = drift
+        self.current_document._drift = drift
         self.current_document._offset = offset
         self.current_document._noise = noise
 
@@ -702,6 +791,8 @@ class MainWindow(QMainWindow):
         self.superpos_canvas._switch_airgap(self.airgap_action.isChecked())
 
     def _air_gap(self, checked):
+        for doc in self.documents:
+            self.superpos_canvas._update_on_marker(doc)
         self.plot_canvas.set_document(self.current_document, checked)
         self.plot_canvas.draw()
         self.superpos_canvas._switch_airgap(checked)
@@ -760,6 +851,67 @@ class NotificationDialog(QDialog):
         self.hint_label.setText(hint_text)
         self.content_textedit.setText('\n'.join([str(f) for f in files]))
         self.exec()
+
+
+class ChangelogDialog(QDialog):
+    SETTING_LAST_SEEN_VERSION = 'MainFrame/last_seen_version'
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(APP_NAME + " — What's New")
+
+        self.info_text = QPlainTextEdit()
+        self.info_text.setReadOnly(True)
+        self.info_text.setMinimumSize(600, 300)
+
+        screen = QApplication.primaryScreen().availableGeometry()
+        geo = self.frameGeometry()
+        geo.moveCenter(screen.center())
+        self.move(geo.topLeft())
+
+        self.checkbox = QCheckBox("Don't show this again")
+        self.checkbox.setChecked(False)
+
+        close_btn = QPushButton('Close')
+        close_btn.clicked.connect(self.accept)
+
+        # TODO: check when installed via pip without -e
+        changelog_path = Path(__file__).resolve().parent.parent / "CHANGELOG.rst"
+        latest_changes = 'No release notes available.'
+
+        if changelog_path.exists():
+            with changelog_path.open(encoding='utf-8') as fh:
+                changelog_text = fh.read()
+                matches = list(re.finditer(r'(?m)^Version\s+\d+\.\d+\.\d+\s*$', changelog_text))
+                if matches:
+                    m0 = matches[0]
+                    start = m0.start()
+                    end = matches[1].start() if len(matches) > 1 else len(changelog_text)
+                    latest_changes = changelog_text[start:end].strip()
+
+        self.info_text.setPlainText(latest_changes)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.info_text)
+        layout.addWidget(self.checkbox)
+        layout.addWidget(close_btn, alignment=Qt.AlignRight)
+        self.setLayout(layout)
+
+        self.finished.connect(self._persist_choice)
+
+        self.setAttribute(Qt.WA_DeleteOnClose)
+
+    def _persist_choice(self, result):
+        # If "Don't show again" is checked, record the current version
+        # so the dialog won't reappear until a newer version is installed.
+        if self.checkbox.isChecked():
+            QSettings().setValue(self.SETTING_LAST_SEEN_VERSION, VERSION)
+
+    def show(self):
+        """Show the dialog only if the version has changed since it was last dismissed."""
+        last_seen = QSettings().value(self.SETTING_LAST_SEEN_VERSION, defaultValue='', type=str)
+        if last_seen != VERSION:
+            super().show()
 
 
 class MarkerDialog(QDialog):

@@ -5,6 +5,8 @@ import struct
 from collections import namedtuple
 from enum import Enum
 
+import numpy as np
+
 log = logging.getLogger('snowmicropyn')
 
 pnt_header_entry = namedtuple('pnt_header_field', ['value', 'unit'])
@@ -203,7 +205,7 @@ class Pnt:
     ]
 
     @staticmethod
-    def load(file):
+    def load(file, binary=False):
         """ Loads the raw data of a pnt file.
 
         This is the low level method used by class :class:`snowmicropyn.Profile`
@@ -214,11 +216,15 @@ class Pnt:
         ``None``. Mostly this is the case for unit.
 
         :param file: Path-like object
+        :param binary: Set to true if you are giving bytes directly.
         """
-        file = pathlib.Path(file)
-        log.info('Reading pnt file {}'.format(file))
-        with file.open('rb') as f:
-            raw = f.read()
+        if binary:
+            raw = file
+        else:
+            file = pathlib.Path(file)
+            log.info('Reading pnt file {}'.format(file))
+            with file.open('rb') as f:
+                raw = f.read()
 
         header = {}
         try:
@@ -235,7 +241,7 @@ class Pnt:
                 header[pnt_id] = pnt_header_entry(value, unit)
 
             count = header[Pnt.Header.SAMPLES_COUNT_FORCE].value
-            raw_samples = struct.unpack_from('>{}h'.format(count), raw, offset=512)
+            raw_samples = np.frombuffer(raw, dtype='>i2', count=count, offset=512)
             log.info('Read {} raw samples from file {}'.format(len(raw_samples), file))
         except struct.error as e:
             log.exception(e)

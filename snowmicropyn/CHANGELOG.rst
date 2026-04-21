@@ -1,6 +1,67 @@
 snowmicropyn Changelog
 ======================
 
+Version 1.4.0
+----------
+2026-04-13
+
+This version brings major performance improvements across the board:
+faster file loading, parallelised derivative computation, and an
+optimised plotting backend. In addition, it adds several UI usability
+improvements and small stability fixes in plotting and packaging.
+
+- Parallelised Löwe 2012 shot noise model computation using a persistent
+  process pool. Parameterisations sharing the same window size and
+  overlap now reuse a single Löwe 2012 result, and results are cached
+  across repeated calls.
+- Vectorised parameterisation formulas (density, SSA) to operate on full
+  numpy arrays instead of row-by-row iteration, with a scalar fallback
+  for custom parameterisations.
+- Optimised Löwe 2012 inner loop: replaced per-chunk pandas DataFrames
+  with numpy array slicing and pre-allocated output arrays; replaced
+  full O(n²) autocorrelation with two O(n) dot products.
+- Optimised windowing: added a fast numpy-only chunking path using
+  vectorised ``np.searchsorted`` instead of per-chunk boolean masking.
+- Faster PNT file loading: replaced ``struct.unpack_from`` with
+  ``np.frombuffer`` for zero-copy sample reading, and streamlined
+  DataFrame construction in Profile (overall ~5× faster loading).
+- Plot canvas refactored to reuse pre-allocated Line2D / PlotDataItem
+  objects instead of recreating axes on every document switch. Added
+  ``refresh_data()`` for in-place updates that preserve the current
+  zoom state.
+- Added new plot layouts for better data overview, and a user-facing
+  ``Force Log Scale`` toggle to switch the force axis between logarithmic
+  and linear scaling.
+  - Added a persistent stay-open behavior for checkable ``Plot Density``
+  and ``Plot SSA`` dropdown menus in the main window.
+- Added context menu support in the sidebar to copy displayed values.
+- Added an air-gap toggle update path for the superposition canvas so
+  profiles are refreshed consistently when toggling air-gap visibility.
+- Fixed zoom/pan behavior in stacked layouts: hidden axes are now
+  excluded from navigation handling, and force log/linear scale changes
+  no longer overwrite user zoom unless the scale actually changes.
+- Setting surface or ground markers no longer resets the plot zoom.
+- Increased default line width for better visibility.
+- Fixed file dialog options in profile open dialog.
+- Several minor bugfixes and improvements.
+
+Version 1.3.0
+----------
+2026-01-15
+
+This version implements a 'above surface' background detection algorithm
+and improves the automatic surface detection algorithm.
+
+- Added background and drift correction. Instead of setting the baseline
+  to zero, it is set to the value of the Calonne and Richter (2020) model
+  in order to ensure consistency when deriving snow microstructure parameters.
+- Improved automatic surface detection algorithm. The new algorithm is more
+  robust and works better for fresh snow conditions.
+- Disable autoprocessing when loading profiles. This improves initial load time.
+  Derivatives are now calculated when first selecting a profile for viewing. The
+  subsequent times, the cached values are used.
+- Several minor bugfixes and improvements.
+
 Version 1.2.1
 ----------
 2023-09-28

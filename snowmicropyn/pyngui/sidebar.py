@@ -3,11 +3,13 @@ import logging
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QDoubleValidator, QFontMetrics
 from PyQt5.QtWidgets import (
+    QApplication,
     QCheckBox,
     QComboBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMenu,
     QPushButton,
     QSizePolicy,
     QToolButton,
@@ -29,6 +31,8 @@ class SidebarWidget(QTreeWidget):
 
         # Get rid of the ugly focus rectangle and border
         self.setAttribute(Qt.WA_MacShowFocusRect, False)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._show_context_menu)
 
         self.doc = None
         self.marker_items = {}
@@ -130,6 +134,36 @@ class SidebarWidget(QTreeWidget):
         self.resizeColumnToContents(1)
         self.resizeColumnToContents(2)
         self.resizeColumnToContents(3)
+
+    def _show_context_menu(self, pos):
+        item = self.itemAt(pos)
+        if item is None:
+            return
+        # Collect the label (column 2) and value (column 4 text or widget text)
+        label = item.text(2) or item.text(0) or ''
+        widget = self.itemWidget(item, self.TEXT_COLUMN)
+        if widget is not None:
+            if isinstance(widget, QLineEdit):
+                value = widget.text()
+            elif isinstance(widget, QLabel):
+                value = widget.text()
+                # Strip HTML tags to get plain text
+                if '<' in value:
+                    import re
+                    value = re.sub(r'<[^>]+>', '', value)
+            else:
+                value = ''
+        else:
+            value = item.text(self.TEXT_COLUMN) or ''
+        # text = '{}: {}'.format(label, value).strip(': ') if label and value else label or value
+        text = value if value else label
+        if not text:
+            return
+        menu = QMenu(self)
+        copy_action = menu.addAction('Copy')
+        action = menu.exec_(self.viewport().mapToGlobal(pos))
+        if action == copy_action:
+            QApplication.clipboard().setText(text)
 
     def set_document(self, doc):
         if doc is None:

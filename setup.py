@@ -18,7 +18,7 @@ with open(readme_rst) as f:
     LONG_DESC = f.read()
 
 DEPENDENCIES = [
-        'matplotlib >= 2',
+        'matplotlib >= 3.10',
         'numpy',
         'pandas >= 0.22',
         'pytz',
@@ -62,17 +62,18 @@ setup(
 
     packages=['snowmicropyn', 'snowmicropyn.ai', 'snowmicropyn.parameterizations', 'snowmicropyn.pyngui', 'snowmicropyn.serialize'],
     package_data={
-        'snowmicropyn': ['githash'],
+        'snowmicropyn': ['githash', 'CHANGELOG.rst'],
         'snowmicropyn.pyngui': ['about.html'],
         'snowmicropyn.ai': ['trained_model_rhossa.dat'],
     },
     include_package_data=True,
+    #data_files=[('.', ['CHANGELOG.rst'])],
     entry_points={
         'gui_scripts': [
             'pyngui = snowmicropyn.pyngui.app:main'
         ]
     },
 
-    python_requires='>=3.8',
+    python_requires='>=3.10',
     install_requires=DEPENDENCIES
 )

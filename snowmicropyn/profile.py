@@ -12,6 +12,7 @@ from . import windowing
 from . import __version__, githash
 from . import detection
 from . import loewe2012
+from . import tools
 # to keep code for a new parameterization to a single file we import all modules available:
 from .parameterizations import *
 from .derivatives import parameterizations
@@ -74,10 +75,13 @@ class Profile(object):
 
     """
 
-    def __init__(self, pnt_file, name=None):
-        self._pnt_file = pathlib.Path(pnt_file)
+    def __init__(self, pnt_file, name=None, binary=False):
+        if not binary:
+            self._pnt_file = pathlib.Path(pnt_file)
+        else:
+            self._pnt_file = None
         # Load pnt file, returns header (dict) and raw samples
-        self._pnt_header, pnt_samples = Pnt.load(self._pnt_file)
+        self._pnt_header, pnt_samples = Pnt.load(pnt_file, binary=binary)
 
         # Set name of profile (by default a entry from pnt header)
         self._name = self.pnt_header_value(Pnt.Header.FILENAME)
@@ -94,16 +98,20 @@ class Profile(object):
             self._latitude = -self._latitude
         if east.upper() != 'E':
             self._longitude = -self._longitude
-        if abs(self._latitude) > 90:
+        if self._latitude == -99999: # silently remove if just not measured
+            self._latitude = None
+        elif abs(self._latitude) > 90:
             log.warning(f'Latitude value {self._latitude} invalid, replacing by None (file {self._name})')
             self._latitude = None
-        if abs(self._longitude) > 180:
-            log.warning(f'Longitude value {self._latitude} invalid, replacing by None (file {self._name})')
+        if self._longitude == -99999:
             self._longitude = None
-        if (self._altitude == 99999): # SMP v<5
+        elif abs(self._longitude) > 180:
+            log.warning(f'Longitude value {self._longitude} invalid, replacing by None (file {self._name})')
+            self._longitude = None
+        if self._altitude == 99999: # SMP v<5
             self._altitude = None
         elif not -50000 < self._altitude < 900000:
-            log.warning(f'Altitude value {self._latitude} invalid, replacing by None (file {self._name})')
+            log.warning(f'Altitude value {self._altitude} invalid, replacing by None (file {self._name})')
             self._altitude = None
 
         # Get a proper timestamp by putting pnt entries together
@@ -140,17 +148,21 @@ class Profile(object):
         # Create a pandas dataframe with distance and force
         distance_arr = np.arange(0, self._samples_count) * self._spatial_resolution
         factor = self.pnt_header_value(Pnt.Header.SAMPLES_CONVFACTOR_FORCE)
-        force_arr = np.asarray(pnt_samples) * factor
-        stacked = np.column_stack([distance_arr, force_arr])
-        self._samples = pd.DataFrame(stacked, columns=('distance', 'force'))
+        force_arr = np.asarray(pnt_samples, dtype=np.float64) * factor
+        self._samples = pd.DataFrame({'distance': distance_arr, 'force': force_arr})
+
+        # define a force offset attribute
+        self._force_drift = 0.0
+        self._force_offset = 0.0
 
         self._ini = configparser.ConfigParser()
 
         # Look for corresponding ini file
-        self._ini_file = self._pnt_file.with_suffix('.ini')
-        if self._ini_file.exists():
-            log.info('Reading ini file {} for {}'.format(self._ini_file, self))
-            self._ini.read(self._ini_file)
+        if self._pnt_file:
+            self._ini_file = self._pnt_file.with_suffix('.ini')
+            if self._ini_file.exists():
+                log.info('Reading ini file {} for {}'.format(self._ini_file, self))
+                self._ini.read(self._ini_file)
 
         # Ensure existence of necessary sections
         if not self._ini.has_section('markers'):
@@ -322,6 +334,93 @@ class Profile(object):
         """ Returns the samples. This is a pandas dataframe."""
         return self._samples
 
+
+    def calc_drift(self):
+        p = self
+
+        try:
+            begin = p.marker('drift_begin')
+            begin_label = 'Marker drift_begin'
+        except KeyError:
+            # Skip the first few values of profile for drift calculation
+            begin = p.samples.distance.iloc[10]
+            begin_label = 'Begin of Profile'
+
+        try:
+            end = p.marker('drift_end')
+            end_label = 'Marker drift_end'
+        except KeyError:
+            try:
+                end = p.marker('surface')
+                end_label = 'Marker surface'
+            except KeyError:
+                end = p.samples.distance.iloc[-1]
+                end_label = 'End of Profile'
+
+        log.debug('Calculating drift from {} to {}'.format(begin, end))
+
+        # Flip begin and end to make sure begin is always smaller then end
+        if end < begin:
+            begin, end = end, begin
+
+        drift_range = p.samples[p.samples.distance.between(begin, end)]
+
+        x_fit, y_fit, drift, offset, noise = tools.lin_fit(drift_range.distance,
+                                                                        drift_range.force)
+        self._fit_x = x_fit
+        self._fit_y = y_fit
+        self._dirft = drift
+        self._offset = offset
+        self._noise = noise
+
+        #self.sidebar.set_drift(begin_label, end_label, drift, offset, noise)
+        return begin_label, end_label, x_fit, y_fit, drift, offset, noise
+
+    def subtract_force_offset(self):
+        force = self._samples['force']
+
+        surface_at = self.marker("surface", fallback=0)
+        if surface_at == 0:
+            surface_at = self.detect_surface()
+
+        print("Surface at: ", surface_at)
+
+        if surface_at > 0:
+            idx = self._samples[self._samples['distance'] < surface_at].index
+
+            _, _, _, _, force_drift, force_offset, _ = self.calc_drift()
+
+            force_offset -= 0.015346 # mean value from RHOSSA calibration dataset
+            # force_drift = 0.0
+
+            log.info('Subtracting offset of {:.4f} N calculated from {} samples above surface marker at {:.2f} mm'.format(force_offset, len(idx), surface_at))
+            # subtract a linear baseline (drift * distance + offset) instead of a constant
+            distances = self._samples['distance']
+            baseline = distances * force_drift + force_offset
+            self._samples.loc[:, 'force'] = force - baseline
+
+            if self._force_drift == 0:
+                self._force_drift = force_drift
+            if self._force_offset == 0:
+                self._force_offset = force_offset
+
+
+    def reset_force_offset(self):
+        force = self._samples['force']
+        log.info('Resetting offset of {:.4f} N'.format(self._force_offset))
+        # Re-apply previously subtracted linear baseline (drift * distance + offset)
+        force = self._samples['force']
+        drift = self._force_drift
+        offset = self._force_offset
+        distances = self._samples['distance']
+        baseline = distances * drift + offset
+        self._samples.loc[:, 'force'] = force + baseline
+        self._force_drift = 0.0
+        self._force_offset = 0.0
+        print("reset")
+        log.info('Restored baseline (drift={:.6f}, offset={:.6f})'.format(drift, offset))
+
+
     @property
     def markers(self):
         """ Returns all markers on the profile (a dictionary).
@@ -396,7 +495,7 @@ class Profile(object):
         return self.samples.force.max()
 
     @staticmethod
-    def load(pnt_file, name=None):
+    def load(pnt_file, name=None, binary=False):
         """ Loads a profile from a pnt file.
 
         This static method loads a pnt file and also its ini file in case it's
@@ -409,7 +508,7 @@ class Profile(object):
 
         .. _path-like object: https://docs.python.org/3/glossary.html#term-path-like-object
         """
-        return Profile(pnt_file, name)
+        return Profile(pnt_file, name, binary)
 
     def save(self):
         """ Save markers of this profile to an ini file.
@@ -469,7 +568,7 @@ class Profile(object):
             5) Data stretching: multiply by a factor (to match a nearby snow pit height)
             6) Adapt header lines
 
-        When the parameter ``file`` is not provided, the default name is used 
+        When the parameter ``file`` is not provided, the default name is used
         which is same as the pnt file from which the profile was loaded with a
         suffix `_samples_niviz` and the `csv` extension.
 
@@ -574,17 +673,9 @@ class Profile(object):
                     writer.writerow(['pnt_' + header_id.name, str(value)])
         return file
 
-    def export_derivatives(self, file=None, snowpack_only=True, parameterization='P2015', precision=4):
-        """Export observables derived from the SMP signal.
-
-        From the GUI, this is called with the parameterzation set in the user settings. Programmatically,
-        Proksch 2015 is defaulted; for others you must supply the object's .shortname property.
-        """
-        if file:
-            file = pathlib.Path(file)
-        else:
-            file = self._pnt_file.with_name(self._pnt_file.stem + '_derivatives').with_suffix('.csv')
-
+    def calc_derivatives(self, snowpack_only=False, parameterization='P2015', precision=4,
+            hand_hardness=False, optical_thickness=False, names_with_units=True):
+        """Calculate observables derived from the SMP signal."""
         samples = self.samples
         if snowpack_only:
             samples = self.samples_within_snowpack()
@@ -597,20 +688,49 @@ class Profile(object):
         loewe2012_df = loewe2012.calc(samples, param.window_size, param.overlap)
         derivatives = loewe2012_df
 
-        # Add units in label for export
-        with_units = {
-            'distance': 'distance [mm]',
-            'force_median': 'force_median [N]',
-            'L2012_lambda': 'L2012_lambda [1/mm]',
-            'L2012_f0': 'L2012_f0 [N]',
-            'L2012_delta': 'L2012_delta [mm]',
-            'L2012_L': 'L2012_L [mm]',
-        }
         log.info('Calculating derivatives by ' + param.name)
         derivatives = derivatives.merge(param.calc_from_loewe2012(loewe2012_df))
-        with_units[param.shortname + '_ssa'] = param.shortname + '_ssa [m^2/kg]'
-        with_units[param.shortname + '_density'] = param.shortname + '_density [kg/m^3]'
-        derivatives = derivatives.rename(columns=with_units)
+
+        if hand_hardness:
+            hardness = derivatives['force_median']
+            hardness = self.hand_hardness_regression(hardness)
+            derivatives['hand_hardness'] = hardness
+
+        if optical_thickness:
+            thickness = derivatives[f'{parameterization}_ssa']
+            thickness = self.optical_thickness(thickness)
+            derivatives['optical_thickness'] = thickness
+
+        if names_with_units:
+            # Add units in label for export
+            with_units = {
+                'distance': 'distance [mm]',
+                'force_median': 'force_median [N]',
+                'L2012_lambda': 'L2012_lambda [1/mm]',
+                'L2012_f0': 'L2012_f0 [N]',
+                'L2012_delta': 'L2012_delta [mm]',
+                'L2012_L': 'L2012_L [mm]',
+                'hand_hardness': 'hand_hardness [1]',
+                'optical_thickness': 'optical_thickness [m]',
+            }
+            with_units[param.shortname + '_ssa'] = param.shortname + '_ssa [m^2/kg]'
+            with_units[param.shortname + '_density'] = param.shortname + '_density [kg/m^3]'
+            derivatives = derivatives.rename(columns=with_units)
+
+        return derivatives
+
+    def export_derivatives(self, file=None, snowpack_only=True, parameterization='P2015', precision=4, names_with_units=True):
+        """Export observables derived from the SMP signal.
+
+        From the GUI, this is called with the parameterization set in the user settings. Programmatically,
+        Proksch 2015 is defaulted; for others you must supply the object's .shortname property.
+        """
+        if file:
+            file = pathlib.Path(file)
+        else:
+            file = self._pnt_file.with_name(self._pnt_file.stem + '_derivatives').with_suffix('.csv')
+
+        derivatives = self.calc_derivatives(snowpack_only, parameterization, precision)
 
         fmt = '%.{}f'.format(precision)
         derivatives.to_csv(file, header=True, index=False, float_format=fmt, na_rep='nan')
@@ -659,6 +779,53 @@ class Profile(object):
         s = self.marker('surface', fallback=self.samples.distance.iloc[0])
         g = self.marker('ground', fallback=self.samples.distance.iloc[-1])
         return self.samples_within_distance(s, g, relativize)
+
+    def _get_hardness_fit(self, recalc=False):
+        """Parameterization through regression (measured SMP force and hand hardness index).
+        Data points provided by van Herwijnen, Pielmeier: Characterizing Snow Stratigraphy:
+        a Comparison of SP2, Snowmicropen, Ramsonde and Hand Hardness Profiles, ISSW Proceedings 2016
+
+        param recalc: Set to True to reproduce the fit parameters on the fly.
+        returns: Fitted function as function object.
+        """
+        hardness_func = lambda xx, aa, bb : aa * xx**bb # use a power law fit
+        if recalc:
+            smp_force_kPa = [4.9303, 11.1914, 17.6419, 37.5721, 49.8849, 104.0583, 124.8842, 314.3845]
+            hand_hardness = [1, 1.5, 2, 2.5, 3, 3.5, 4, 5]
+            A_smp = 19.6e-6 # area of penetration of SMP as used by authors (in m^2)
+            smp_force_N = [ff * A_smp * 1000 for ff in smp_force_kPa]
+            (aa, bb), _ = curve_fit(hardness_func, smp_force_N, hand_hardness)
+        else:
+            aa = 2.780171583411649 # running the above code unmodified yields these fit parameters
+            bb = 0.341486204481987
+
+        fit_func = lambda xx : hardness_func(xx, aa, bb)
+        return fit_func
+
+    def hand_hardness_regression(self, smp_force):
+        """Parameterization method for hand hardness index.
+        See above for implementation details.
+
+        param smp_force: The measured force in N.
+        returns: Hand hardness index.
+        """
+        fit_func = self._get_hardness_fit()
+        return fit_func(smp_force)
+
+    def optical_thickness(self, ssa):
+        """Calculation of a snow grain's diameter via the specific surface area as explained in
+        `Representation of a nonspherical ice particle by a collection of independent spheres for
+        scattering and absorption of radiation <https://doi.org/10.1029/1999JD900496>`_ by
+        Thomas C. Grenfell and Stephen G. Warren publicised in `Journal of Geophysical
+        Research <https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/1999JD900496>`_,
+        Volume 104, 1999.
+
+        param ssa: Specific surface area in m^2/kg.
+        returns: Optical thickness ("diameter") of particle in m.
+        """
+        DENSITY_ICE = 917.
+        d_eff = 6 / (DENSITY_ICE * ssa) # r_eff=3V/A ==> d_eff=6/(rho_ice*SSA)
+        return d_eff
 
     def detect_surface(self):
         """ Convenience method to detect the surface. This also sets the marker
